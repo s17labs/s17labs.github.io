@@ -1,49 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>s17 Labs.</title>
     <meta name="description" content="Building efficient, lightweight software for the modern web.">
-    <meta property="og:site_name" content="s17 Labs.">
-    <meta property="og:description" content="Building efficient, lightweight software for the modern web.">
-    <meta property="og:title" content="s17 Labs.">
-    <meta property="twitter:card" content="summary">
-    <meta property="twitter:description" content="Building efficient, lightweight software for the modern web.">
     <link rel="stylesheet" href="src/main.css">
     <link rel="icon" href="src/assets/favicon.ico">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-</head>
-
-<body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
+  </head>
+  <body>
     <div class="main">
-        <div class="wrapper">
-            <header class="header">
-                <h1>
-                    <span class="accent-color cube">■</span> s17 Labs.
-                </h1>
-                <p>Building efficient, lightweight software<br>for the modern web.</p>
-            </header>
-
-            <div class="card">
-                <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content across the modern web.</p>
-
-                <div class="card-link">
-                    <a href="https://github.com/s17labs" target="_blank" class="github-link">
-                        <i class="fa-brands fa-github"></i>
-                        GitHub
-                    </a>
-                </div>
+      <div class="wrapper">
+        <div id="home-view">
+          <header class="header">
+            <h1><span class="cube"></span> s17 Labs.</h1>
+          </header>
+          <div class="header" style="margin-top: -2.5rem;">
+            <p>Building efficient, lightweight software<br>for the modern web.</p>
+          </div>
+          <div class="card">
+            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
+            <div class="card-link">
+              <a href="https://github.com/s17labs" target="_blank" class="github-link">
+              <i class="fa-brands fa-github"></i> GitHub
+              </a>
+              <button id="btn-to-projects" class="projects-btn">
+              <i class="fa-solid fa-diagram-project"></i> Projects
+              </button>
             </div>
+          </div>
         </div>
+        <div id="projects-view" style="display: none;">
+          <header class="header">
+            <button id="btn-to-home" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <h1>Projects</h1>
+          </header>
+          <div class="project-list">
+            <a href="https://s17labs.github.io/tools" class="project-item">
+              <div class="project-info">
+                <h3>Tools</h3>
+                <p>A collection of fast, privacy-first, browser-based utility tools for creators and developers.</p>
+              </div>
+              <i class="fa-solid fa-arrow-right project-arrow"></i>
+            </a>
+            <a href="https://github.com/s17labs/minimal-ui" class="project-item">
+              <div class="project-info">
+                <h3>Minimal-UI</h3>
+                <p>A minimalist CSS framework designed for rapid prototyping.</p>
+              </div>
+              <i class="fa-solid fa-arrow-right project-arrow"></i>
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
-
     <footer class="footer">
-        © <script>document.write(new Date().getFullYear())</script> <b>s17 Labs</b>
-        • <a href="https://github.com/s17labs/s17labs.github.io" target="_blank">
-            <i class="fa-brands fa-github"></i> Source Code
-        </a>
+      © <script>document.write(new Date().getFullYear())</script> <b>s17 Labs</b>
+      • <a href="https://github.com/s17labs/s17labs.github.io" target="_blank">
+      <i class="fa-brands fa-github"></i> Source Code
+      </a>
     </footer>
-</body>
+    <script src="src/script.js"></script>
+  </body>
 </html>
