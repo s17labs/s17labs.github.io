@@ -5,5 +5,5 @@
   </a>
 </p>
 <p align="center">
-  Clean and minimal static homepage for s17 Labs.
+  Clean and minimal homepage for s17 Labs.
 </p>
