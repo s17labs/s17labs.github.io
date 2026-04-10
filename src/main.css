@@ -52,15 +52,6 @@ a {
   min-height: 480px;
 }
 
-.animate-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 .header {
   width: 100%;
   text-align: center;
@@ -162,8 +153,5 @@ a {
   .github-link {
     width: 100%;
     justify-content: center;
-  }
-  .back-link {
-    font-size: 0.9rem;
   }
 }
