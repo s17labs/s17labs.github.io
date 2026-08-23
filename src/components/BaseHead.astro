@@ -1,0 +1,36 @@
+---
+import { SITE } from '../data/site';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = SITE.description } = Astro.props;
+const site = Astro.site ?? SITE.url;
+const canonical = new URL(Astro.url.pathname, site);
+const ogImage = new URL('/link_preview.png', site);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<link rel="icon" href="/favicon.ico" />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link rel="preload" href="/fonts/Aldrich.ttf" as="font" type="font/ttf" crossorigin />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE.name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<meta name="generator" content={Astro.generator} />
+<meta name="theme-color" content="#0e0e10" />

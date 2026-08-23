@@ -1,0 +1,184 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import { SITE } from '../../data/site';
+import '../../styles/tools/m2-calc.css';
+
+const title = 'm² Calc';
+const description =
+  'A fast, mobile-friendly construction cost calculator. Enter your area, rate per m², and get an instant cost breakdown.';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} />
+    <!-- Page-specific overrides (must follow BaseHead) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="/tools/m2-calc/favicon.ico" />
+    <link rel="preload" href="/fonts/m2calc/barlow-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/m2calc/barlow-condensed-900-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="canonical" href={new URL('/tools/m2-calc/', SITE.url)} />
+  </head>
+  <body data-theme="dark">
+    <!-- SPLASH OVERLAY -->
+    <div class="overlay" id="splash-overlay">
+      <div class="splash" id="splash-box">
+        <div class="splash-icon">📐</div>
+        <div class="splash-title" data-i="splash_title">m² Calc</div>
+        <div class="splash-sub" data-i="splash_sub">Contractor Work Calculator</div>
+        <div class="splash-desc" data-i="splash_desc">
+          Quickly calculate the <strong>total cost</strong> of any construction work by area — with VAT, waste factor and
+          multiple room support.
+        </div>
+        <div class="splash-features">
+          <div class="sf"><div class="sf-icon">💶</div><div class="sf-text" data-i="sf1">Set your own €/m² rate</div></div>
+          <div class="sf"><div class="sf-icon">📏</div><div class="sf-text" data-i="sf2">Direct m², L×W, or multiple areas</div></div>
+          <div class="sf"><div class="sf-icon">🧾</div><div class="sf-text" data-i="sf3">Waste % and VAT included</div></div>
+          <div class="sf"><div class="sf-icon">🌙</div><div class="sf-text" data-i="sf4">Dark, light & system theme</div></div>
+        </div>
+        <hr class="splash-divider" />
+        <div class="splash-lang">
+          <button type="button" class="sl-btn active" id="sl-en" data-lang="en">🇺🇸 EN</button>
+          <button type="button" class="sl-btn" id="sl-sk" data-lang="sk">🇸🇰 SK</button>
+          <button type="button" class="sl-btn" id="sl-de" data-lang="de">🇩🇪 DE</button>
+        </div>
+        <hr class="splash-divider" />
+        <label class="splash-check">
+          <div class="cbox" id="splash-cbox">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <polyline points="1.5,6.5 5,10 11.5,3" stroke="#141820" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+          </div>
+          <span data-i="splash_dontshow">Don't show this again</span>
+        </label>
+        <button type="button" class="splash-btn" data-i="splash_btn">Get Started →</button>
+      </div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+      <div class="logo">m² <em>Calc</em></div>
+      <div class="header-controls">
+        <!-- THEME BUTTON -->
+        <div style="position:relative;">
+          <button type="button" class="hbtn" id="theme-btn">
+            <svg id="theme-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <span id="theme-label">Dark</span>
+          </button>
+          <div class="dropdown" id="theme-menu">
+            <div class="dd-item" data-theme="dark">
+              <span class="dd-icon">🌙</span><span data-i="theme_dark">Dark</span><span class="dd-check" id="thck-dark">✓</span>
+            </div>
+            <div class="dd-item" data-theme="light">
+              <span class="dd-icon">☀️</span><span data-i="theme_light">Light</span><span class="dd-check" id="thck-light">✓</span>
+            </div>
+            <div class="dd-item" data-theme="system">
+              <span class="dd-icon">⚙️</span><span data-i="theme_system">System</span><span class="dd-check" id="thck-system">✓</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- LANGUAGE BUTTON -->
+        <div style="position:relative;">
+          <button type="button" class="hbtn" id="lang-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+            <span id="lang-label">EN</span>
+          </button>
+          <div class="dropdown" id="lang-menu">
+            <div class="dd-item" data-lang="en">
+              <span class="dd-icon">🇺🇸</span><span>English (US)</span><span class="dd-check" id="lngck-en">✓</span>
+            </div>
+            <div class="dd-item" data-lang="sk">
+              <span class="dd-icon">🇸🇰</span><span>Slovenčina</span><span class="dd-check" id="lngck-sk">✓</span>
+            </div>
+            <div class="dd-item" data-lang="de">
+              <span class="dd-icon">🇩🇪</span><span>Deutsch</span><span class="dd-check" id="lngck-de">✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN PAGE -->
+    <div class="page">
+      <div class="sec" data-i="sec_rate"></div>
+      <div class="card mb">
+        <label for="rate" data-i="lbl_rate"></label>
+        <div class="rate-wrap">
+          <span class="pre">€</span>
+          <input type="number" id="rate" inputmode="decimal" data-i-ph="ph_rate" />
+          <span class="suf">/m²</span>
+        </div>
+      </div>
+
+      <div class="card mb">
+        <div class="r2">
+          <div>
+            <label for="waste" data-i="lbl_waste"></label>
+            <input type="number" id="waste" inputmode="decimal" data-i-ph="ph_waste" />
+          </div>
+          <div>
+            <label for="vat" data-i="lbl_vat"></label>
+            <input type="number" id="vat" inputmode="decimal" data-i-ph="ph_vat" />
+          </div>
+        </div>
+      </div>
+
+      <div class="sec" data-i="sec_area"></div>
+      <div class="card mb">
+        <div class="tabs">
+          <div class="tab active" id="tab-direct" data-i="tab_direct"></div>
+          <div class="tab" id="tab-lw" data-i="tab_lw"></div>
+          <div class="tab" id="tab-multi" data-i="tab_multi"></div>
+        </div>
+
+        <div id="inp-direct">
+          <label for="area-direct" data-i="lbl_area_direct"></label>
+          <input type="number" id="area-direct" inputmode="decimal" data-i-ph="ph_area" />
+        </div>
+
+        <div id="inp-lw" style="display:none;">
+          <div class="r2 mb">
+            <div>
+              <label for="lw-l" data-i="lbl_length"></label>
+              <input type="number" id="lw-l" inputmode="decimal" placeholder="5.0" />
+            </div>
+            <div>
+              <label for="lw-w" data-i="lbl_width"></label>
+              <input type="number" id="lw-w" inputmode="decimal" placeholder="4.8" />
+            </div>
+          </div>
+          <div class="lw-prev" id="lw-prev"></div>
+        </div>
+
+        <div id="inp-multi" style="display:none;">
+          <div id="multi-list"></div>
+          <button type="button" class="add-btn" id="add-area-btn">+ <span data-i="btn_add_area"></span></button>
+          <div class="mtotal" id="mtotal"></div>
+        </div>
+      </div>
+
+      <div class="sec" data-i="sec_result"></div>
+      <div id="result-wrap"></div>
+
+      <button type="button" class="reset-btn" id="reset-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.5"></path>
+        </svg>
+        <span data-i="btn_reset"></span>
+      </button>
+    </div>
+  </body>
+</html>
+
+<script>
+  import '../../scripts/tools/m2-calc';
+</script>

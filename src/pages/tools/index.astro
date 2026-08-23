@@ -1,0 +1,253 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { SITE } from '../../data/site';
+import { TOOLS, TOOLS_SECTION } from '../../data/tools';
+
+const toolsUrlBase = '/tools';
+---
+
+<BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
+  <div class="page">
+    <div class="site-header">
+      <h1><span class="cube"></span> <a href="/">{SITE.name}</a> Tools</h1>
+    </div>
+
+    <p class="site-desc">{TOOLS_SECTION.description}</p>
+
+    <div class="tool-list">
+      {
+        TOOLS.map((tool) => (
+          <a href={`${toolsUrlBase}/${tool.slug}/`} class="tool-item">
+            <div class="tool-item-left">
+              <div class="tool-item-icon">
+                <Icon name={tool.icon} />
+              </div>
+              <div class="tool-item-info">
+                <h3>{tool.name}</h3>
+                <p>{tool.description}</p>
+                {tool.tags.map((tag) => (
+                  <span class="tool-tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+            <span class="tool-item-arrow">
+              <Icon name="arrow-right" />
+            </span>
+          </a>
+        ))
+      }
+    </div>
+
+    <footer class="footer">
+      © {new Date().getFullYear()} <b>{SITE.name}</b>
+      &bull;
+      <a href={SITE.sourceUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="github" /> Source Code
+      </a>
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  :root {
+    --surface-2: #1a1a1c;
+    --border: rgba(255, 255, 255, 0.07);
+    --accent-dim: rgba(255, 65, 54, 0.12);
+    --radius: 4px;
+    --t: 0.25s ease;
+  }
+
+  ::selection {
+    background: rgba(255, 65, 54, 0.4);
+  }
+
+  .page {
+    width: 100%;
+    max-width: 680px;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  /* Header */
+  .site-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2.5rem 0 0.4rem;
+    position: relative;
+    min-height: 2.8rem;
+  }
+
+  .site-header h1 {
+    font-family: Aldrich, sans-serif;
+    font-size: 1.8rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+  }
+
+  .site-header a:hover {
+    text-decoration: underline;
+  }
+
+  .cube {
+    display: inline-block;
+    width: 0.82em;
+    height: 0.82em;
+    background: var(--accent);
+    transform: translateY(-0.12em);
+    flex-shrink: 0;
+  }
+
+  .site-desc {
+    text-align: center;
+    color: var(--secondary-text);
+    font-size: 0.95rem;
+    margin: 0.6rem 0 2.5rem;
+    line-height: 1.6;
+    max-width: 520px;
+    align-self: center;
+  }
+
+  /* Tool list */
+  .tool-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .tool-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.4rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all var(--t);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .tool-item:hover {
+    background: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
+    transform: translateX(6px);
+    border-color: rgba(255, 65, 54, 0.2);
+  }
+
+  .tool-item-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .tool-item-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(255, 65, 54, 0.2);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    transition: all var(--t);
+  }
+
+  .tool-item:hover .tool-item-icon {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .tool-item-info {
+    min-width: 0;
+  }
+
+  .tool-item-info h3 {
+    font-family: Verdana, sans-serif;
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin: 0 0 0.2rem;
+    color: var(--primary-text);
+  }
+
+  .tool-item-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--secondary-text);
+    line-height: 1.45;
+    padding-right: 1rem;
+  }
+
+  .tool-item-arrow {
+    display: inline-flex;
+    font-size: 1rem;
+    color: var(--secondary-text);
+    flex-shrink: 0;
+    transition: all var(--t);
+  }
+
+  .tool-item:hover .tool-item-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  /* Tool tag */
+  .tool-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 0.1rem 0.45rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    color: var(--secondary-text);
+    margin-top: 0.3rem;
+    font-family: 'Courier New', monospace;
+    text-transform: lowercase;
+  }
+
+  /* Footer */
+  .footer {
+    width: 100%;
+    padding: 2rem 0 1.5rem;
+    color: var(--secondary-text);
+    opacity: 0.65;
+    font-size: 0.95rem;
+    text-align: center;
+    margin-top: auto;
+  }
+
+  .footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .footer a:hover,
+  .footer a:active {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 580px) {
+    .site-header h1 {
+      font-size: 1.5rem;
+    }
+    .tool-item {
+      padding: 1rem;
+    }
+    .tool-item-info p {
+      display: none;
+    }
+  }
+</style>

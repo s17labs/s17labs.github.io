@@ -1,0 +1,207 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+import '../../styles/tools/icon-maker.css';
+
+const title = 'Icon Maker | s17 Labs Tools';
+const description =
+  'Generate and export custom icons from Font Awesome, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
+const tagline =
+  'Generate custom icons from Font Awesome, Noto Emoji, or Twemoji. Control colors, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
+---
+
+<ToolLayout title={title} description={description} heading="Icon Maker" tagline={tagline} maxWidth={900}>
+  <div class="workspace">
+    <!-- Preview -->
+    <div class="panel preview-panel">
+      <div class="panel-title">Preview</div>
+      <div class="canvas-wrapper">
+        <div id="preview-container">
+          <div class="icon-placeholder" id="placeholder">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
+            <p>Enter an icon name or emoji to begin</p>
+          </div>
+          <div class="preview-loading" id="preview-loading">
+            <span style="display:inline-flex;"><Icon name="circle-notch" class="spin-icon" /></span>
+            <span>Fetching emoji…</span>
+          </div>
+        </div>
+      </div>
+      <div class="preview-meta" id="preview-meta" style="display:none;">
+        <div class="preview-badge">source: <span id="meta-source">—</span></div>
+        <div class="preview-badge">icon: <span id="meta-icon">—</span></div>
+        <div class="preview-badge">bg: <span id="meta-bg">—</span></div>
+      </div>
+      <div class="android-preview" id="android-preview">
+        <div class="android-preview-title">Android Adaptive Preview</div>
+        <div class="android-sizes-row" id="android-sizes-row"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-col">
+      <!-- Icon panel -->
+      <div class="panel">
+        <div class="panel-title">Icon</div>
+
+        <!-- Source selector -->
+        <div class="source-row">
+          <button type="button" class="source-btn active" data-source="fa">
+            <span class="src-ico"><Icon name="icons" /></span>
+            <span class="src-lbl">Font Awesome</span>
+          </button>
+          <button type="button" class="source-btn" data-source="noto">
+            <span class="src-ico">🌈</span>
+            <span class="src-lbl">Noto Emoji</span>
+          </button>
+          <button type="button" class="source-btn" data-source="twemoji">
+            <span class="src-ico">🐦</span>
+            <span class="src-lbl">Twemoji</span>
+          </button>
+        </div>
+
+        <div class="field">
+          <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
+          <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
+          <div class="error-msg" id="error-msg">Icon not found — check spelling at fontawesome.com/icons</div>
+        </div>
+      </div>
+
+      <!-- Colors panel -->
+      <div class="panel">
+        <div class="panel-title">Colors</div>
+        <div class="color-row">
+          <div class="color-field" id="icon-color-field">
+            <label>Icon Color</label>
+            <div class="cp-row" id="cp-row-icon">
+              <button type="button" class="cp-swatch" id="cp-swatch-icon" data-target="icon" aria-label="Pick icon color">
+                <div class="cp-swatch-fill" id="cp-fill-icon" style="background:#ffffff"></div>
+              </button>
+              <input class="cp-hex-input" id="cp-hex-icon" type="text" value="#ffffff" maxlength="7" spellcheck="false" autocomplete="off" />
+            </div>
+            <span class="cp-fa-only" id="cp-fa-only-note">FA only — emoji use own colors</span>
+          </div>
+          <div class="color-field">
+            <label>Background</label>
+            <div class="cp-row" id="cp-row-bg">
+              <button type="button" class="cp-swatch" id="cp-swatch-bg" data-target="bg" aria-label="Pick background color">
+                <div class="cp-swatch-fill" id="cp-fill-bg" style="background:#ff4136"></div>
+              </button>
+              <input class="cp-hex-input" id="cp-hex-bg" type="text" value="#ff4136" maxlength="7" spellcheck="false" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared picker popup -->
+      <div class="cp-popup" id="cp-popup">
+        <div class="cp-canvas-wrap" id="cp-canvas-wrap">
+          <canvas class="cp-canvas" id="cp-canvas" width="200" height="148"></canvas>
+          <div class="cp-cursor" id="cp-cursor"></div>
+        </div>
+        <div class="cp-hue-track">
+          <input type="range" class="cp-hue" id="cp-hue" min="0" max="360" step="1" value="0" />
+        </div>
+        <div class="cp-bottom">
+          <div class="cp-preview"><div class="cp-preview-fill" id="cp-preview-fill"></div></div>
+          <input class="cp-hex-popup" id="cp-hex-popup" type="text" maxlength="7" spellcheck="false" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- Shape + scale -->
+      <div class="panel">
+        <div class="panel-title">Background Shape</div>
+        <div class="shape-row">
+          <button type="button" class="shape-btn" data-shape="none">
+            <div class="shape-icon none"></div>
+            None
+          </button>
+          <button type="button" class="shape-btn active" data-shape="circle">
+            <div class="shape-icon circle"></div>
+            Circle
+          </button>
+          <button type="button" class="shape-btn" data-shape="rounded">
+            <div class="shape-icon rounded"></div>
+            Rounded
+          </button>
+          <button type="button" class="shape-btn" data-shape="square">
+            <div class="shape-icon square"></div>
+            Square
+          </button>
+        </div>
+        <hr class="divider" />
+        <div class="field">
+          <label for="icon-scale">Icon Scale — <span id="size-label">70%</span></label>
+          <input type="range" id="icon-scale" min="20" max="90" value="70" />
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="panel">
+        <div class="panel-title">Export</div>
+
+        <label style="display:block;margin-bottom:0.45rem;">Resolution Presets</label>
+        <div class="preset-grid">
+          <button type="button" class="preset-btn">16px</button>
+          <button type="button" class="preset-btn">32px</button>
+          <button type="button" class="preset-btn">64px</button>
+          <button type="button" class="preset-btn active">128px</button>
+          <button type="button" class="preset-btn">256px</button>
+          <button type="button" class="preset-btn">512px</button>
+          <button type="button" class="preset-btn">1024px</button>
+          <button type="button" class="preset-btn">2048px</button>
+        </div>
+
+        <label style="display:block;margin-bottom:0.45rem;" for="custom-w">Custom Size</label>
+        <div class="custom-res">
+          <input type="text" id="custom-w" value="128" style="text-align:center;" />
+          <span>×</span>
+          <input type="text" id="custom-h" value="128" style="text-align:center;" />
+          <span>px</span>
+        </div>
+
+        <div class="export-row">
+          <button type="button" class="export-btn" data-fmt="svg"><span class="fmt">SVG</span> Export</button>
+          <button type="button" class="export-btn" data-fmt="png"><span class="fmt">PNG</span> Export</button>
+        </div>
+
+        <div class="android-divider"><hr /><span>Android</span><hr /></div>
+
+        <label class="checkbox-row" id="material-row" for="material-toggle">
+          <div class="custom-checkbox">
+            <input type="checkbox" id="material-toggle" />
+            <div class="checkbox-box"><Icon name="check" /></div>
+          </div>
+          <div class="checkbox-text">
+            <span class="checkbox-label">Include Material You / Themed Icons</span>
+            <span class="checkbox-sub" id="material-sub">Adds &lt;monochrome&gt; layer for Android 13+</span>
+          </div>
+        </label>
+
+        <button type="button" class="android-btn" id="android-btn">
+          <span style="font-size:1.05rem;display:inline-flex;"><Icon name="android" /></span>
+          <span>
+            <span class="android-label">Export Android Package</span>
+            <span class="android-sub">· .zip</span>
+          </span>
+        </button>
+
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
+          <div class="progress-label" id="progress-label">Preparing…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/icon-maker';
+</script>
+
+<style is:global>
+  .spin-icon {
+    animation: s17-spin 2s infinite linear;
+    display: inline-flex;
+  }
+</style>

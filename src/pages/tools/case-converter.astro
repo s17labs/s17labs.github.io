@@ -1,0 +1,168 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { FORMATS, DEFAULT_FORMAT_ID } from '../../scripts/tools/case-converter';
+
+const title = 'Case Converter | s17 Labs Tools';
+const description =
+  'Convert strings between 15 programming and writing conventions — camelCase, snake_case, kebab-case, PascalCase, and more.';
+const tagline = 'Convert text between 15 programming conventions and writing formats — instantly, in your browser.';
+---
+
+<ToolLayout title={title} description={description} heading="Case Converter" tagline={tagline}>
+  <!-- Input -->
+  <div class="panel">
+    <div class="panel-title">Input</div>
+    <textarea id="input" placeholder="Type or paste text here…" spellcheck="false" autocomplete="off"></textarea>
+  </div>
+
+  <!-- Format selector -->
+  <div class="panel">
+    <div class="panel-title">Format</div>
+    <div class="case-grid" id="case-grid">
+      {
+        FORMATS.map((fmt) => (
+          <button
+            type="button"
+            class:list={['case-btn', { active: fmt.id === DEFAULT_FORMAT_ID }]}
+            data-id={fmt.id}
+          >
+            <span>{fmt.label}</span>
+            <span class="case-preview">{fmt.preview}</span>
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="panel">
+    <div class="panel-title">Output</div>
+    <div class="output-wrap">
+      <textarea id="output" readonly spellcheck="false"></textarea>
+      <button type="button" class="copy-btn" id="copy-btn">
+        <span class="copy-state copy-idle"><Icon name="copy" /> Copy</span>
+        <span class="copy-state copy-done"><Icon name="check" /> Copied</span>
+      </button>
+    </div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/case-converter';
+</script>
+
+<style>
+  /* Textarea */
+  textarea {
+    padding: 0.8rem;
+  }
+
+  textarea#output {
+    resize: none;
+    min-height: 90px;
+    cursor: default;
+  }
+
+  /* Case format buttons */
+  .case-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .case-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--t);
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .case-btn:hover {
+    border-color: rgba(255, 65, 54, 0.4);
+    color: var(--primary-text);
+  }
+
+  .case-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--primary-text);
+  }
+
+  .case-preview {
+    font-size: 0.65rem;
+    color: var(--secondary-text);
+    opacity: 0.6;
+    font-family: 'Courier New', monospace;
+  }
+
+  .case-btn.active .case-preview {
+    opacity: 0.8;
+  }
+
+  /* Output */
+  .output-wrap {
+    position: relative;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.3rem 0.65rem;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Copy / Copied state swap */
+  .copy-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .copy-done {
+    display: none;
+  }
+
+  .copy-btn.copied .copy-idle {
+    display: none;
+  }
+
+  .copy-btn.copied .copy-done {
+    display: inline-flex;
+  }
+
+  @media (max-width: 580px) {
+    .case-btn {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>

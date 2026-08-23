@@ -1,3 +1,22 @@
+/* Tailwind v4 without preflight — keeps UA defaults (h1 sizing etc.) for
+   pixel parity with the legacy site; utilities remain available. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS — shared across all s17 pages/tools.
+   Exposed to Tailwind via @theme (bg-primary, text-secondary-text, ...)
+   and as raw CSS variables for component styles.
+   ═══════════════════════════════════════════════════ */
+@theme {
+  --color-primary: #0e0e10;
+  --color-accent: #ff4136;
+  --color-primary-text: #f1f1f1;
+  --color-secondary-text: #868686;
+  --color-btn-bg: #1a1a1c;
+}
+
 :root {
   --primary: #0e0e10;
   --accent: #ff4136;
@@ -8,7 +27,7 @@
 
 @font-face {
   font-family: Aldrich;
-  src: url(assets/Aldrich.ttf);
+  src: url('/fonts/Aldrich.ttf');
 }
 
 * {
@@ -16,9 +35,8 @@
 }
 
 body {
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
-  max-width: 700px;
   min-height: 100vh;
   background: var(--primary);
   color: var(--primary-text);

@@ -1,0 +1,480 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'SVG to PNG | s17 Labs Tools';
+const description =
+  'Convert vector graphics to high-quality transparent PNGs locally in your browser.';
+const tagline = 'Convert SVG vectors to transparent PNG files locally — batch supported, nothing leaves your browser.';
+---
+
+<ToolLayout title={title} description={description} heading="SVG to PNG" tagline={tagline} maxWidth={640}>
+  <!-- Upload -->
+  <div class="panel">
+    <div class="panel-title">Upload</div>
+    <div class="drop-zone" id="drop-zone">
+      <!-- Empty state -->
+      <div class="dz-empty" id="dz-empty">
+        <Icon name="bezier-curve" size={29} />
+        <p>Drag &amp; drop SVG files here, or click to select</p>
+        <span>Batch conversion supported &middot; transparent PNG output</span>
+      </div>
+      <!-- Filled state -->
+      <div class="dz-filled" id="dz-filled">
+        <div class="dz-preview-grid" id="dz-preview-grid"></div>
+        <div class="dz-filled-meta">
+          <span id="dz-count-label"></span>
+          <button type="button" class="dz-change" id="dz-change-btn">
+            <Icon name="plus" /> Add / Change
+          </button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept=".svg,image/svg+xml" multiple />
+  </div>
+
+  <!-- Settings -->
+  <div class="panel">
+    <div class="panel-title">Output Size</div>
+    <div class="field">
+      <label for="input-w">Width (px) — height scales automatically</label>
+      <input type="number" id="input-w" value="512" min="1" max="8000" />
+      <span class="field-note">Height is calculated automatically to preserve the SVG's aspect ratio.</span>
+      <div class="scale-row">
+        <button type="button" class="scale-btn">64</button>
+        <button type="button" class="scale-btn">128</button>
+        <button type="button" class="scale-btn">256</button>
+        <button type="button" class="scale-btn active">512</button>
+        <button type="button" class="scale-btn">1024</button>
+        <button type="button" class="scale-btn">2048</button>
+      </div>
+    </div>
+    <button type="button" class="btn" id="convert-btn" disabled>
+      <Icon name="wand-magic-sparkles" />Convert
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="panel" id="results-panel" style="display:none;">
+    <div class="panel-header-row">
+      <div class="panel-title">Output</div>
+    </div>
+    <!-- ZIP / single download progress -->
+    <div class="zip-progress-wrap" id="zip-progress-wrap">
+      <div class="zip-progress-track"><div class="zip-progress-fill" id="zip-progress-fill"></div></div>
+      <div class="zip-progress-label" id="zip-progress-label">Packing…</div>
+    </div>
+    <!-- Download button — label + icon adapt to single vs batch -->
+    <button type="button" class="dl-all-btn" id="dl-all-btn" disabled>
+      <span id="dl-icon"><Icon name="download" /></span>
+      <span id="dl-label">Save PNG</span>
+    </button>
+    <div class="results-list" id="results-list"></div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/svg-to-png';
+</script>
+
+<style>
+  /* Drop zone overrides (block layout, tighter padding than shared base) */
+  .drop-zone {
+    display: block;
+    padding: 2rem 1.5rem;
+  }
+
+  .drop-zone:hover :global(.dz-empty) svg,
+  .drop-zone.drag-over :global(.dz-empty) svg {
+    color: var(--accent);
+  }
+
+  /* Empty state */
+  .dz-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dz-empty svg {
+    color: var(--secondary-text);
+    transition: var(--t);
+  }
+
+  .dz-empty p {
+    color: var(--secondary-text);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  .dz-empty span {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    opacity: 0.6;
+  }
+
+  /* Filled state */
+  .dz-filled {
+    display: none;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .dz-filled.visible {
+    display: flex;
+  }
+
+  /* Desktop: 6 cols */
+  .dz-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.4rem;
+  }
+
+  /* SVG file tile — icon only, no canvas render */
+  .dz-thumb {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+    background: var(--surface-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .dz-thumb :global(.svg-icon) {
+    font-size: 1.1rem;
+    color: var(--secondary-text);
+    line-height: 1;
+  }
+
+  .dz-thumb :global(.svg-name),
+  :global(.svg-name) {
+    font-size: 0.5rem;
+    color: var(--secondary-text);
+    opacity: 0.55;
+    font-family: 'Courier New', monospace;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    padding: 0 2px;
+  }
+
+  /* Desktop solid overflow tile */
+  .dz-thumb.overflow-solid {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .dz-thumb.overflow-solid span {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.82rem;
+    color: var(--primary-text);
+  }
+
+  /* Mobile dimmed overflow tile — still shows icon underneath */
+  .dz-thumb.overflow-img :global(.overflow-dim) {
+    position: absolute;
+    inset: 0;
+    background: rgba(14, 14, 16, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .dz-thumb.overflow-img :global(.overflow-dim) span {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.82rem;
+    color: var(--primary-text);
+  }
+
+  .dz-filled-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--secondary-text);
+  }
+
+  .dz-change {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+    font-family: Verdana, sans-serif;
+    cursor: pointer;
+    transition: all var(--t);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .dz-change:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #file-input {
+    display: none;
+  }
+
+  /* Form fields */
+  .field-note {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    opacity: 0.7;
+  }
+
+  input[type='number'] {
+    font-size: 0.95rem;
+  }
+
+  /* Scale presets */
+  .scale-row {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+  }
+
+  .scale-btn {
+    padding: 0.3rem 0.7rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.72rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all var(--t);
+  }
+
+  .scale-btn:hover {
+    border-color: rgba(255, 65, 54, 0.4);
+    color: var(--primary-text);
+  }
+
+  .scale-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--primary-text);
+  }
+
+  /* Action button — accent state when files loaded */
+  .btn.ready {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .btn.ready:hover {
+    background: #e8382e;
+    border-color: #e8382e;
+  }
+
+  .btn:disabled {
+    background: var(--btn-bg);
+    color: var(--secondary-text);
+    border-color: transparent;
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .btn-fmt {
+    transition: color var(--t);
+  }
+
+  .btn.ready :global(.btn-fmt) {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  /* Results panel */
+  .panel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+  }
+
+  .panel-header-row :global(.panel-title) {
+    margin-bottom: 0;
+  }
+
+  /* Download All — full-width accent */
+  .dl-all-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1.4rem;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    color: #fff;
+    font-size: 1rem;
+    font-family: Verdana, sans-serif;
+    cursor: pointer;
+    transition: all var(--t);
+  }
+
+  .dl-all-btn:hover {
+    background: #e8382e;
+    border-color: #e8382e;
+  }
+
+  .dl-all-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .dl-all-btn :global(svg) {
+    display: inline-flex;
+  }
+
+  /* ZIP progress */
+  .zip-progress-wrap {
+    display: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .zip-progress-wrap.visible {
+    display: block;
+  }
+
+  .zip-progress-track {
+    width: 100%;
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .zip-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.15s ease;
+  }
+
+  .zip-progress-label {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    margin-top: 0.4rem;
+    font-family: 'Courier New', monospace;
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .results-list :global(.result-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* Checkered bg shows transparency */
+  .results-list :global(.result-thumb) {
+    width: 42px;
+    height: 42px;
+    border-radius: 3px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background-image: linear-gradient(45deg, #333 25%, transparent 25%),
+      linear-gradient(-45deg, #333 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #333 75%),
+      linear-gradient(-45deg, transparent 75%, #333 75%);
+    background-size: 8px 8px;
+    background-position:
+      0 0,
+      0 4px,
+      4px -4px,
+      -4px 0;
+    background-color: #1e1e20;
+  }
+
+  .results-list :global(.result-thumb.placeholder) {
+    background-image: none;
+    background-color: var(--surface-3);
+  }
+
+  .results-list :global(.result-info) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .results-list :global(.result-name) {
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-text);
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .results-list :global(.result-meta) {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .results-list :global(.result-dl) {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.38rem 0.7rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .results-list :global(.result-dl:hover) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .results-list :global(.result-dl:disabled) {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* Mobile */
+  @media (max-width: 580px) {
+    /* 4-col grid → 2 rows of 4 = 8 tiles max */
+    .dz-preview-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

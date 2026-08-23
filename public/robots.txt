@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://s17labs.github.io/sitemap-index.xml
