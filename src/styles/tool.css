@@ -1,0 +1,452 @@
+/* ═══════════════════════════════════════════════════
+   s17 Labs Tools — shared design system.
+   Ported from tools/_template.html; imported by ToolLayout.
+   Tool-specific styles live scoped in each page.
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --surface-2: #1a1a1c;
+  --surface-3: #222226;
+  --border: rgba(255, 255, 255, 0.07);
+  --accent-dim: rgba(255, 65, 54, 0.12);
+  --radius: 4px;
+  --t: 0.25s ease;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--t);
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE WRAPPER
+   ═══════════════════════════════════════════════════ */
+.page {
+  width: 100%;
+  max-width: 680px;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   HEADER (back link + centered title)
+   ═══════════════════════════════════════════════════ */
+.tool-header {
+  width: 100%;
+  text-align: center;
+  margin: 2.5rem 0 0.4rem;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 2.8rem;
+}
+
+.back-link {
+  position: absolute;
+  left: 0;
+  background: none;
+  border: none;
+  color: var(--secondary-text);
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: Verdana, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  transition: var(--t);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.tool-header h1 {
+  font-family: Aldrich, sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+}
+
+/* Red cube logo mark */
+.cube {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  background: var(--accent);
+  transform: translateY(-0.12em);
+  flex-shrink: 0;
+}
+
+/* Subtitle below header */
+.tool-desc {
+  text-align: center;
+  color: var(--secondary-text);
+  font-size: 0.95rem;
+  margin: 0.6rem 0 2rem;
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════
+   PANEL (card-style content block)
+   ═══════════════════════════════════════════════════ */
+.panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.panel-title {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--secondary-text);
+  margin-bottom: 1.1rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   FORM ELEMENTS
+   ═══════════════════════════════════════════════════ */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+label {
+  font-size: 0.74rem;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+input[type='text'],
+input[type='number'],
+textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--t);
+}
+
+input[type='text']:focus,
+input[type='number']:focus,
+textarea:focus {
+  border-color: rgba(255, 65, 54, 0.5);
+}
+
+input[type='text']::placeholder,
+textarea::placeholder {
+  color: var(--secondary-text);
+  opacity: 0.45;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+/* Divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.9rem 0;
+}
+
+/* Range slider */
+input[type='range'] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 3px;
+  background: var(--surface-3);
+  border-radius: 99px;
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════
+   DROP ZONE (for file upload tools)
+   ═══════════════════════════════════════════════════ */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t);
+  background: rgba(255, 255, 255, 0.01);
+  user-select: none;
+  position: relative;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.drop-zone p {
+  color: var(--secondary-text);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.drop-zone span {
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+  opacity: 0.6;
+  display: block;
+  margin-top: 0.3rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════ */
+
+/* Primary action button (full width) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  background: var(--btn-bg);
+  border: 1px solid transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius);
+  font-family: Verdana, sans-serif;
+  transition: var(--t);
+  width: 100%;
+}
+
+.btn:hover {
+  background: var(--accent);
+  color: var(--primary-text);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+  background: var(--btn-bg);
+  color: var(--secondary-text);
+}
+
+/* Inline / small button */
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-size: 0.78rem;
+  font-family: Verdana, sans-serif;
+  cursor: pointer;
+  transition: all var(--t);
+}
+
+.btn-sm:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Two-column export row */
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+/* Accent text inside buttons (e.g. file format label) */
+.btn-fmt {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.85rem;
+  color: var(--accent);
+  transition: color var(--t);
+}
+
+.btn:hover .btn-fmt {
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════
+   STATUS / ERROR MESSAGE
+   ═══════════════════════════════════════════════════ */
+.status-msg {
+  font-size: 0.75rem;
+  min-height: 1.1em;
+  opacity: 0;
+  transition: opacity var(--t);
+}
+
+.status-msg.error {
+  color: var(--accent);
+}
+
+.status-msg.success {
+  color: #3ddc84;
+}
+
+.status-msg.visible {
+  opacity: 1;
+}
+
+/* Spinner (replaces Font Awesome fa-spin) */
+.spin {
+  animation: s17-spin 2s infinite linear;
+  display: inline-flex;
+}
+
+@keyframes s17-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   MORE TOOLS SECTION
+   ═══════════════════════════════════════════════════ */
+.more-tools {
+  width: 100%;
+  margin: 2.5rem 0 0;
+  padding: 2rem 0 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.more-tools h3 {
+  font-family: Aldrich, sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 0.55rem;
+}
+
+.more-tools p {
+  color: var(--secondary-text);
+  font-size: 0.9rem;
+  margin-bottom: 1.4rem;
+  line-height: 1.5;
+}
+
+.more-tools-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  background: var(--btn-bg);
+  border: 1px solid transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius);
+  font-family: Verdana, sans-serif;
+  transition: var(--t);
+  text-decoration: none;
+}
+
+.more-tools-btn:hover {
+  background: var(--accent);
+  color: var(--primary-text);
+}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════ */
+.footer {
+  width: 100%;
+  padding: 2rem 0 1.5rem;
+  color: var(--secondary-text);
+  opacity: 0.65;
+  font-size: 0.95rem;
+  text-align: center;
+  margin-top: auto;
+}
+
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer a:hover,
+.footer a:active {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 580px) {
+  .tool-header h1 {
+    font-size: 1.5rem;
+  }
+  .btn-row {
+    grid-template-columns: 1fr;
+  }
+}

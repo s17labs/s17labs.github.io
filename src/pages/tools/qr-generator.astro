@@ -1,0 +1,269 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'QR Code Generator | s17 Labs Tools';
+const description =
+  'Generate QR codes from any text or URL with custom colors and sizes. Export as PNG or SVG.';
+const tagline = 'Generate QR codes from any text or URL. Customize size and colors, then export as PNG or SVG.';
+---
+
+<ToolLayout title={title} description={description} heading="QR Generator" tagline={tagline} maxWidth={640}>
+  <!-- Input Panel -->
+  <div class="panel">
+    <div class="panel-title">Input</div>
+    <div class="field">
+      <label for="qr-input">Text / URL</label>
+      <textarea id="qr-input" placeholder="https://example.com or any text…" maxlength="2953"></textarea>
+      <div class="char-count" id="char-count">0 / 2953</div>
+      <div class="status-msg error" id="error-msg">Please enter some text or a URL.</div>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="panel">
+    <div class="panel-title">Settings</div>
+
+    <div class="field">
+      <div class="label-row">
+        <label for="qr-size">Size</label>
+        <span class="label-val" id="size-val">256 px</span>
+      </div>
+      <input type="range" id="qr-size" min="128" max="512" step="8" value="256" />
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field">
+      <label for="qr-ec">Error Correction</label>
+      <select id="qr-ec">
+        <option value="L">L — Low (7%)</option>
+        <option value="M" selected>M — Medium (15%)</option>
+        <option value="Q">Q — Quartile (25%)</option>
+        <option value="H">H — High (30%)</option>
+      </select>
+    </div>
+
+    <hr class="divider" />
+
+    <div class="color-row">
+      <div class="color-field">
+        <label for="qr-fg-picker">Foreground</label>
+        <div class="color-input-wrap">
+          <input type="color" id="qr-fg-picker" value="#f1f1f1" />
+          <input type="text" id="qr-fg-hex" class="color-hex" value="F1F1F1" maxlength="6" />
+        </div>
+      </div>
+      <div class="color-field">
+        <label for="qr-bg-picker">Background</label>
+        <div class="color-input-wrap">
+          <input type="color" id="qr-bg-picker" value="#0e0e10" />
+          <input type="text" id="qr-bg-hex" class="color-hex" value="0E0E10" maxlength="6" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Panel -->
+  <div class="panel">
+    <div class="panel-title">Preview</div>
+    <div class="preview-wrap">
+      <div id="qr-container">
+        <div class="qr-placeholder" id="qr-placeholder">
+          <Icon name="qrcode" size={40} />
+          <span>Your QR code will appear here</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Panel -->
+  <div class="panel">
+    <div class="panel-title">Export</div>
+    <div class="btn-row">
+      <button type="button" class="btn" id="btn-png" disabled>
+        <span class="btn-fmt">PNG</span> Download
+      </button>
+      <button type="button" class="btn" id="btn-svg" disabled>
+        <span class="btn-fmt">SVG</span> Download
+      </button>
+    </div>
+    <div class="status-msg success" id="export-msg">Downloaded successfully.</div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/qr-generator';
+</script>
+
+<style>
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .label-val {
+    font-size: 0.74rem;
+    color: var(--primary-text);
+    font-family: 'Courier New', monospace;
+  }
+
+  textarea {
+    min-height: 80px;
+  }
+
+  /* Select */
+  select {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--primary-text);
+    font-family: Verdana, sans-serif;
+    font-size: 0.88rem;
+    padding: 0.6rem 0.8rem;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    transition: border-color var(--t);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23868686'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+  }
+
+  select:focus {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  /* Color picker row */
+  .color-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  .color-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .color-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.7rem;
+    transition: border-color var(--t);
+  }
+
+  .color-input-wrap:focus-within {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  input[type='color'] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+  }
+
+  input[type='color']::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  input[type='color']::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+  }
+
+  .color-hex {
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    width: 100%;
+    outline: none;
+    text-transform: uppercase;
+    padding: 0;
+  }
+
+  /* Preview */
+  .preview-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.8rem;
+    min-height: 220px;
+  }
+
+  #qr-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #qr-container :global(canvas),
+  #qr-container :global(img) {
+    display: block;
+    border-radius: 2px;
+    max-width: 100%;
+    max-height: 280px;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .qr-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--secondary-text);
+  }
+
+  .qr-placeholder svg {
+    opacity: 0.3;
+  }
+
+  .qr-placeholder span {
+    font-size: 0.85rem;
+    opacity: 0.5;
+  }
+
+  /* Status msg spacing */
+  .status-msg {
+    margin-top: 0.5rem;
+  }
+
+  /* Char counter */
+  .char-count {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    text-align: right;
+    margin-top: 0.3rem;
+    opacity: 0.6;
+  }
+
+  .char-count.warn {
+    color: #f0a500;
+    opacity: 1;
+  }
+
+  @media (max-width: 580px) {
+    .color-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

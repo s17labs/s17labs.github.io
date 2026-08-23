@@ -1,0 +1,480 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Image Resizer | s17 Labs Tools';
+const description =
+  'Batch resize images with aspect ratio locking and high-quality output.';
+const tagline = 'Batch resize images directly in your browser — nothing is uploaded to any server.';
+---
+
+<ToolLayout title={title} description={description} heading="Image Resizer" tagline={tagline} maxWidth={640}>
+  <!-- Upload -->
+  <div class="panel">
+    <div class="panel-title">Upload</div>
+    <div class="drop-zone" id="drop-zone">
+      <div class="dz-empty" id="dz-empty">
+        <Icon name="cloud-arrow-up" size={29} />
+        <p>Drag &amp; drop images here, or click to select</p>
+        <span>PNG, JPG, GIF, WEBP &mdash; batch supported</span>
+      </div>
+      <div class="dz-filled" id="dz-filled">
+        <div class="dz-preview-grid" id="dz-preview-grid"></div>
+        <div class="dz-filled-meta">
+          <span id="dz-count-label"></span>
+          <button type="button" class="dz-change" id="dz-change-btn">
+            <Icon name="plus" /> Add / Change
+          </button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" multiple />
+  </div>
+
+  <!-- Settings -->
+  <div class="panel">
+    <div class="panel-title">Resize Settings</div>
+    <div class="field">
+      <label for="input-w">Dimensions (px)</label>
+      <div class="input-row">
+        <input type="number" id="input-w" placeholder="Width" min="1" max="8000" value="800" />
+        <span class="input-sep">×</span>
+        <input type="number" id="input-h" placeholder="Height" min="1" max="8000" value="600" />
+      </div>
+    </div>
+    <div class="field">
+      <div class="toggle-row" id="aspect-toggle-row">
+        <div class="toggle-track on" id="aspect-track">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label" id="aspect-label">Lock Aspect Ratio</span>
+      </div>
+    </div>
+    <button type="button" class="btn" id="resize-btn" disabled>
+      <Icon name="scissors" /> Resize Images
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="panel" id="results-panel" style="display:none;">
+    <div class="panel-header-row">
+      <div class="panel-title">Output</div>
+    </div>
+    <!-- ZIP progress -->
+    <div class="zip-progress-wrap" id="zip-progress-wrap">
+      <div class="zip-progress-track"><div class="zip-progress-fill" id="zip-progress-fill"></div></div>
+      <div class="zip-progress-label" id="zip-progress-label">Packing…</div>
+    </div>
+    <!-- Download button — label/icon adapt to single vs batch -->
+    <button type="button" class="dl-all-btn" id="dl-all-btn" disabled>
+      <span id="dl-icon"><Icon name="download" /></span>
+      <span id="dl-label">Download Image</span>
+    </button>
+    <div class="results-list" id="results-list"></div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/image-resizer';
+</script>
+
+<style>
+  /* Drop zone overrides (block layout) */
+  .drop-zone {
+    display: block;
+  }
+
+  .drop-zone:hover :global(.dz-empty) svg,
+  .drop-zone.drag-over :global(.dz-empty) svg {
+    color: var(--accent);
+  }
+
+  /* Empty state */
+  .dz-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dz-empty svg {
+    color: var(--secondary-text);
+    transition: var(--t);
+  }
+
+  .dz-empty p {
+    color: var(--secondary-text);
+    font-size: 0.88rem;
+    margin: 0;
+  }
+
+  .dz-empty span {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    opacity: 0.6;
+  }
+
+  /* Filled state */
+  .dz-filled {
+    display: none;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .dz-filled.visible {
+    display: flex;
+  }
+
+  /* Desktop: 6 cols */
+  .dz-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.4rem;
+  }
+
+  .dz-thumb {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+    background: var(--surface-3);
+  }
+
+  .dz-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Desktop solid overflow tile (no image) */
+  .dz-thumb.overflow-solid {
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dz-thumb.overflow-solid span {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.82rem;
+    color: var(--primary-text);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Mobile dimmed-image overflow tile */
+  .dz-thumb.overflow-img :global(.overflow-dim) {
+    position: absolute;
+    inset: 0;
+    background: rgba(14, 14, 16, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .dz-thumb.overflow-img :global(.overflow-dim) span {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.82rem;
+    color: var(--primary-text);
+  }
+
+  .dz-filled-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--secondary-text);
+  }
+
+  .dz-change {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+    font-family: Verdana, sans-serif;
+    cursor: pointer;
+    transition: all var(--t);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .dz-change:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #file-input {
+    display: none;
+  }
+
+  /* Form fields */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .input-sep {
+    color: var(--secondary-text);
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  input[type='number'] {
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-track {
+    width: 34px;
+    height: 18px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    position: relative;
+    transition: background var(--t);
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-track.on {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .toggle-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--secondary-text);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all var(--t);
+  }
+
+  .toggle-track.on :global(.toggle-thumb),
+  .toggle-track.on .toggle-thumb {
+    left: 18px;
+    background: #fff;
+  }
+
+  .toggle-label {
+    font-size: 0.85rem;
+    color: var(--secondary-text);
+    transition: var(--t);
+  }
+
+  .toggle-row:has(.toggle-track.on) .toggle-label {
+    color: var(--primary-text);
+  }
+
+  /* Action button — accent state when files loaded */
+  .btn.ready {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .btn.ready:hover {
+    background: #e8382e;
+    border-color: #e8382e;
+  }
+
+  .btn:disabled {
+    background: var(--btn-bg);
+    color: var(--secondary-text);
+    border-color: transparent;
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .btn:not(.ready):not(:disabled) {
+    color: var(--accent);
+  }
+
+  .btn:not(.ready):not(:disabled):hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Results panel */
+  .panel-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+  }
+
+  .panel-header-row :global(.panel-title) {
+    margin-bottom: 0;
+  }
+
+  /* Download All — accent, full width */
+  .dl-all-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1.4rem;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    font-family: Verdana, sans-serif;
+    cursor: pointer;
+    transition: all var(--t);
+  }
+
+  .dl-all-btn:hover {
+    background: #e8382e;
+    border-color: #e8382e;
+  }
+
+  .dl-all-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .dl-all-btn :global(svg) {
+    display: inline-flex;
+  }
+
+  /* Progress bar inside output panel */
+  .zip-progress-wrap {
+    display: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .zip-progress-wrap.visible {
+    display: block;
+  }
+
+  .zip-progress-track {
+    width: 100%;
+    height: 3px;
+    background: var(--surface-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .zip-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.15s ease;
+  }
+
+  .zip-progress-label {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    margin-top: 0.4rem;
+    font-family: 'Courier New', monospace;
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .results-list :global(.result-item) {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .results-list :global(.result-thumb) {
+    width: 42px;
+    height: 42px;
+    border-radius: 3px;
+    object-fit: contain;
+    background: var(--surface-3);
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .results-list :global(.result-info) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .results-list :global(.result-name) {
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+    color: var(--primary-text);
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .results-list :global(.result-meta) {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .results-list :global(.result-dl) {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.38rem 0.7rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .results-list :global(.result-dl:hover) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .results-list :global(.result-dl:disabled) {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* Mobile */
+  @media (max-width: 580px) {
+    /* 4-col grid → 8 tiles max */
+    .dz-preview-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

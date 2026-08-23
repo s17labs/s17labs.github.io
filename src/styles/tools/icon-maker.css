@@ -1,0 +1,853 @@
+/* ═══════════════════════════════════════════════════
+   s17 Labs Tools — Icon Maker page styles.
+   Imported globally by src/pages/tools/icon-maker.astro
+   (JS-generated markup relies on unscoped selectors).
+   Shared design system lives in tool.css.
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  --android: #3ddc84;
+  --android-dim: rgba(61, 220, 132, 0.12);
+}
+
+/* Layout overrides: workspace is a grid, panels have no bottom margin */
+.page {
+  max-width: 900px;
+}
+
+.tool-desc {
+  margin: 0.6rem 0 2.5rem;
+}
+
+.panel {
+  margin-bottom: 0;
+}
+
+.field {
+  margin-bottom: 0;
+}
+
+/* Workspace */
+.workspace {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* Preview */
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.canvas-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: var(--radius);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+  min-height: 260px;
+}
+
+#preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.preview-badge {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+}
+
+.preview-badge span {
+  color: var(--primary-text);
+}
+
+/* Android preview */
+.android-preview {
+  display: none;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.android-preview.visible {
+  display: flex;
+}
+
+.android-preview-title {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: Aldrich, sans-serif;
+}
+
+.android-sizes-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.android-size-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.android-size-item canvas {
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.android-size-item span {
+  font-size: 0.62rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+}
+
+/* Loading spinner in preview */
+.preview-loading {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--secondary-text);
+  opacity: 0.5;
+  font-size: 0.78rem;
+}
+
+.preview-loading.visible {
+  display: flex;
+}
+
+.preview-loading svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* Controls */
+.controls-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input[type='text'] {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--t);
+}
+
+input[type='text']:focus {
+  border-color: rgba(255, 65, 54, 0.5);
+}
+
+input[type='text']::placeholder {
+  color: var(--secondary-text);
+  opacity: 0.5;
+}
+
+/* ── Source selector ── */
+.source-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.source-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.55rem 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--t);
+  color: var(--secondary-text);
+  font-size: 0.68rem;
+  font-family: Verdana, sans-serif;
+}
+
+.source-btn:hover {
+  border-color: rgba(255, 65, 54, 0.4);
+  color: var(--primary-text);
+}
+
+.source-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.source-btn .src-ico {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+}
+
+.source-btn .src-lbl {
+  font-size: 0.65rem;
+  font-family: Aldrich, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+/* emoji input (larger for pasting actual emoji) */
+input.emoji-input {
+  font-size: 1.3rem;
+  padding: 0.45rem 0.8rem;
+  line-height: 1.4;
+}
+
+/* Icon color disabled for emoji */
+.color-field.cp-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.cp-fa-only {
+  font-size: 0.65rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+  margin-top: 0.2rem;
+  opacity: 0.6;
+  display: none;
+}
+
+.cp-fa-only.visible {
+  display: block;
+}
+
+/* Custom color picker */
+.color-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.cp-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--t);
+}
+
+.cp-row:focus-within,
+.cp-row.open {
+  border-color: rgba(255, 65, 54, 0.5);
+}
+
+.cp-swatch {
+  width: 40px;
+  flex-shrink: 0;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: filter var(--t);
+}
+
+.cp-swatch:hover {
+  filter: brightness(1.18);
+}
+
+.cp-swatch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #555 25%, transparent 25%),
+    linear-gradient(-45deg, #555 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #555 75%),
+    linear-gradient(-45deg, transparent 75%, #555 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+  background-color: #2a2a2a;
+}
+
+.cp-swatch-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.cp-hex-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  padding: 0 0.65rem;
+  caret-color: var(--accent);
+  height: 36px;
+}
+
+/* Picker popup */
+.cp-popup {
+  position: fixed;
+  z-index: 9000;
+  background: #1c1c1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+  width: 220px;
+  display: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.cp-popup.visible {
+  display: block;
+}
+
+.cp-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 148px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.cp-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cp-cursor {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.cp-hue-track {
+  margin-top: 9px;
+  height: 11px;
+  border-radius: 99px;
+  position: relative;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+input.cp-hue {
+  position: absolute;
+  inset: -3px 0;
+  width: 100%;
+  height: calc(100% + 6px);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  border: none;
+  outline: none;
+}
+
+input.cp-hue::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+input.cp-hue::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  border: none;
+}
+
+.cp-bottom {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.cp-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.cp-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #555 25%, transparent 25%),
+    linear-gradient(-45deg, #555 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #555 75%),
+    linear-gradient(-45deg, transparent 75%, #555 75%);
+  background-size: 7px 7px;
+  background-position:
+    0 0,
+    0 3.5px,
+    3.5px -3.5px,
+    -3.5px 0;
+  background-color: #2a2a2a;
+}
+
+.cp-preview-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.cp-hex-popup {
+  flex: 1;
+  min-width: 0;
+  background: #252527;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+  transition: border-color var(--t);
+  caret-color: var(--accent);
+}
+
+.cp-hex-popup:focus {
+  border-color: rgba(255, 65, 54, 0.5);
+}
+
+/* Shape buttons */
+.shape-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+}
+
+.shape-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--t);
+  color: var(--secondary-text);
+  font-size: 0.68rem;
+  font-family: Verdana, sans-serif;
+}
+
+.shape-btn:hover {
+  border-color: rgba(255, 65, 54, 0.4);
+  color: var(--primary-text);
+}
+
+.shape-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.shape-icon {
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.shape-icon.circle {
+  border-radius: 50%;
+}
+
+.shape-icon.rounded {
+  border-radius: 4px;
+}
+
+.shape-icon.square {
+  border-radius: 0;
+}
+
+.shape-icon.none {
+  background: none;
+  border: 1.5px dashed currentColor;
+  border-radius: 2px;
+  opacity: 1;
+}
+
+/* Preset grid */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+}
+
+.preset-btn {
+  padding: 0.4rem 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-size: 0.7rem;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--t);
+}
+
+.preset-btn:hover {
+  border-color: rgba(255, 65, 54, 0.4);
+  color: var(--primary-text);
+}
+
+.preset-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.custom-res {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.custom-res span {
+  color: var(--secondary-text);
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.export-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  font-size: 1rem;
+  background: var(--btn-bg);
+  border: 1px solid transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  padding: 0.7rem 1.2rem;
+  border-radius: var(--radius);
+  font-family: Verdana, sans-serif;
+  transition: var(--t);
+}
+
+.export-btn:hover {
+  background: var(--accent);
+  color: var(--primary-text);
+}
+
+.fmt {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.85rem;
+  color: var(--accent);
+  transition: color var(--t);
+}
+
+.export-btn:hover .fmt {
+  color: #fff;
+}
+
+/* Android */
+.android-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 1rem 0 0.7rem;
+}
+
+.android-divider hr {
+  flex: 1;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.android-divider span {
+  font-size: 0.68rem;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  transition:
+    border-color var(--t),
+    background var(--t);
+  user-select: none;
+}
+
+.checkbox-row:hover {
+  border-color: rgba(61, 220, 132, 0.3);
+  background: rgba(61, 220, 132, 0.04);
+}
+
+/* Disabled checkbox row for emoji */
+.checkbox-row.cb-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.custom-checkbox {
+  position: relative;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.custom-checkbox input[type='checkbox'] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-box {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--t);
+  color: transparent;
+}
+
+.checkbox-box svg {
+  width: 0.58rem;
+  height: 0.58rem;
+}
+
+.custom-checkbox input:checked ~ .checkbox-box {
+  background: var(--android-dim);
+  border-color: var(--android);
+  color: var(--android);
+}
+
+.checkbox-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.checkbox-label {
+  font-size: 0.8rem;
+  color: var(--primary-text);
+  font-family: Verdana, sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.checkbox-sub {
+  font-size: 0.68rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+}
+
+.android-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  background: var(--android-dim);
+  border: 1px solid rgba(61, 220, 132, 0.22);
+  border-radius: var(--radius);
+  color: var(--android);
+  font-family: Verdana, sans-serif;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all var(--t);
+  position: relative;
+  overflow: hidden;
+}
+
+.android-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(61, 220, 132, 0.07), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.android-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.android-btn:hover {
+  background: rgba(61, 220, 132, 0.18);
+  border-color: rgba(61, 220, 132, 0.48);
+}
+
+.android-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.android-label {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.85rem;
+  color: var(--android);
+  transition: color var(--t);
+}
+
+.android-sub {
+  font-size: 0.7rem;
+  color: rgba(61, 220, 132, 0.55);
+  margin-left: 0.15rem;
+}
+
+.progress-wrap {
+  margin-top: 0.7rem;
+  display: none;
+}
+
+.progress-wrap.visible {
+  display: block;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 3px;
+  background: var(--surface-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--android);
+  border-radius: 99px;
+  transition: width 0.15s ease;
+}
+
+.progress-label {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  margin-top: 0.4rem;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+.error-msg {
+  color: var(--accent);
+  font-size: 0.75rem;
+  min-height: 1.1em;
+  opacity: 0;
+  transition: opacity var(--t);
+}
+
+.error-msg.visible {
+  opacity: 1;
+}
+
+.icon-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--secondary-text);
+  opacity: 0.3;
+}
+
+.icon-placeholder svg {
+  width: 42px;
+  height: 42px;
+  fill: currentColor;
+}
+
+.icon-placeholder p {
+  font-size: 0.78rem;
+}
+
+@media (max-width: 680px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+}

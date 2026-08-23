@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from './Icon.astro';
+import { SITE } from '../data/site';
+import '../styles/tool.css';
+
+interface Props {
+  title: string;
+  description: string;
+  heading?: string;
+  tagline?: string;
+  maxWidth?: number;
+  chrome?: boolean;
+}
+
+const {
+  title,
+  description,
+  heading,
+  tagline,
+  maxWidth = 680,
+  chrome = true,
+} = Astro.props;
+
+const year = new Date().getFullYear();
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="page" style={`max-width:${maxWidth}px`}>
+    <slot name="pre" />
+    {
+      chrome && (
+        <div class="tool-header">
+          <a href="/tools/" class="back-link">
+            <Icon name="arrow-left" /> Tools
+          </a>
+          <h1>
+            <span class="cube" />
+            {heading}
+          </h1>
+        </div>
+      )
+    }
+    {chrome && tagline && <p class="tool-desc">{tagline}</p>}
+
+    <slot />
+
+    {
+      chrome && (
+        <div class="more-tools">
+          <h3>More s17 Labs Tools</h3>
+          <p>Discover more free, browser-based utilities designed for creators and developers.</p>
+          <a href="/tools/" class="more-tools-btn">
+            <Icon name="arrow-left" /> View More Tools
+          </a>
+        </div>
+      )
+    }
+
+    <footer class="footer">
+      © {year} <b>{SITE.name}</b>
+      &bull;
+      <a href={SITE.sourceUrl} target="_blank" rel="noopener noreferrer">
+        <Icon name="github" /> Source Code
+      </a>
+    </footer>
+  </div>
+</BaseLayout>

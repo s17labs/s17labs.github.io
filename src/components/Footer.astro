@@ -1,0 +1,13 @@
+---
+import Icon from './Icon.astro';
+import { SITE } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  © {year} <b>s17 Labs</b>
+  • <a href={SITE.sourceUrl} target="_blank" rel="noopener noreferrer">
+    <Icon name="github" /> Source Code
+  </a>
+</footer>
