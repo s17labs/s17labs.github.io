@@ -279,8 +279,12 @@ a {
 }
 
 @media (max-width: 580px) {
+  .main {
+    padding-top: 4rem;
+    padding-bottom: 11rem;
+  }
   .header {
-    margin-top: 4rem;
+    margin-top: 3rem;
   }
   .header h1 {
     font-size: 1.8rem;
