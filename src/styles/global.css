@@ -156,8 +156,8 @@ a {
   margin-top: auto;
   font-size: 0.9rem;
   color: var(--secondary-text);
-  background: var(--btn-bg);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(to bottom, var(--primary) 0%, rgba(255, 65, 54, 0.18) 100%);
+  border-top: 1px solid rgba(255, 65, 54, 0.4);
   position: relative;
 }
 
@@ -279,6 +279,9 @@ a {
 }
 
 @media (max-width: 580px) {
+  .header {
+    margin-top: 4rem;
+  }
   .header h1 {
     font-size: 1.8rem;
   }
