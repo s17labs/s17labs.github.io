@@ -17,6 +17,10 @@ export const SITE = {
       handle: '@s17hq',
       url: 'https://x.com/s17hq',
     },
+    discord: {
+      name: 'Discord',
+      url: 'https://discord.gg/dDGbjKTVH2',
+    },
   },
   byline: {
     prefix: 'Brought to you by',
