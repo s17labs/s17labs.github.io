@@ -7,20 +7,20 @@ const year = new Date().getFullYear();
 interface LinkItem {
   label: string;
   href: string;
-  icon?: 'github' | 'x';
+  icon?: 'github' | 'x' | 'globe';
   external?: boolean;
 }
 
 const projects: LinkItem[] = [
   { label: 'Tools', href: SITE.toolsUrl },
-  { label: 'Minimal-UI', href: 'https://github.com/s17labs/minimal-ui', external: true },
-  { label: 'Notes', href: 'https://github.com/s17labs/notes', external: true },
-  { label: 'More on GitHub', href: SITE.orgUrl, icon: 'github', external: true },
+  { label: 'Koda', href: 'https://s17labs.github.io/koda/', external: true },
+  { label: 'WebShell', href: 'https://github.com/s17labs/webshell', external: true },
+  { label: 'More on GitHub', href: SITE.orgUrl, external: true },
 ];
 
 const links: LinkItem[] = [
-  { label: SITE.parent.name, href: SITE.parent.url, external: true },
-  { label: SITE.socials.x.handle, href: SITE.socials.x.url, icon: 'x', external: true },
+  { label: SITE.parent.name, href: SITE.parent.url, icon: 'globe', external: true },
+  { label: 'X / Twitter', href: SITE.socials.x.url, icon: 'x', external: true },
   { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
 ];
 ---
