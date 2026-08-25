@@ -1,27 +1,35 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from '../components/Footer.astro';
 import { SITE } from '../data/site';
 ---
 
 <BaseLayout title={`404 | ${SITE.title}`} description="Page not found.">
-  <div class="main">
-    <div class="wrapper">
-      <header class="header">
-        <h1><span class="cube"></span> 404</h1>
-      </header>
-      <div class="card">
-        <p>This page doesn't exist or has been moved.<br />Let's get you back on track.</p>
-        <div class="card-link">
-          <a href="/" class="github-link">Back to Home</a>
+  <div class="shell">
+    <div class="main">
+      <div class="wrapper">
+        <header class="header">
+          <h1><span class="cube"></span> 404</h1>
+        </header>
+        <div class="card">
+          <p>This page doesn't exist or has been moved.<br />Let's get you back on track.</p>
+          <div class="card-link">
+            <a href="/" class="github-link">Back to Home</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
+  <Footer />
 </BaseLayout>
 
 <style is:global>
-  body {
+  .shell {
+    width: 100%;
     max-width: 700px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
   }
 </style>

@@ -3,11 +3,78 @@ import Icon from './Icon.astro';
 import { SITE } from '../data/site';
 
 const year = new Date().getFullYear();
+
+interface LinkItem {
+  label: string;
+  href: string;
+  icon?: 'github' | 'x';
+  external?: boolean;
+}
+
+const projects: LinkItem[] = [
+  { label: 'Tools', href: SITE.toolsUrl },
+  { label: 'Minimal-UI', href: 'https://github.com/s17labs/minimal-ui', external: true },
+  { label: 'Notes', href: 'https://github.com/s17labs/notes', external: true },
+  { label: 'More on GitHub', href: SITE.orgUrl, icon: 'github', external: true },
+];
+
+const links: LinkItem[] = [
+  { label: SITE.parent.name, href: SITE.parent.url, external: true },
+  { label: SITE.socials.x.handle, href: SITE.socials.x.url, icon: 'x', external: true },
+  { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
+];
 ---
 
 <footer class="footer">
-  © {year} <b>s17 Labs</b>
-  • <a href={SITE.sourceUrl} target="_blank" rel="noopener noreferrer">
-    <Icon name="github" /> Source Code
-  </a>
+  <div class="footer-inner">
+    <div class="footer-cols">
+      <div class="footer-col">
+        <a href="/" class="footer-logo">
+          <span class="cube"></span>
+          {SITE.name}.
+        </a>
+        <p class="footer-tagline">{SITE.tagline}</p>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-col-title">Projects</span>
+        <ul class="footer-links">
+          {
+            projects.map((item) => (
+              <li>
+                <a href={item.href} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}>
+                  {item.icon && <Icon name={item.icon} />}
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <span class="footer-col-title">Links</span>
+        <ul class="footer-links">
+          {
+            links.map((item) => (
+              <li>
+                <a href={item.href} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}>
+                  {item.icon && <Icon name={item.icon} />}
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <hr class="footer-divider" />
+
+    <p class="footer-byline">
+      {SITE.byline.prefix}
+      <a href={SITE.byline.url} target="_blank" rel="noopener noreferrer">{SITE.byline.name}</a>
+    </p>
+    <p class="footer-copy">© {year} {SITE.name}. All rights reserved.</p>
+  </div>
 </footer>
