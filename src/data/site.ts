@@ -13,7 +13,7 @@ export const SITE = {
   },
   socials: {
     x: {
-      name: 'X / Twitter',
+      name: 'X/Twitter',
       handle: '@s17hq',
       url: 'https://x.com/s17hq',
     },
