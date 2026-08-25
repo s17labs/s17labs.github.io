@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Footer from './Footer.astro';
 import Icon from './Icon.astro';
-import { SITE } from '../data/site';
 import '../styles/tool.css';
 
 interface Props {
@@ -21,8 +21,6 @@ const {
   maxWidth = 680,
   chrome = true,
 } = Astro.props;
-
-const year = new Date().getFullYear();
 ---
 
 <BaseLayout title={title} description={description}>
@@ -56,13 +54,6 @@ const year = new Date().getFullYear();
         </div>
       )
     }
-
-    <footer class="footer">
-      © {year} <b>{SITE.name}</b>
-      &bull;
-      <a href={SITE.sourceUrl} target="_blank" rel="noopener noreferrer">
-        <Icon name="github" /> Source Code
-      </a>
-    </footer>
   </div>
+  <Footer />
 </BaseLayout>

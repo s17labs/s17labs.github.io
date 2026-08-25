@@ -6,24 +6,26 @@ import { SITE } from '../data/site';
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
-  <div class="main">
-    <div class="wrapper">
-      <div id="home-view">
-        <header class="header">
-          <h1><span class="cube"></span> s17 Labs.</h1>
-        </header>
-        <div class="header" style="margin-top: -2.5rem;">
-          <p>Building efficient, lightweight software<br />for the modern web.</p>
-        </div>
-        <div class="card">
-          <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
-          <div class="card-link">
-            <a href={SITE.orgUrl} class="github-link" target="_blank" rel="noopener noreferrer">
-              <Icon name="github" /> GitHub
-            </a>
-            <a href={SITE.toolsUrl} class="github-link">
-              <Icon name="toolbox" /> s17 Labs Tools
-            </a>
+  <div class="shell">
+    <div class="main">
+      <div class="wrapper">
+        <div id="home-view">
+          <header class="header">
+            <h1><span class="cube"></span> s17 Labs.</h1>
+          </header>
+          <div class="header" style="margin-top: -2.5rem;">
+            <p>Building efficient, lightweight software<br />for the modern web.</p>
+          </div>
+          <div class="card">
+            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
+            <div class="card-link">
+              <a href={SITE.orgUrl} class="github-link" target="_blank" rel="noopener noreferrer">
+                <Icon name="github" /> GitHub
+              </a>
+              <a href={SITE.toolsUrl} class="github-link">
+                <Icon name="toolbox" /> s17 Labs Tools
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -33,8 +35,12 @@ import { SITE } from '../data/site';
 </BaseLayout>
 
 <style is:global>
-  body {
+  .shell {
+    width: 100%;
     max-width: 700px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
   }
 </style>

@@ -27,7 +27,9 @@
 
 @font-face {
   font-family: Aldrich;
-  src: url('/fonts/Aldrich.ttf');
+  src: url('/fonts/aldrich-latin.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026;
 }
 
 * {
@@ -62,6 +64,7 @@ a {
   width: 100%;
   display: flex;
   align-items: center;
+  padding-bottom: 4.5rem;
 }
 
 .wrapper {
@@ -144,23 +147,144 @@ a {
   color: var(--primary-text);
 }
 
+/* ═══════════════════════════════════════════════════
+   FOOTER — solid variant (ported from Minimal-UI)
+   ═══════════════════════════════════════════════════ */
 .footer {
   width: 100%;
-  padding: 2.5rem 0 1.5rem;
-  color: var(--secondary-text);
-  opacity: 0.65;
-  font-size: 0.95rem;
-  text-align: center;
+  padding: 2.5rem 1.5rem 1.5rem;
   margin-top: auto;
+  font-size: 0.9rem;
+  color: var(--secondary-text);
+  background: linear-gradient(to bottom, var(--primary) 0%, rgba(255, 65, 54, 0.18) 100%);
+  position: relative;
 }
 
-.footer a:hover,
-.footer a:active {
+.footer-inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.footer-col-title {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary-text);
+  margin-bottom: 0.4rem;
+}
+
+.footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: Aldrich, sans-serif;
+  font-size: 1.05rem;
+  color: var(--primary-text);
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.footer-logo .cube {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  background-color: var(--accent);
+  transform: translateY(-0.12em);
+  flex-shrink: 0;
+}
+
+.footer-tagline {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-links a {
+  color: var(--secondary-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--accent);
+}
+
+.footer-links svg {
+  font-size: 0.85em;
+}
+
+.footer-divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin: 0.75rem 0;
+}
+
+.footer-byline {
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 0 0 0.2rem;
+}
+
+.footer-byline a {
+  color: var(--primary-text);
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.footer-byline a:hover {
   color: var(--accent);
   text-decoration: underline;
 }
 
+.footer-copy {
+  font-size: 0.85rem;
+  text-align: center;
+  padding-top: 0.25rem;
+  opacity: 0.8;
+}
+
 @media (max-width: 580px) {
+  .footer-cols {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 580px) {
+  .main {
+    padding-top: 4rem;
+    padding-bottom: 11rem;
+  }
+  .header {
+    margin-top: 3rem;
+  }
   .header h1 {
     font-size: 1.8rem;
   }
