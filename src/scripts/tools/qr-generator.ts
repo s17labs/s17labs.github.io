@@ -298,3 +298,10 @@ elBtnSVG.addEventListener('click', exportSVG);
 
 /* ── Init ───────────────────────────────────────────── */
 elSizeVal.textContent = S.size + ' px';
+// Initialize from existing input value (e.g. browser restore / "Hello world" in screenshot)
+S.text = elInput.value;
+elCharCount.textContent = `${S.text.length} / 2953`;
+if (S.text.trim()) {
+  // Defer to next tick to ensure QRCode lib is ready and DOM is settled
+  setTimeout(() => scheduleUpdate(), 100);
+}
