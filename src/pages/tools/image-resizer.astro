@@ -125,11 +125,11 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
     display: flex;
   }
 
-  /* Preview tiles — fixed 28px (smaller than result 42px) — GitHub history before Astro used 28px */
+  /* Preview tiles — 42px matching output result-thumb, reuse output scaling */
   :global(.dz-preview-grid) {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 28px);
-    gap: 0.35rem;
+    grid-template-columns: repeat(auto-fill, 42px);
+    gap: 0.4rem;
     justify-content: start;
     width: 100%;
   }
@@ -139,12 +139,12 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
   }
 
   :global(.dz-thumb) {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    max-width: 42px;
+    max-height: 42px;
     aspect-ratio: 1;
     border-radius: 3px;
     overflow: hidden;
@@ -160,9 +160,10 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
     height: 100%;
     max-width: 100%;
     max-height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     display: block;
+    background: var(--surface-3);
   }
 
   /* Desktop solid overflow tile (no image) */
@@ -492,8 +493,8 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
 
   /* Mobile — keep fixed tile size */
   @media (max-width: 580px) {
-    .dz-preview-grid {
-      grid-template-columns: repeat(auto-fill, 28px);
+    :global(.dz-preview-grid) {
+      grid-template-columns: repeat(auto-fill, 42px);
     }
   }
 </style>
