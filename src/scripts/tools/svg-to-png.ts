@@ -111,17 +111,28 @@ function renderUploadPreview(): void {
   dzFilled.classList.add('visible');
 }
 
-// Build a simple SVG file tile (icon + truncated filename — no canvas rendering)
+// Build SVG tile with live preview — falls back to icon if SVG fails to render
 function makeSVGTile(file: File): HTMLElement {
   const tile = document.createElement('div');
-  tile.className = 'dz-thumb';
+  tile.className = 'dz-thumb svg-preview';
 
-  const icon = document.createElement('span');
-  icon.className = 'svg-icon';
-  icon.innerHTML = iconSvg('bezier-curve');
-  tile.appendChild(icon);
+  const url = URL.createObjectURL(file);
+  const img = document.createElement('img');
+  img.alt = file.name;
+  img.src = url;
+  img.onload = () => URL.revokeObjectURL(url);
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    img.remove();
+    const fallbackIcon = document.createElement('span');
+    fallbackIcon.className = 'svg-icon';
+    fallbackIcon.innerHTML = iconSvg('bezier-curve');
+    // restore fallback tile styling
+    tile.classList.remove('svg-preview');
+    tile.prepend(fallbackIcon);
+  };
+  tile.appendChild(img);
 
-  // Short name: strip .svg and truncate
   const shortName = file.name.replace(/\.svg$/i, '');
   const nameEl = document.createElement('div');
   nameEl.className = 'svg-name';

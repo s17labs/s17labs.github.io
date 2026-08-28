@@ -1,0 +1,478 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'JSON Lab | s17 Labs Tools';
+const description =
+  'Format, validate, minify and explore JSON — with syntax highlighting, tree view, error pinpointing and stats. All locally in your browser.';
+const tagline = 'Format, validate, minify and inspect JSON — with tree view and error pinpointing. Your data never leaves the browser.';
+---
+
+<ToolLayout title={title} description={description} heading="JSON Lab" tagline={tagline} maxWidth={720}>
+  <!-- Input -->
+  <div class="panel">
+    <div class="panel-title">Input</div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <label class="file-btn">
+          <Icon name="cloud-arrow-up" /> Open
+          <input type="file" id="file-input" accept=".json,application/json" hidden />
+        </label>
+        <button type="button" class="btn-sm" id="paste-sample">Sample</button>
+        <button type="button" class="btn-sm" id="clear-btn">Clear</button>
+      </div>
+      <div class="toolbar-right">
+        <span class="stat" id="input-stat"></span>
+      </div>
+    </div>
+    <div class="editor-wrap">
+      <div class="editor-gutter" id="gutter"></div>
+      <textarea
+        id="json-input"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder='Paste JSON here… e.g. {"name": "s17", "tools": ["json", "regex", "palette"]}'></textarea>
+    </div>
+    <div class="status-msg error" id="error-msg"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="panel">
+    <div class="panel-title">Actions</div>
+    <div class="actions-grid">
+      <button type="button" class="btn" id="btn-format">Format</button>
+      <button type="button" class="btn" id="btn-minify">Minify</button>
+      <button type="button" class="btn" id="btn-sort">Sort Keys</button>
+      <button type="button" class="btn" id="btn-validate">Validate</button>
+    </div>
+    <div class="options-row">
+      <label class="check">
+        <input type="checkbox" id="opt-sort" />
+        <span>Sort on format</span>
+      </label>
+      <label class="field inline">
+        <span>Indent</span>
+        <select id="indent-select">
+          <option value="2" selected>2 spaces</option>
+          <option value="4">4 spaces</option>
+          <option value="tab">Tab</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <!-- Output / Tabs -->
+  <div class="panel">
+    <div class="tabs" id="tabs">
+      <button type="button" class="tab active" data-tab="pretty">Pretty</button>
+      <button type="button" class="tab" data-tab="tree">Tree</button>
+      <button type="button" class="tab" data-tab="stats">Stats</button>
+    </div>
+
+    <div class="tab-pane active" id="pane-pretty">
+      <div class="output-wrap">
+        <pre class="output-code" id="output-code"><span class="muted">Formatted output will appear here</span></pre>
+        <button type="button" class="copy-btn" id="copy-pretty">
+          <span class="copy-state copy-idle"><Icon name="copy" /> Copy</span>
+          <span class="copy-state copy-done"><Icon name="check" /> Copied</span>
+        </button>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn" id="btn-copy-pretty"><Icon name="copy" /> Copy JSON</button>
+        <button type="button" class="btn" id="btn-download"><Icon name="download" /> Download</button>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="pane-tree">
+      <div class="tree-wrap" id="tree-wrap"><span class="muted">Tree view appears after valid JSON</span></div>
+    </div>
+
+    <div class="tab-pane" id="pane-stats">
+      <div class="stats-grid" id="stats-grid"></div>
+    </div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/json-lab';
+</script>
+
+<style>
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-left {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 32px;
+    min-height: 32px;
+    padding: 0 0.8rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.78rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--t);
+    font-family: Verdana, sans-serif;
+    box-sizing: border-box;
+  }
+
+  .toolbar-left .btn-sm {
+    height: 32px;
+    min-height: 32px;
+    padding: 0 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+
+  .file-btn:hover {
+    border-color: var(--accent);
+    color: var(--primary-text);
+  }
+
+  .stat {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+  }
+
+  .editor-wrap {
+    display: flex;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 180px;
+  }
+
+  .editor-wrap:focus-within {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  .editor-gutter {
+    background: var(--surface-3);
+    border-right: 1px solid var(--border);
+    padding: 0.6rem 0.35rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--secondary-text);
+    text-align: right;
+    user-select: none;
+    min-width: 2.2rem;
+    white-space: pre;
+  }
+
+  #json-input {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    min-height: 180px;
+    resize: vertical;
+    line-height: 1.55;
+    font-size: 0.82rem;
+  }
+
+  .status-msg {
+    margin-top: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.45rem;
+  }
+
+  .actions-grid .btn {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .options-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--secondary-text);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .check input {
+    accent-color: var(--accent);
+  }
+
+  .field.inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+  }
+
+  .field.inline span {
+    font-size: 0.74rem;
+  }
+
+  select {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--primary-text);
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    outline: none;
+  }
+
+  select:focus {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.6rem;
+  }
+
+  .tab {
+    padding: 0.4rem 0.8rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.76rem;
+    cursor: pointer;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--primary-text);
+  }
+
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  .output-wrap {
+    position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .output-code {
+    margin: 0;
+    padding: 0.85rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 420px;
+    overflow: auto;
+    color: var(--primary-text);
+  }
+
+  .output-code .muted,
+  .tree-wrap .muted {
+    color: var(--secondary-text);
+    opacity: 0.6;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .copy-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .copy-done {
+    display: none;
+  }
+  .copy-btn.copied .copy-idle {
+    display: none;
+  }
+  .copy-btn.copied .copy-done {
+    display: inline-flex;
+  }
+
+  .btn-row {
+    margin-top: 0.7rem;
+  }
+
+  .tree-wrap {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.85rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    max-height: 420px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .stat-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+  }
+
+  .stat-card-label {
+    font-size: 0.68rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-card-value {
+    font-family: 'Courier New', monospace;
+    font-size: 1.05rem;
+    color: var(--primary-text);
+  }
+
+  .stat-card-sub {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    margin-top: 0.15rem;
+  }
+
+  /* Syntax token colors (subtle, dark theme) */
+  :global(.tok-string) {
+    color: #7ec699;
+  }
+  :global(.tok-number) {
+    color: #f0a500;
+  }
+  :global(.tok-boolean) {
+    color: #6ca0ff;
+  }
+  :global(.tok-null) {
+    color: #ff7b72;
+  }
+  :global(.tok-key) {
+    color: #79c0ff;
+  }
+  :global(.tok-punct) {
+    color: #868686;
+  }
+
+  /* Tree specifics */
+  :global(.tree-row) {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.15rem 0;
+  }
+  :global(.tree-toggle) {
+    cursor: pointer;
+    color: var(--secondary-text);
+    width: 0.9rem;
+    text-align: center;
+    user-select: none;
+    flex-shrink: 0;
+    line-height: 1.4;
+  }
+  :global(.tree-toggle:hover) {
+    color: var(--accent);
+  }
+  :global(.tree-children) {
+    margin-left: 1rem;
+    border-left: 1px dashed rgba(255, 255, 255, 0.07);
+    padding-left: 0.6rem;
+  }
+  :global(.tree-children.collapsed) {
+    display: none;
+  }
+  :global(.tree-key) {
+    color: #79c0ff;
+  }
+  :global(.tree-type) {
+    color: var(--secondary-text);
+    font-size: 0.7em;
+    opacity: 0.7;
+  }
+
+  @media (max-width: 580px) {
+    .actions-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

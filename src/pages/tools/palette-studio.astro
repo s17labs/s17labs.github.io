@@ -1,0 +1,542 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Palette Studio | s17 Labs Tools';
+const description =
+  'Generate harmonious color palettes from any base color. Analogous, complementary, triadic and more — with WCAG contrast checks and CSS export.';
+const tagline =
+  'Generate harmonious palettes from any base color — preview, test contrast, and export as CSS, Tailwind, or PNG.';
+---
+
+<ToolLayout title={title} description={description} heading="Palette Studio" tagline={tagline} maxWidth={640}>
+  <!-- Base Color -->
+  <div class="panel">
+    <div class="panel-title">Base Color</div>
+    <div class="base-row">
+      <div class="base-preview-wrap">
+        <div class="base-preview" id="base-preview"></div>
+      </div>
+      <div class="base-inputs">
+        <div class="field">
+          <label for="base-hex">Hex</label>
+          <div class="color-input-wrap">
+            <input type="color" id="base-picker" value="#ff4136" />
+            <input type="text" id="base-hex" class="color-hex" value="#FF4136" maxlength="7" spellcheck="false" autocomplete="off" />
+          </div>
+        </div>
+        <div class="rgb-row" id="rgb-row">
+          <div class="field tight">
+            <label>R</label>
+            <input type="number" id="rgb-r" min="0" max="255" value="255" />
+          </div>
+          <div class="field tight">
+            <label>G</label>
+            <input type="number" id="rgb-g" min="0" max="255" value="65" />
+          </div>
+          <div class="field tight">
+            <label>B</label>
+            <input type="number" id="rgb-b" min="0" max="255" value="54" />
+          </div>
+        </div>
+        <button type="button" class="btn-sm" id="random-btn">
+          <Icon name="wand-magic-sparkles" /> Random
+        </button>
+      </div>
+    </div>
+    <!-- Canvas picker -->
+    <div class="picker-wrap" id="picker-wrap">
+      <canvas id="picker-canvas" width="300" height="180"></canvas>
+      <div class="picker-cursor" id="picker-cursor"></div>
+    </div>
+    <div class="hue-wrap">
+      <input type="range" id="hue-slider" min="0" max="360" step="1" value="6" />
+    </div>
+  </div>
+
+  <!-- Harmony Mode -->
+  <div class="panel">
+    <div class="panel-title">Harmony</div>
+    <div class="harmony-grid" id="harmony-grid">
+      <button type="button" class="harmony-btn active" data-mode="analogous">Analogous</button>
+      <button type="button" class="harmony-btn" data-mode="complementary">Complementary</button>
+      <button type="button" class="harmony-btn" data-mode="triadic">Triadic</button>
+      <button type="button" class="harmony-btn" data-mode="tetradic">Tetradic</button>
+      <button type="button" class="harmony-btn" data-mode="split">Split</button>
+      <button type="button" class="harmony-btn" data-mode="monochromatic">Monochrome</button>
+      <button type="button" class="harmony-btn" data-mode="shades">Shades</button>
+    </div>
+  </div>
+
+  <!-- Palette -->
+  <div class="panel">
+    <div class="panel-title">Palette</div>
+    <div class="palette-grid" id="palette-grid"></div>
+    <div class="status-msg" id="copy-msg">Copied!</div>
+  </div>
+
+  <!-- Image Eyedropper -->
+  <div class="panel">
+    <div class="panel-title">Extract from Image</div>
+    <div class="drop-zone" id="drop-zone">
+      <div class="dz-empty" id="dz-empty">
+        <Icon name="image" size={24} />
+        <p>Drop an image here or click to select</p>
+        <span>PNG, JPG, WEBP — colors extracted locally</span>
+      </div>
+      <canvas id="img-canvas" style="display:none;"></canvas>
+      <img id="img-preview" alt="" style="display:none;" />
+    </div>
+    <input type="file" id="img-input" accept="image/*" style="display:none;" />
+    <div class="dz-actions" id="dz-actions" style="display:none;">
+      <button type="button" class="btn-sm" id="change-image-btn"><Icon name="plus" /> Change image</button>
+      <button type="button" class="btn-sm" id="remove-image-btn">Remove</button>
+    </div>
+    <div class="extracted-row" id="extracted-row" style="display:none;">
+      <div class="extracted-label">Extracted palette — click a swatch or use the button to apply</div>
+      <div class="extracted-colors" id="extracted-colors"></div>
+      <button type="button" class="btn-sm" id="use-dominant-btn" style="display:none; margin-top:0.6rem;">Use dominant color as base</button>
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="panel">
+    <div class="panel-title">Export</div>
+    <div class="export-tabs" id="export-tabs">
+      <button type="button" class="export-tab active" data-tab="css">CSS Vars</button>
+      <button type="button" class="export-tab" data-tab="tailwind">Tailwind</button>
+      <button type="button" class="export-tab" data-tab="json">JSON</button>
+    </div>
+    <div class="export-wrap">
+      <pre class="export-code" id="export-code"></pre>
+      <button type="button" class="copy-btn" id="export-copy">
+        <span class="copy-state copy-idle"><Icon name="copy" /> Copy</span>
+        <span class="copy-state copy-done"><Icon name="check" /> Copied</span>
+      </button>
+    </div>
+    <div class="btn-row" style="margin-top:0.9rem;">
+      <button type="button" class="btn" id="btn-png">
+        <span class="btn-fmt">PNG</span> Download Palette
+      </button>
+      <button type="button" class="btn" id="btn-css">
+        <span class="btn-fmt">CSS</span> Download
+      </button>
+    </div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/palette-studio';
+</script>
+
+<style>
+  .base-row {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .base-preview-wrap {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .base-preview {
+    width: 100%;
+    height: 100%;
+  }
+
+  .base-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .color-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.7rem;
+  }
+
+  .color-input-wrap:focus-within {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  input[type='color'] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+  }
+
+  input[type='color']::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  input[type='color']::-webkit-color-swatch {
+    border: none;
+    border-radius: 3px;
+  }
+
+  .color-hex {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .rgb-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+  }
+
+  .field.tight {
+    margin-bottom: 0;
+  }
+
+  .field.tight label {
+    font-size: 0.65rem;
+  }
+
+  .field.tight input {
+    text-align: center;
+    padding: 0.45rem 0.3rem;
+  }
+
+  .picker-wrap {
+    position: relative;
+    margin-top: 0.9rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: crosshair;
+    height: 180px;
+    touch-action: none;
+  }
+
+  #picker-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .picker-cursor {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+
+  .hue-wrap {
+    margin-top: 0.6rem;
+  }
+
+  .harmony-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .harmony-btn {
+    padding: 0.45rem 0.75rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.74rem;
+    font-family: Verdana, sans-serif;
+    cursor: pointer;
+    transition: all var(--t);
+  }
+
+  .harmony-btn:hover {
+    border-color: rgba(255, 65, 54, 0.4);
+    color: var(--primary-text);
+  }
+
+  .harmony-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--primary-text);
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.55rem;
+  }
+
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    cursor: pointer;
+    transition: transform var(--t);
+  }
+
+  .swatch:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .swatch-color {
+    height: 72px;
+  }
+
+  .swatch-info {
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .swatch-hex {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--primary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .swatch-meta {
+    font-size: 0.6rem;
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .wcag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.58rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .wcag.pass {
+    color: #3ddc84;
+    border-color: rgba(61, 220, 132, 0.3);
+    background: rgba(61, 220, 132, 0.08);
+  }
+
+  .wcag.fail {
+    color: var(--secondary-text);
+  }
+
+  .status-msg {
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+    color: #3ddc84;
+    opacity: 0;
+    transition: opacity var(--t);
+    text-align: center;
+  }
+
+  .status-msg.visible {
+    opacity: 1;
+  }
+
+  .drop-zone {
+    padding: 1.4rem;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dz-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--secondary-text);
+  }
+
+  .dz-empty p {
+    font-size: 0.84rem;
+    margin: 0;
+    color: var(--secondary-text);
+  }
+
+  .dz-empty span {
+    font-size: 0.7rem;
+    opacity: 0.6;
+  }
+
+  #img-preview {
+    max-width: 100%;
+    max-height: 180px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .dz-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+  }
+
+  .extracted-row {
+    margin-top: 0.9rem;
+  }
+
+  .extracted-label {
+    font-size: 0.68rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+  }
+
+  .extracted-colors {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .extracted-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: transform var(--t);
+  }
+
+  .extracted-swatch:hover {
+    transform: scale(1.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .export-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .export-tab {
+    padding: 0.35rem 0.7rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .export-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--primary-text);
+  }
+
+  .export-wrap {
+    position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .export-code {
+    margin: 0;
+    padding: 0.85rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--primary-text);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .copy-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .copy-done {
+    display: none;
+  }
+
+  .copy-btn.copied .copy-idle {
+    display: none;
+  }
+
+  .copy-btn.copied .copy-done {
+    display: inline-flex;
+  }
+
+  @media (max-width: 580px) {
+    .base-row {
+      grid-template-columns: 1fr;
+    }
+    .base-preview-wrap {
+      width: 100%;
+      height: 64px;
+    }
+    .palette-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .swatch-color {
+      height: 64px;
+    }
+  }
+</style>

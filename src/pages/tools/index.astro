@@ -27,9 +27,11 @@ const toolsUrlBase = '/tools';
               <div class="tool-item-info">
                 <h3>{tool.name}</h3>
                 <p>{tool.description}</p>
-                {tool.tags.map((tag) => (
-                  <span class="tool-tag">{tag}</span>
-                ))}
+                <div class="tool-tags">
+                  {tool.tags.map((tag) => (
+                    <span class="tool-tag">{tag}</span>
+                  ))}
+                </div>
               </div>
             </div>
             <span class="tool-item-arrow">
@@ -197,6 +199,14 @@ const toolsUrlBase = '/tools';
     transform: translateX(3px);
   }
 
+  /* Tool tags row — flex wrap with small gap */
+  .tool-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.32rem;
+    margin-top: 0.45rem;
+  }
+
   /* Tool tag */
   .tool-tag {
     display: inline-block;
@@ -206,9 +216,9 @@ const toolsUrlBase = '/tools';
     border: 1px solid var(--border);
     border-radius: 99px;
     color: var(--secondary-text);
-    margin-top: 0.3rem;
     font-family: 'Courier New', monospace;
     text-transform: lowercase;
+    line-height: 1.5;
   }
 
   @media (max-width: 580px) {

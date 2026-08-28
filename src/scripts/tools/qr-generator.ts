@@ -1,4 +1,4 @@
-import QRCode from 'qrcodejs';
+import QRCode from '../../lib/qrcode.js';
 
 interface QrState {
   text: string;
@@ -90,20 +90,17 @@ function generateQR(): void {
   elContainer.appendChild(qrDiv);
 
   try {
-    const Lib = QRCode as unknown as {
-      new (
-        el: HTMLElement,
-        opts: Record<string, unknown>
-      ): unknown;
+    const QRCodeLib = QRCode as unknown as {
+      new (el: HTMLElement, opts: Record<string, unknown>): unknown;
       CorrectLevel: Record<string, unknown>;
     };
-    qrInstance = new Lib(qrDiv, {
+    qrInstance = new QRCodeLib(qrDiv, {
       text: text,
       width: S.size,
       height: S.size,
       colorDark: S.fg,
       colorLight: S.bg,
-      correctLevel: Lib.CorrectLevel[S.ec],
+      correctLevel: QRCodeLib.CorrectLevel[S.ec],
     });
 
     // qrcodejs may create a canvas AND an img; hide the img, keep canvas

@@ -45,6 +45,27 @@ export const TOOLS: Tool[] = [
     icon: 'font',
   },
   {
+    name: 'JSON Lab',
+    slug: 'json-lab',
+    description: 'Format, validate, minify and explore JSON with tree view, error pinpointing and stats. All local.',
+    tags: ['text', 'dev', 'json'],
+    icon: 'code',
+  },
+  {
+    name: 'Regex Lab',
+    slug: 'regex-lab',
+    description: 'Test and debug regular expressions live — highlight matches, inspect groups and preview replacements.',
+    tags: ['text', 'dev', 'regex'],
+    icon: 'magnifying-glass',
+  },
+  {
+    name: 'Palette Studio',
+    slug: 'palette-studio',
+    description: 'Generate harmonious palettes from any base color — with WCAG contrast checks and CSS / Tailwind export.',
+    tags: ['design', 'colors'],
+    icon: 'palette',
+  },
+  {
     name: 'QR Code Generator',
     slug: 'qr-generator',
     description: 'Generate QR codes from any text or URL with custom colors and sizes. Export as PNG or SVG.',

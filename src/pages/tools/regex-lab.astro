@@ -1,0 +1,532 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Regex Lab | s17 Labs Tools';
+const description =
+  'Test and debug regular expressions live — with match highlighting, capture groups, replace preview and a built-in cheat sheet.';
+const tagline = 'Live regex tester with match highlighting, groups and replace — plus a quick cheat sheet.';
+---
+
+<ToolLayout title={title} description={description} heading="Regex Lab" tagline={tagline} maxWidth={720}>
+  <!-- Pattern -->
+  <div class="panel">
+    <div class="panel-title">Pattern</div>
+    <div class="pattern-row">
+      <span class="slash">/</span>
+      <input type="text" id="pattern" placeholder="e.g. (\w+)@(\w+)\.(\w+)" spellcheck="false" autocomplete="off" />
+      <span class="slash">/</span>
+      <div class="flags" id="flags">
+        <button type="button" class="flag-btn active" data-flag="g" title="global — find all matches">g</button>
+        <button type="button" class="flag-btn" data-flag="i" title="case-insensitive">i</button>
+        <button type="button" class="flag-btn" data-flag="m" title="multiline — ^ $ match line breaks">m</button>
+        <button type="button" class="flag-btn" data-flag="s" title="dotAll — . matches newlines">s</button>
+        <button type="button" class="flag-btn" data-flag="u" title="unicode">u</button>
+        <button type="button" class="flag-btn" data-flag="y" title="sticky">y</button>
+      </div>
+    </div>
+    <div class="status-msg error" id="pattern-error"></div>
+    <div class="samples-row">
+      <span class="samples-label">Try:</span>
+      <button type="button" class="sample-btn" data-sample="email">email</button>
+      <button type="button" class="sample-btn" data-sample="url">url</button>
+      <button type="button" class="sample-btn" data-sample="ipv4">ipv4</button>
+      <button type="button" class="sample-btn" data-sample="hex">hex color</button>
+      <button type="button" class="sample-btn" data-sample="date">date</button>
+      <button type="button" class="sample-btn" data-sample="time">time</button>
+    </div>
+  </div>
+
+  <!-- Test String -->
+  <div class="panel">
+    <div class="panel-title">Test String</div>
+    <textarea id="test-input" spellcheck="false" placeholder="Paste or type text to test — matches highlight live"></textarea>
+    <div class="highlight-wrap" id="highlight-wrap" aria-hidden="true"></div>
+    <div class="match-stat" id="match-stat"></div>
+  </div>
+
+  <!-- Replace -->
+  <div class="panel">
+    <div class="panel-title">Replace</div>
+    <div class="field">
+      <label for="replace-input">Replacement — use $1, $2, $&amp;, $` , $' , $$, or $&lt;name&gt;</label>
+      <input type="text" id="replace-input" placeholder="e.g. [$1] or ${name}" spellcheck="false" autocomplete="off" />
+    </div>
+    <div class="output-wrap" id="replace-wrap" style="display:none;">
+      <div class="replace-preview" id="replace-preview"></div>
+      <button type="button" class="copy-btn" id="copy-replace">
+        <span class="copy-state copy-idle"><Icon name="copy" /> Copy</span>
+        <span class="copy-state copy-done"><Icon name="check" /> Copied</span>
+      </button>
+    </div>
+    <button type="button" class="btn-sm" id="btn-replace-copy" style="display:none; margin-top:0.6rem;">Copy Result</button>
+  </div>
+
+  <!-- Matches -->
+  <div class="panel" id="matches-panel" style="display:none;">
+    <div class="panel-title">Matches</div>
+    <div class="matches-list" id="matches-list"></div>
+  </div>
+
+  <!-- Tools -->
+  <div class="panel">
+    <div class="panel-title">Tools</div>
+    <div class="btn-row">
+      <button type="button" class="btn" id="btn-copy-pattern"><Icon name="copy" /> Copy Regex</button>
+      <button type="button" class="btn" id="btn-copy-test"><Icon name="copy" /> Copy Test String</button>
+    </div>
+  </div>
+
+  <!-- Cheat Sheet -->
+  <div class="panel cheat-panel">
+    <button type="button" class="cheat-toggle" id="cheat-toggle">
+      <span>Cheat Sheet</span>
+      <span class="cheat-arrow">▾</span>
+    </button>
+    <div class="cheat-body" id="cheat-body">
+      <div class="cheat-grid">
+        <div class="cheat-group">
+          <div class="cheat-title">Anchors &amp; Bounds</div>
+          <code>^</code><span>start</span><code>$</code><span>end</span><code>\b</code><span>word boundary</span><code>\B</code><span>non-boundary</span>
+        </div>
+        <div class="cheat-group">
+          <div class="cheat-title">Quantifiers</div>
+          <code>*</code><span>0+</span><code>+</code><span>1+</span><code>?</code><span>0/1</span><code>&#123;n&#125;</code><span>exactly n</span><code>&#123;n,m&#125;</code><span>n to m</span><code>*?</code><span>lazy</span>
+        </div>
+        <div class="cheat-group">
+          <div class="cheat-title">Character Classes</div>
+          <code>.</code><span>any</span><code>\d</code><span>digit</span><code>\w</code><span>word</span><code>\s</code><span>space</span><code>[abc]</code><span>one of</span><code>[^abc]</code><span>not one</span><code>\p&#123;L&#125;</code><span>unicode (u flag)</span>
+        </div>
+        <div class="cheat-group">
+          <div class="cheat-title">Groups</div>
+          <code>(…)</code><span>capture</span><code>(?:…)</code><span>non-capture</span><code>(?&lt;n&gt;…)</code><span>named</span><code>\1</code><span>backref</span><code>(?=…)</code><span>lookahead</span><code>(?!…)</code><span>neg lookahead</span>
+        </div>
+        <div class="cheat-group">
+          <div class="cheat-title">Flags</div>
+          <code>g</code><span>global</span><code>i</code><span>ignore case</span><code>m</code><span>multiline</span><code>s</code><span>dotAll</span><code>u</code><span>unicode</span><code>y</code><span>sticky</span>
+        </div>
+        <div class="cheat-group">
+          <div class="cheat-title">Replacement</div>
+          <code>$&amp;</code><span>match</span><code>$1</code><span>group 1</span><code>$&lt;n&gt;</code><span>named</span><code>$`</code><span>before</span><code>$'</code><span>after</span><code>$$</code><span>$</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</ToolLayout>
+
+<script>
+  import '../../scripts/tools/regex-lab';
+</script>
+
+<style>
+  .pattern-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.55rem;
+  }
+
+  .pattern-row:focus-within {
+    border-color: rgba(255, 65, 54, 0.5);
+  }
+
+  .pattern-row.error {
+    border-color: var(--accent);
+    background: rgba(255, 65, 54, 0.06);
+  }
+
+  .slash {
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  #pattern {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.25rem 0 !important;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+
+  #pattern:focus {
+    border: none !important;
+  }
+
+  .flags {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+  }
+
+  .flag-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--t);
+  }
+
+  .flag-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--primary-text);
+  }
+
+  .status-msg {
+    margin-top: 0.45rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.74rem;
+    min-height: 1.1em;
+  }
+
+  .samples-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.6rem;
+  }
+
+  .samples-label {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .sample-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.85rem;
+    padding: 0 0.65rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .sample-btn:hover {
+    border-color: rgba(255, 65, 54, 0.4);
+    color: var(--primary-text);
+  }
+
+  /* Test string — textarea + overlay highlight */
+  .panel:has(#test-input) {
+    position: relative;
+  }
+
+  #test-input {
+    position: relative;
+    z-index: 2;
+    background: transparent !important;
+    min-height: 140px;
+    line-height: 1.6;
+    caret-color: var(--primary-text);
+  }
+
+  .highlight-wrap {
+    position: absolute;
+    top: calc(1.4rem + 1.1rem + 0.6rem); /* panel-title + gap — approximate via JS correction */
+    left: 1.4rem;
+    right: 1.4rem;
+    pointer-events: none;
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 0.6rem 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: transparent;
+    overflow: hidden;
+  }
+
+  /* Fallback positioning — corrected by JS */
+  .match-stat {
+    margin-top: 0.45rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+  }
+
+  .match-stat strong {
+    color: var(--primary-text);
+  }
+
+  :global(.hl-match) {
+    background: rgba(255, 65, 54, 0.22);
+    border: 1px solid rgba(255, 65, 54, 0.32);
+    border-radius: 2px;
+  }
+
+  :global(.hl-group) {
+    background: rgba(255, 213, 0, 0.18);
+    border-color: rgba(255, 213, 0, 0.3);
+  }
+
+  /* Since overlay technique is complex with wrapping, we use simpler inline highlight below textarea: */
+  .highlight-wrap.simple {
+    position: static !important;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 0.6rem;
+    color: var(--primary-text);
+    min-height: 2.2rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .output-wrap {
+    position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .replace-preview {
+    padding: 0.8rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 2.2rem;
+    color: var(--primary-text);
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--secondary-text);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: Verdana, sans-serif;
+    transition: all var(--t);
+  }
+
+  .copy-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .copy-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .copy-done {
+    display: none;
+  }
+  .copy-btn.copied .copy-idle {
+    display: none;
+  }
+  .copy-btn.copied .copy-done {
+    display: inline-flex;
+  }
+
+  .matches-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  :global(.match-card) {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.75rem;
+  }
+
+  :global(.match-head) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  :global(.match-idx) {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.68rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  :global(.match-pos) {
+    font-family: 'Courier New', monospace;
+    font-size: 0.68rem;
+    color: var(--secondary-text);
+  }
+
+  :global(.match-text) {
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    color: var(--primary-text);
+    background: rgba(255, 65, 54, 0.08);
+    border: 1px solid rgba(255, 65, 54, 0.18);
+    border-radius: 3px;
+    padding: 0.25rem 0.45rem;
+    word-break: break-all;
+  }
+
+  :global(.match-groups) {
+    margin-top: 0.45rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  :global(.grp) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.2rem 0.45rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+  }
+
+  :global(.grp b) {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  :global(.grp-named) {
+    border-color: rgba(255, 213, 0, 0.25);
+  }
+
+  .cheat-panel {
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .cheat-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.4rem;
+    background: none;
+    border: none;
+    color: var(--primary-text);
+    font-family: Aldrich, sans-serif;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .cheat-arrow {
+    font-size: 0.95rem;
+    line-height: 1;
+    display: inline-flex;
+    transition: transform var(--t);
+    color: var(--secondary-text);
+  }
+
+  .cheat-panel.open .cheat-arrow {
+    transform: rotate(180deg);
+  }
+
+  .cheat-body {
+    display: none;
+    padding: 0 1.4rem 1.2rem;
+  }
+
+  .cheat-panel.open .cheat-body {
+    display: block;
+  }
+
+  .cheat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.9rem;
+  }
+
+  .cheat-group {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.6rem;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.65rem;
+  }
+
+  .cheat-title {
+    grid-column: 1 / -1;
+    font-family: Aldrich, sans-serif;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--secondary-text);
+    margin-bottom: 0.2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3rem;
+  }
+
+  .cheat-group code {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.72rem;
+    color: var(--accent);
+    justify-self: start;
+  }
+
+  .cheat-group span {
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+  }
+
+  @media (max-width: 580px) {
+    .pattern-row {
+      flex-wrap: wrap;
+    }
+    .flags {
+      width: 100%;
+      justify-content: flex-start;
+      margin-top: 0.3rem;
+      margin-left: 0.6rem;
+    }
+    .cheat-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
