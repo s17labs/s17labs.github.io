@@ -125,11 +125,11 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
     display: flex;
   }
 
-  /* Preview tiles — fixed 32px (smaller than result 42px) — GitHub history before Astro used 32px */
+  /* Preview tiles — fixed 28px (smaller than result 42px) — GitHub history before Astro used 28px */
   .dz-preview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 32px);
-    gap: 0.4rem;
+    grid-template-columns: repeat(auto-fill, 28px);
+    gap: 0.35rem;
     justify-content: start;
     width: 100%;
   }
@@ -139,12 +139,12 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
   }
 
   .dz-thumb {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    max-width: 32px;
-    max-height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
     aspect-ratio: 1;
     border-radius: 3px;
     overflow: hidden;
@@ -493,7 +493,7 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
   /* Mobile — keep fixed tile size */
   @media (max-width: 580px) {
     .dz-preview-grid {
-      grid-template-columns: repeat(auto-fill, 32px);
+      grid-template-columns: repeat(auto-fill, 28px);
     }
   }
 </style>

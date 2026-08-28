@@ -125,11 +125,11 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
     display: flex;
   }
 
-  /* Preview tiles — fixed 32px (smaller than result 42px) — unified with image-resizer */
+  /* Preview tiles — fixed 28px (smaller than result 42px) — unified with image-resizer */
   .dz-preview-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 32px);
-    gap: 0.4rem;
+    grid-template-columns: repeat(auto-fill, 28px);
+    gap: 0.35rem;
     justify-content: start;
     width: 100%;
   }
@@ -138,14 +138,14 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
     overflow: hidden;
   }
 
-  /* SVG file tile — preview or fallback icon, fixed 32px unified */
+  /* SVG file tile — preview or fallback icon, fixed 28px unified */
   .dz-thumb {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    max-width: 32px;
-    max-height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    max-width: 28px;
+    max-height: 28px;
     aspect-ratio: 1;
     border-radius: 3px;
     overflow: hidden;
@@ -156,7 +156,7 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.12rem;
     flex-shrink: 0;
   }
 
@@ -533,7 +533,7 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
   /* Mobile — keep fixed tile size */
   @media (max-width: 580px) {
     .dz-preview-grid {
-      grid-template-columns: repeat(auto-fill, 32px);
+      grid-template-columns: repeat(auto-fill, 28px);
     }
   }
 </style>
