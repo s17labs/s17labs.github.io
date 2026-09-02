@@ -99,14 +99,17 @@ PR rules:
   (e.g. `feat(tools): add batch rename to image resizer`) — it becomes the squash-merge commit message.
 - Body stays concise: what changed and why, bullet list of touched areas, testing checklist (tick before merge).
 - UI changes must include clear before/after screenshots (upload directly to GitHub — never commit PR-only screenshots).
-- End the body with an AI attribution line stating exactly which model and agent made the changes,
-  in this exact format:
+- End the body with an AI attribution line that states the real model and agent/harness that
+  produced this PR. Use this exact sentence with your actual values — do NOT output literal
+  `{model}`/`{agent}` or copy the example verbatim:
 
   ```
-  Built with {model} in the {agent} harness.
+  Built with YOUR_MODEL_NAME in the YOUR_AGENT_NAME harness.
   ```
 
-  Example: `Built with ox-alpha in the OpenCode harness.`
+  Replace `YOUR_MODEL_NAME` with your real model ID and `YOUR_AGENT_NAME` with your
+  harness (e.g. `Built with claude-opus-4 in the Claude Code harness.` or
+  `Built with gemini-2.5-pro in the OpenCode harness.`).
 
 - Do **not** put AI attribution in GitHub Release notes — releases stay clean.
 
