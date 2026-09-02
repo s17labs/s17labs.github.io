@@ -1,4 +1,4 @@
-import QRCode from 'qrcodejs';
+import QRCode from 'qrcode';
 
 interface QrState {
   text: string;
@@ -18,8 +18,6 @@ const S: QrState = {
   ready: false,
 };
 
-let qrInstance: unknown = null;
-
 const elInput = document.getElementById('qr-input') as HTMLTextAreaElement;
 const elSize = document.getElementById('qr-size') as HTMLInputElement;
 const elSizeVal = document.getElementById('size-val')!;
@@ -35,14 +33,6 @@ const elErrorMsg = document.getElementById('error-msg')!;
 const elExportMsg = document.getElementById('export-msg')!;
 const elBtnPNG = document.getElementById('btn-png') as HTMLButtonElement;
 const elBtnSVG = document.getElementById('btn-svg') as HTMLButtonElement;
-
-/* ── Helpers ────────────────────────────────────────── */
-function hexToFull(h: string): string {
-  h = h.replace('#', '').trim();
-  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-  return '#' + h.toUpperCase().padEnd(6, '0').slice(0, 6);
-}
-void hexToFull;
 
 function isValidHex(h: string): boolean {
   return /^[0-9A-Fa-f]{6}$/.test(h.replace('#', ''));
@@ -64,7 +54,16 @@ function flashExport(): void {
   setTimeout(() => showMsg(elExportMsg, false), 2000);
 }
 
-/* ── QR generation ──────────────────────────────────── */
+function clearPreview(): void {
+  for (const el of [...elContainer.children]) {
+    if (el !== elPlaceholder) el.remove();
+  }
+  elPlaceholder.style.display = 'flex';
+  S.ready = false;
+  elBtnPNG.disabled = true;
+  elBtnSVG.disabled = true;
+}
+
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleUpdate(): void {
@@ -72,7 +71,7 @@ function scheduleUpdate(): void {
   debounceTimer = setTimeout(generateQR, 300);
 }
 
-function generateQR(): void {
+async function generateQR(): Promise<void> {
   const text = S.text.trim();
 
   if (!text) {
@@ -85,39 +84,22 @@ function generateQR(): void {
   clearPreview();
   elPlaceholder.style.display = 'none';
 
-  const qrDiv = document.createElement('div');
-  qrDiv.id = 'qr-inner-' + Date.now();
-  elContainer.appendChild(qrDiv);
+  const canvas = document.createElement('canvas');
+  canvas.id = 'qr-canvas-' + Date.now();
+  elContainer.appendChild(canvas);
 
   try {
-    const Lib = QRCode as unknown as {
-      new (
-        el: HTMLElement,
-        opts: Record<string, unknown>
-      ): unknown;
-      CorrectLevel: Record<string, unknown>;
-    };
-    qrInstance = new Lib(qrDiv, {
-      text: text,
+    await QRCode.toCanvas(canvas, text, {
       width: S.size,
-      height: S.size,
-      colorDark: S.fg,
-      colorLight: S.bg,
-      correctLevel: Lib.CorrectLevel[S.ec],
+      color: { dark: S.fg, light: S.bg },
+      errorCorrectionLevel: S.ec,
+      margin: 0,
     });
 
-    // qrcodejs may create a canvas AND an img; hide the img, keep canvas
-    setTimeout(() => {
-      const qrDivCurrent = elContainer.querySelector<HTMLDivElement>('[id^="qr-inner-"]');
-      const canvas = qrDivCurrent?.querySelector('canvas');
-      const img = qrDivCurrent?.querySelector('img');
-      if (img) img.style.display = 'none';
-      if (canvas) canvas.style.borderRadius = '2px';
-      S.ready = true;
-      elBtnPNG.disabled = false;
-      elBtnSVG.disabled = false;
-    }, 50);
-    void qrInstance;
+    canvas.style.borderRadius = '2px';
+    S.ready = true;
+    elBtnPNG.disabled = false;
+    elBtnSVG.disabled = false;
   } catch (err) {
     console.error('QR generation error:', err);
     clearPreview();
@@ -126,138 +108,61 @@ function generateQR(): void {
   }
 }
 
-function clearPreview(): void {
-  for (const el of [...elContainer.children]) {
-    if (el !== elPlaceholder) el.remove();
+async function exportPNG(): Promise<void> {
+  const text = S.text.trim();
+  if (!text) return;
+
+  try {
+    const dataURL = await QRCode.toDataURL(text, {
+      width: S.size * 2,
+      color: { dark: S.fg, light: S.bg },
+      errorCorrectionLevel: S.ec,
+      margin: 0,
+    });
+
+    dl(dataURL, 'qrcode.png');
+    flashExport();
+  } catch (err) {
+    console.error('PNG export error:', err);
   }
-  elPlaceholder.style.display = 'flex';
-  S.ready = false;
-  elBtnPNG.disabled = true;
-  elBtnSVG.disabled = true;
 }
 
-/* ── Get current canvas ─────────────────────────────── */
-function getCanvas(): HTMLCanvasElement | null {
-  return elContainer.querySelector('canvas');
-}
+async function exportSVG(): Promise<void> {
+  const text = S.text.trim();
+  if (!text) return;
 
-/* ── PNG Export ─────────────────────────────────────── */
-function exportPNG(): void {
-  const canvas = getCanvas();
-  if (!canvas) return;
+  try {
+    const svgString = await QRCode.toString(text, {
+      width: 256,
+      color: { dark: S.fg, light: S.bg },
+      errorCorrectionLevel: S.ec,
+      margin: 0,
+      type: 'svg',
+    });
 
-  // Render at 2x for crisp exports
-  const size = S.size * 2;
-  const off = document.createElement('canvas');
-  off.width = size;
-  off.height = size;
-  const ctx = off.getContext('2d')!;
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(canvas, 0, 0, size, size);
-
-  off.toBlob((blob) => {
-    if (!blob) return;
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
-    dl(url, 'qrcode.png');
+    dl(url, 'qrcode.svg');
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     flashExport();
-  }, 'image/png');
+  } catch (err) {
+    console.error('SVG export error:', err);
+  }
 }
 
-/* ── SVG Export ─────────────────────────────────────── */
-function exportSVG(): void {
-  // Re-derive the module matrix by reading pixel data from the canvas
-  const canvas = getCanvas();
-  if (!canvas) return;
-
-  const size = canvas.width;
-  const ctx = canvas.getContext('2d')!;
-  const imgData = ctx.getImageData(0, 0, size, size);
-
-  const fgR = parseInt(S.fg.slice(1, 3), 16);
-  const fgG = parseInt(S.fg.slice(3, 5), 16);
-  const fgB = parseInt(S.fg.slice(5, 7), 16);
-
-  function isFG(x: number, y: number): boolean {
-    const i = (y * size + x) * 4;
-    const d = imgData.data;
-    return Math.abs(d[i] - fgR) < 20 && Math.abs(d[i + 1] - fgG) < 20 && Math.abs(d[i + 2] - fgB) < 20;
-  }
-
-  // Find module size: scan horizontally for first fg run in top row area
-  let modSize = 1;
-  let quietStart = 0;
-  for (let x = 0; x < size; x++) {
-    if (isFG(x, Math.floor(size * 0.15))) {
-      quietStart = x;
-      break;
-    }
-  }
-  let firstEnd = quietStart;
-  for (let x = quietStart; x < size; x++) {
-    if (!isFG(x, Math.floor(size * 0.15))) {
-      firstEnd = x;
-      break;
-    }
-  }
-  modSize = Math.max(1, firstEnd - quietStart);
-  const modules = Math.round(size / modSize);
-
-  // Sample modules
-  const grid: number[][] = [];
-  for (let row = 0; row < modules; row++) {
-    grid[row] = [];
-    for (let col = 0; col < modules; col++) {
-      const px = Math.floor(col * modSize + modSize / 2);
-      const py = Math.floor(row * modSize + modSize / 2);
-      grid[row][col] = isFG(px, py) ? 1 : 0;
-    }
-  }
-
-  // Build SVG path
-  const svgSize = 256;
-  const cellPx = svgSize / modules;
-  let rects = '';
-
-  for (let row = 0; row < modules; row++) {
-    for (let col = 0; col < modules; col++) {
-      if (grid[row][col]) {
-        const x = (col * cellPx).toFixed(2);
-        const y = (row * cellPx).toFixed(2);
-        const w = cellPx.toFixed(2);
-        rects += `<rect x="${x}" y="${y}" width="${w}" height="${w}"/>`;
-      }
-    }
-  }
-
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgSize} ${svgSize}" width="${svgSize}" height="${svgSize}">
-  <rect width="${svgSize}" height="${svgSize}" fill="${S.bg}"/>
-  <g fill="${S.fg}">${rects}</g>
-</svg>`;
-
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const url = URL.createObjectURL(blob);
-  dl(url, 'qrcode.svg');
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  flashExport();
-}
-
-/* ── Color sync helpers ─────────────────────────────── */
 function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'fg' | 'bg'): void {
   picker.addEventListener('input', () => {
-    const val = picker.value; // #rrggbb
-    hexInput.value = val.replace('#', '').toUpperCase();
-    S[key] = val;
+    hexInput.value = picker.value.replace('#', '').toUpperCase();
+    S[key] = picker.value;
     scheduleUpdate();
   });
 
   hexInput.addEventListener('input', () => {
     const raw = hexInput.value.replace('#', '');
     if (isValidHex(raw)) {
-      const full = '#' + raw.toUpperCase();
-      picker.value = full;
-      S[key] = full;
+      hexInput.value = raw.toUpperCase();
+      S[key] = '#' + raw.toUpperCase();
+      picker.value = S[key];
       scheduleUpdate();
     }
   });
@@ -266,13 +171,14 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
     const raw = hexInput.value.replace('#', '');
     if (isValidHex(raw)) {
       hexInput.value = raw.toUpperCase();
+      S[key] = '#' + raw.toUpperCase();
+      picker.value = S[key];
     } else {
       hexInput.value = S[key].replace('#', '').toUpperCase();
     }
   });
 }
 
-/* ── Event listeners ────────────────────────────────── */
 elInput.addEventListener('input', () => {
   S.text = elInput.value;
   const len = elInput.value.length;
@@ -299,5 +205,4 @@ syncColor(elBgPicker, elBgHex, 'bg');
 elBtnPNG.addEventListener('click', exportPNG);
 elBtnSVG.addEventListener('click', exportSVG);
 
-/* ── Init ───────────────────────────────────────────── */
 elSizeVal.textContent = S.size + ' px';
