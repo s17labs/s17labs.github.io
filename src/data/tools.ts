@@ -19,7 +19,7 @@ export const TOOLS: Tool[] = [
     name: 'Icon Maker',
     slug: 'icon-maker',
     description:
-      'Generate and export custom icons from Font Awesome, Noto Emoji, or Twemoji. Includes full Android launcher package export.',
+      'Generate and export custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.',
     tags: ['icons', 'android', 'design'],
     icon: 'icons',
   },

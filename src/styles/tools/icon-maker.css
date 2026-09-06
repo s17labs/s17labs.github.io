@@ -182,7 +182,7 @@ input[type='text']::placeholder {
 /* ── Source selector ── */
 .source-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0.4rem;
   margin-bottom: 1rem;
 }
@@ -231,6 +231,85 @@ input.emoji-input {
   font-size: 1.3rem;
   padding: 0.45rem 0.8rem;
   line-height: 1.4;
+}
+
+/* text icon input (bold, larger, letter-spaced) */
+input.text-input {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: Verdana, sans-serif;
+}
+
+/* ── Text style panel (text source only) ── */
+#text-style-panel {
+  display: none;
+}
+
+#text-style-panel.visible {
+  display: block;
+}
+
+.font-note {
+  font-size: 0.65rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+  opacity: 0.6;
+}
+
+.style-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 2fr;
+  gap: 0.4rem;
+}
+
+.style-btn {
+  padding: 0.45rem 0.25rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--t);
+  font-family: Verdana, sans-serif;
+}
+
+.style-btn:hover {
+  border-color: rgba(255, 65, 54, 0.4);
+  color: var(--primary-text);
+}
+
+.style-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.weight-select,
+.font-select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  padding: 0.45rem 0.4rem;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--t);
+}
+
+.weight-select:focus,
+.font-select:focus {
+  border-color: rgba(255, 65, 54, 0.5);
+}
+
+.font-select {
+  font-size: 0.82rem;
+  padding: 0.6rem 0.8rem;
 }
 
 /* Icon color disabled for emoji */
@@ -849,5 +928,8 @@ input.cp-hue::-moz-range-thumb {
 @media (max-width: 680px) {
   .workspace {
     grid-template-columns: 1fr;
+  }
+  .source-row {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
