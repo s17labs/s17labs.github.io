@@ -650,6 +650,7 @@ elIconOffset.addEventListener('input', () => {
 // Resolution presets
 // ─────────────────────────────────────────────────────────────────────────────
 function setPreset(px: number): void {
+  if (!Number.isFinite(px) || px <= 0) return;
   (document.getElementById('custom-w') as HTMLInputElement).value = String(px);
   (document.getElementById('custom-h') as HTMLInputElement).value = String(px);
   document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) =>
@@ -658,7 +659,9 @@ function setPreset(px: number): void {
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.preset-btn')) {
-  b.addEventListener('click', () => setPreset(Number(b.textContent)));
+  // Button labels read like "128px" — parseInt stops at the unit suffix
+  // (Number("128px") would be NaN).
+  b.addEventListener('click', () => setPreset(parseInt(b.textContent ?? '', 10)));
 }
 
 for (const id of ['custom-w', 'custom-h']) {
