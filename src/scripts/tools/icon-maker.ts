@@ -358,6 +358,121 @@ function setTextFont(name: string): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Font embedding for exports.
+//
+// An SVG rasterized through <img> (all PNG exports + Android thumbnails) is
+// isolated: it cannot see the page's webfonts, so custom families would fall
+// back to system fonts. Embedding the bundled woff2 as a data URI makes
+// exports render exactly like the preview (and self-contained SVG files).
+// Mirrors icon-maker-fonts.css — variable faces cover a range with one file.
+// ─────────────────────────────────────────────────────────────────────────────
+interface FontFile {
+  style: string; // 'normal' | 'italic'
+  min: number;
+  max: number;
+  file: string;
+}
+
+const FONT_FILES: Record<string, FontFile[]> = {
+  'Alien Block': [{ style: 'normal', min: 400, max: 400, file: 'alienblock-400-latin.woff2' }],
+  Anton: [{ style: 'normal', min: 400, max: 400, file: 'anton-400-latin.woff2' }],
+  'Archivo Black': [{ style: 'normal', min: 400, max: 400, file: 'archivoblack-400-latin.woff2' }],
+  'Bebas Neue': [{ style: 'normal', min: 400, max: 400, file: 'bebasneue-400-latin.woff2' }],
+  Lobster: [{ style: 'normal', min: 400, max: 400, file: 'lobster-400-latin.woff2' }],
+  Montserrat: [
+    { style: 'normal', min: 100, max: 900, file: 'montserrat-100900-latin.woff2' },
+    { style: 'italic', min: 100, max: 900, file: 'montserrat-100900i-latin.woff2' },
+  ],
+  Oswald: [{ style: 'normal', min: 200, max: 700, file: 'oswald-200700-latin.woff2' }],
+  'Playfair Display': [
+    { style: 'normal', min: 400, max: 900, file: 'playfairdisplay-400900-latin.woff2' },
+    { style: 'italic', min: 400, max: 900, file: 'playfairdisplay-400900i-latin.woff2' },
+  ],
+  Roboto: [
+    { style: 'normal', min: 400, max: 400, file: 'roboto-400-latin.woff2' },
+    { style: 'normal', min: 700, max: 700, file: 'roboto-700-latin.woff2' },
+    { style: 'italic', min: 400, max: 400, file: 'roboto-400i-latin.woff2' },
+    { style: 'italic', min: 700, max: 700, file: 'roboto-700i-latin.woff2' },
+  ],
+  'JetBrains Mono': [
+    { style: 'normal', min: 100, max: 800, file: 'jetbrainsmono-100800-latin.woff2' },
+    { style: 'italic', min: 100, max: 800, file: 'jetbrainsmono-100800i-latin.woff2' },
+  ],
+};
+
+function pickFontFile(family: string, weight: number, italic: boolean): FontFile | null {
+  const opts = FONT_FILES[family];
+  if (!opts) return null; // system stacks need no embedding
+  for (const st of italic ? ['italic', 'normal'] : ['normal', 'italic']) {
+    const cands = opts.filter((o) => o.style === st);
+    if (!cands.length) continue;
+    const inRange = cands.find((o) => weight >= o.min && weight <= o.max);
+    if (inRange) return inRange;
+    let best = cands[0];
+    let bestD = Infinity;
+    for (const o of cands) {
+      const d = weight < o.min ? o.min - weight : weight - o.max;
+      if (d < bestD) {
+        bestD = d;
+        best = o;
+      }
+    }
+    return best;
+  }
+  return null;
+}
+
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  const CHUNK = 0x8000;
+  let s = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    s += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(s);
+}
+
+const fontEmbedCache = new Map<string, string>(); // key → <style> ('' = none/failed)
+
+async function textFontEmbedCSS(): Promise<string> {
+  if (S.source !== 'text') return '';
+  const key = `${S.fontFamily}|${S.fontWeight}|${S.fontItalic}|${S.fontUnderline}`;
+  const hit = fontEmbedCache.get(key);
+  if (hit !== undefined) return hit;
+  let css = '';
+  try {
+    const pick = pickFontFile(S.fontFamily, S.fontWeight, S.fontItalic);
+    if (pick) {
+      const res = await fetch(`/fonts/icon-maker/${pick.file}`);
+      if (res.ok) {
+        const b64 = arrayBufferToBase64(await res.arrayBuffer());
+        // Declare the requested weight/style so this face always matches —
+        // variable ranges stay truthful, statics pin the closest file.
+        const weightDesc = pick.min === pick.max ? String(S.fontWeight) : `${pick.min} ${pick.max}`;
+        const styleDesc = S.fontItalic ? 'italic' : 'normal';
+        css =
+          `<style>@font-face{font-family:"${S.fontFamily}";` +
+          `font-style:${styleDesc};font-weight:${weightDesc};font-display:swap;` +
+          `src:url(data:font/woff2;base64,${b64}) format('woff2');}</style>`;
+      }
+    }
+  } catch {
+    /* fall back to system rendering */
+  }
+  fontEmbedCache.set(key, css);
+  return css;
+}
+
+// buildSVG plus the embedded typeface (when the text source needs one).
+// Used by every export path; the live preview uses document fonts instead.
+async function buildExportSVG(shapeOverride?: string): Promise<string> {
+  const svg = buildSVG(shapeOverride);
+  const css = await textFontEmbedCSS();
+  if (!css) return svg;
+  return svg.replace(/<svg[^>]*>/, (m) => m + css);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Build composite SVG
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSVG(shapeOverride?: string): string {
@@ -700,11 +815,11 @@ async function exportAs(fmt: string): Promise<void> {
         : `emoji-icon`;
 
   if (fmt === 'svg') {
-    dl(URL.createObjectURL(new Blob([buildSVG()], { type: 'image/svg+xml' })), fname + '.svg');
+    dl(URL.createObjectURL(new Blob([await buildExportSVG()], { type: 'image/svg+xml' })), fname + '.svg');
     return;
   }
   await fontsReady();
-  svgToPngBlob(buildSVG(), w, h).then((b) => dl(URL.createObjectURL(b), `${fname}-${w}x${h}.png`));
+  svgToPngBlob(await buildExportSVG(), w, h).then((b) => dl(URL.createObjectURL(b), `${fname}-${w}x${h}.png`));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
@@ -1118,7 +1233,7 @@ NOTE FOR ${isEmoji ? 'EMOJI' : 'TEXT'} ICONS
   VectorDrawable format does not support the ${isEmoji ? 'gradients and raster\n  references used in emoji SVGs' : 'text elements used in text icons'}. For full adaptive icon XML support
   (API 26+ shape masking, Material You theming), use a vector
   source (Font Awesome or Bootstrap) instead.
-${isEmoji ? '' : `  Standalone SVG exports reference the "${S.fontFamily}" typeface by name —\n  install it for identical rendering elsewhere.\n  PNG exports are fully rasterized and always exact.\n`}
+${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface, so they\n  render identically anywhere. PNG exports are fully rasterized.\n`}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
     : '';
@@ -1269,17 +1384,17 @@ async function exportAndroid(): Promise<void> {
     }
 
     for (const [density, size] of densities) {
-      const squareBlob = await svgToPngBlob(buildSVG(), size, size);
+      const squareBlob = await svgToPngBlob(await buildExportSVG(), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher.png', squareBlob);
       nextStep(`mipmap-${density}/ic_launcher.png  ${size}px`);
 
-      const roundBlob = await svgToPngBlob(buildSVG('circle'), size, size);
+      const roundBlob = await svgToPngBlob(await buildExportSVG('circle'), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher_round.png', roundBlob);
       nextStep(`mipmap-${density}/ic_launcher_round.png  ${size}px`);
     }
 
     setProgress(82, 'play_store_icon.png  512px…');
-    const playBlob = await svgToPngBlob(buildSVG(), 512, 512);
+    const playBlob = await svgToPngBlob(await buildExportSVG(), 512, 512);
     zip.file('play_store_icon.png', playBlob);
 
     // XML files: vector sources (FA, Bootstrap) only
@@ -1339,7 +1454,7 @@ async function showAndroidPreview(densities: [string, number][]): Promise<void> 
   container.innerHTML = '';
 
   for (const [label, size] of densities.filter(([d]) => ['mdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'].includes(d))) {
-    const url = URL.createObjectURL(new Blob([buildSVG('circle')], { type: 'image/svg+xml;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([await buildExportSVG('circle')], { type: 'image/svg+xml;charset=utf-8' }));
     await new Promise<void>((resolve) => {
       const img = new Image();
       img.onload = () => {
