@@ -9,18 +9,42 @@ library.add(fas);
 library.add(far);
 library.add(fab);
 
+// Bootstrap Icons (MIT, 2000+ fill-based glyphs) ship with the page via npm
+// and load on demand — no CDN, fully offline. Each file is a 16x16 SVG with
+// one or more <path> elements, which maps 1:1 onto the FA pipeline
+// (fill color + Android VectorDrawable export).
+const biModules = import.meta.glob(
+  '../../../node_modules/bootstrap-icons/icons/*.svg',
+  { query: '?raw', import: 'default', eager: false }
+) as Record<string, () => Promise<string>>;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
+interface VectorPath {
+  d: string;
+  fillRule?: string; // 'evenodd' — preserved from Bootstrap SVGs
+  opacity?: string; // e.g. '0.4' — FA duotone secondary layer / BI fill-opacity
+}
+
 const S = {
-  source: 'fa', // 'fa' | 'noto' | 'twemoji'
-  iconName: '', // FA icon name OR raw emoji character
+  source: 'fa', // 'fa' | 'bi' | 'text' | 'noto' | 'twemoji'
+  iconName: '', // FA/BI icon name, raw emoji character, or text value
+  // Text specific
+  textValue: '', // raw text for the 'text' source
+  fontFamily: 'System Sans', // display name (built-in or Google Font)
+  fontStack: `Verdana, Geneva, 'DejaVu Sans', 'Segoe UI', sans-serif`,
+  fontWeight: 700,
+  fontItalic: false,
+  fontUnderline: false,
+  textSpacing: 0, // letter-spacing in inner text-viewport units
   iconColor: '#ffffff',
   bgColor: '#ff4136',
   bgShape: 'circle',
   iconScale: 70,
-  // FA specific
-  paths: null as string[] | null,
+  iconOffsetY: 0, // vertical icon offset in canvas units (− up · + down)
+  // Vector specific (FA + Bootstrap)
+  paths: null as VectorPath[] | null,
   viewBox: '0 0 512 512',
   // Emoji specific
   emojiSvg: null as string | null, // raw SVG string from CDN
@@ -36,6 +60,18 @@ const INPUT_CONFIG = {
     placeholder: 'e.g. star, circle-check, bolt',
     cls: '',
     error: 'Icon not found — check spelling at fontawesome.com/icons',
+  },
+  bi: {
+    label: 'Bootstrap Icon Name',
+    placeholder: 'e.g. star, alarm, rocket',
+    cls: '',
+    error: 'Icon not found — check spelling at icons.getbootstrap.com',
+  },
+  text: {
+    label: 'Icon Text (letters, numbers, symbols)',
+    placeholder: 'Type characters  e.g. A, 42, @, →',
+    cls: 'text-input',
+    error: 'Type 1–8 characters',
   },
   noto: {
     label: 'Noto Emoji',
@@ -57,6 +93,8 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.paths = null;
   S.emojiSvg = null;
   S.iconName = '';
+  S.textValue = '';
+  biSeq++; // invalidate any in-flight Bootstrap lookup
 
   // Update source buttons
   document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => b.classList.toggle('active', b.dataset.source === src));
@@ -68,23 +106,33 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   input.placeholder = cfg.placeholder;
   input.value = '';
   input.className = cfg.cls;
+  if (src === 'text') input.setAttribute('maxlength', '8');
+  else input.removeAttribute('maxlength');
 
   // Error message text
   const errorMsg = document.getElementById('error-msg')!;
   errorMsg.textContent = cfg.error;
   errorMsg.classList.remove('visible');
 
-  // Icon color: disabled + note for emoji
-  const isEmoji = src !== 'fa';
+  // Icon color applies to vector sources (FA, Bootstrap) and text.
+  // Emoji carry their own colors.
+  const isEmoji = src === 'noto' || src === 'twemoji';
   document.getElementById('icon-color-field')!.classList.toggle('cp-disabled', isEmoji);
   document.getElementById('cp-fa-only-note')!.classList.toggle('visible', isEmoji);
 
-  // Material You checkbox: only for FA (emoji won't produce VectorDrawable XMLs)
+  // Material You checkbox + VectorDrawable XMLs need real vector paths
+  // (FA, Bootstrap). Text and emoji export as PNG-only.
+  const isVector = src === 'fa' || src === 'bi';
   const row = document.getElementById('material-row')!;
-  row.classList.toggle('cb-disabled', isEmoji);
-  document.getElementById('material-sub')!.textContent = isEmoji
-    ? 'FA only — not supported for emoji sources'
-    : 'Adds <monochrome> layer for Android 13+';
+  row.classList.toggle('cb-disabled', !isVector);
+  document.getElementById('material-sub')!.textContent = isVector
+    ? 'Adds <monochrome> layer for Android 13+'
+    : src === 'text'
+      ? 'Text icons export as PNG only — no vector XMLs'
+      : 'Vector sources only — not supported for emoji';
+
+  // Text style panel is only relevant for the text source
+  document.getElementById('text-style-panel')!.classList.toggle('visible', src === 'text');
 
   render();
 }
@@ -147,13 +195,17 @@ function svgDataUri(svgText: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 // FA API lookup
 // ─────────────────────────────────────────────────────────────────────────────
-function findFAIcon(name: string): { paths: string[]; viewBox: string } | null {
+function findFAIcon(name: string): { paths: VectorPath[]; viewBox: string } | null {
   for (const prefix of ['fas', 'far', 'fab'] as const) {
     try {
       const def = findIconDefinition({ prefix, iconName: name } as Parameters<typeof findIconDefinition>[0]);
       if (def?.icon) {
         const [w, h, , , pd] = def.icon;
-        return { paths: Array.isArray(pd) ? pd : [pd], viewBox: `0 0 ${w} ${h}` };
+        const ds = Array.isArray(pd) ? pd : [pd];
+        // Preserve the duotone treatment: FA multi-path definitions
+        // dim their first (secondary) layer.
+        const paths = ds.map((d, i) => (ds.length > 1 && i === 0 ? { d, opacity: '0.4' } : { d }));
+        return { paths, viewBox: `0 0 ${w} ${h}` };
       }
     } catch {
       /* keep looking */
@@ -163,27 +215,300 @@ function findFAIcon(name: string): { paths: string[]; viewBox: string } | null {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Bootstrap Icons lookup (local .svg files, loaded on demand)
+// ─────────────────────────────────────────────────────────────────────────────
+function svgAttr(attrs: string, name: string): string | undefined {
+  // (^|\s) guard so 'x' doesn't match inside 'rx', etc.
+  return new RegExp(`(?:^|\\s)${name}="([^"]*)"`).exec(attrs)?.[1];
+}
+
+// Apply an SVG matrix(a b c d e f) transform to an absolute-coordinate path
+// using only M/L/Q/Z commands (what the rect converter below emits).
+function applySvgMatrix(d: string, matrix: string): string {
+  const m = /matrix\(\s*([^)]+)\)/.exec(matrix);
+  if (!m) return d;
+  const [a, b, c, dd, e, f] = m[1].trim().split(/[\s,]+/).map(Number);
+  if ([a, b, c, dd, e, f].some((n) => Number.isNaN(n))) return d;
+  const pt = (x: number, y: number): string =>
+    `${+(a * x + c * y + e).toFixed(3)} ${+(b * x + dd * y + f).toFixed(3)}`;
+  return d.replace(/([MLQ])([^MLQZ]*)/g, (_m: string, cmd: string, coords: string) => {
+    const nums = coords.trim().split(/[\s,]+/).map(Number);
+    const pts: string[] = [];
+    for (let i = 0; i + 1 < nums.length; i += 2) pts.push(pt(nums[i], nums[i + 1]));
+    return cmd + pts.join(' ');
+  });
+}
+
+// Convert a <rect> to absolute-coordinate path data (supports rx + matrix).
+function rectToPath(x: number, y: number, w: number, h: number, rx: number, transform?: string): string {
+  const rr = Math.min(rx, w / 2, h / 2);
+  const r = (n: number): number => Math.round(n * 1000) / 1000;
+  let d: string;
+  if (!rr) {
+    d = `M${r(x)} ${r(y)}L${r(x + w)} ${r(y)}L${r(x + w)} ${r(y + h)}L${r(x)} ${r(y + h)}Z`;
+  } else {
+    d =
+      `M${r(x + rr)} ${r(y)}` +
+      `L${r(x + w - rr)} ${r(y)}Q${r(x + w)} ${r(y)} ${r(x + w)} ${r(y + rr)}` +
+      `L${r(x + w)} ${r(y + h - rr)}Q${r(x + w)} ${r(y + h)} ${r(x + w - rr)} ${r(y + h)}` +
+      `L${r(x + rr)} ${r(y + h)}Q${r(x)} ${r(y + h)} ${r(x)} ${r(y + h - rr)}` +
+      `L${r(x)} ${r(y + rr)}Q${r(x)} ${r(y)} ${r(x + rr)} ${r(y)}Z`;
+  }
+  return transform ? applySvgMatrix(d, transform) : d;
+}
+
+function parseBiSvg(raw: string): { paths: VectorPath[]; viewBox: string } | null {
+  const inner = raw.slice(raw.indexOf('>') + 1, raw.lastIndexOf('<'));
+  const paths: VectorPath[] = [];
+  const elRe = /<(path|circle|rect)\b([^>]*)\/?>/g;
+  let m: RegExpExecArray | null;
+  while ((m = elRe.exec(inner))) {
+    const [, tag, attrs] = m;
+    if (tag === 'path') {
+      const d = svgAttr(attrs, 'd');
+      if (!d) continue;
+      const p: VectorPath = { d };
+      if (svgAttr(attrs, 'fill-rule') === 'evenodd') p.fillRule = 'evenodd';
+      const fo = svgAttr(attrs, 'fill-opacity');
+      if (fo) p.opacity = fo;
+      paths.push(p);
+    } else if (tag === 'circle') {
+      const cx = Number(svgAttr(attrs, 'cx') ?? 0);
+      const cy = Number(svgAttr(attrs, 'cy') ?? 0);
+      const cr = Number(svgAttr(attrs, 'r') ?? 0);
+      if (!cr) continue;
+      paths.push({ d: `M${cx - cr} ${cy}a${cr} ${cr} 0 1 0 ${2 * cr} 0a${cr} ${cr} 0 1 0 ${-2 * cr} 0z` });
+    } else {
+      const w = Number(svgAttr(attrs, 'width') ?? 0);
+      const h = Number(svgAttr(attrs, 'height') ?? 0);
+      if (!w || !h) continue;
+      paths.push({
+        d: rectToPath(
+          Number(svgAttr(attrs, 'x') ?? 0),
+          Number(svgAttr(attrs, 'y') ?? 0),
+          w,
+          h,
+          Number(svgAttr(attrs, 'rx') ?? 0),
+          svgAttr(attrs, 'transform')
+        ),
+      });
+    }
+  }
+  if (!paths.length) return null;
+  const viewBox = raw.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 16 16';
+  return { paths, viewBox };
+}
+
+async function findBootstrapIcon(name: string): Promise<{ paths: VectorPath[]; viewBox: string } | null> {
+  const loader = biModules[`../../../node_modules/bootstrap-icons/icons/${name}.svg`];
+  if (!loader) return null;
+  try {
+    return parseBiSvg(await loader());
+  } catch {
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Text icon helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function escapeXml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Auto-shrink the type so 1–8 characters always fill the icon nicely.
+// The inner text viewport is 100x100 units; sized so type fills the icon
+// the way FA glyphs fill their viewBox (Verdana cap-height is ~0.73em,
+// so single glyphs render at 76 units).
+function textFontSize(len: number): number {
+  if (len <= 1) return 76;
+  return Math.min(64, 150 / len);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Text fonts: self-hosted bundle (public/fonts/icon-maker/, all SIL OFL).
+// No network, no name-spelling issues — the <select> only offers families
+// declared in icon-maker-fonts.css. Variable faces cover whole weight ranges.
+// ─────────────────────────────────────────────────────────────────────────────
+const TEXT_FONTS: { name: string; stack: string }[] = [
+  { name: 'System Sans', stack: `Verdana, Geneva, 'DejaVu Sans', 'Segoe UI', sans-serif` },
+  { name: 'System Serif', stack: `Georgia, 'Times New Roman', 'DejaVu Serif', serif` },
+  { name: 'System Mono', stack: `'Courier New', 'DejaVu Sans Mono', monospace` },
+  { name: 'Alien Block', stack: `'Alien Block', Verdana, Geneva, sans-serif` },
+  { name: 'Anton', stack: `'Anton', Verdana, Geneva, sans-serif` },
+  { name: 'Archivo Black', stack: `'Archivo Black', Verdana, Geneva, sans-serif` },
+  { name: 'Bebas Neue', stack: `'Bebas Neue', Verdana, Geneva, sans-serif` },
+  { name: 'Lobster', stack: `'Lobster', Georgia, serif` },
+  { name: 'Montserrat', stack: `'Montserrat', Verdana, Geneva, sans-serif` },
+  { name: 'Oswald', stack: `'Oswald', Verdana, Geneva, sans-serif` },
+  { name: 'Playfair Display', stack: `'Playfair Display', Georgia, serif` },
+  { name: 'Roboto', stack: `'Roboto', Verdana, Geneva, sans-serif` },
+  { name: 'JetBrains Mono', stack: `'JetBrains Mono', 'Courier New', monospace` },
+];
+
+function setTextFont(name: string): void {
+  const f = TEXT_FONTS.find((x) => x.name === name) ?? TEXT_FONTS[0];
+  Object.assign(S, { fontFamily: f.name, fontStack: f.stack });
+  render();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Font embedding for exports.
+//
+// An SVG rasterized through <img> (all PNG exports + Android thumbnails) is
+// isolated: it cannot see the page's webfonts, so custom families would fall
+// back to system fonts. Embedding the bundled woff2 as a data URI makes
+// exports render exactly like the preview (and self-contained SVG files).
+// Mirrors icon-maker-fonts.css — variable faces cover a range with one file.
+// ─────────────────────────────────────────────────────────────────────────────
+interface FontFile {
+  style: string; // 'normal' | 'italic'
+  min: number;
+  max: number;
+  file: string;
+}
+
+const FONT_FILES: Record<string, FontFile[]> = {
+  'Alien Block': [{ style: 'normal', min: 400, max: 400, file: 'alienblock-400-latin.woff2' }],
+  Anton: [{ style: 'normal', min: 400, max: 400, file: 'anton-400-latin.woff2' }],
+  'Archivo Black': [{ style: 'normal', min: 400, max: 400, file: 'archivoblack-400-latin.woff2' }],
+  'Bebas Neue': [{ style: 'normal', min: 400, max: 400, file: 'bebasneue-400-latin.woff2' }],
+  Lobster: [{ style: 'normal', min: 400, max: 400, file: 'lobster-400-latin.woff2' }],
+  Montserrat: [
+    { style: 'normal', min: 100, max: 900, file: 'montserrat-100900-latin.woff2' },
+    { style: 'italic', min: 100, max: 900, file: 'montserrat-100900i-latin.woff2' },
+  ],
+  Oswald: [{ style: 'normal', min: 200, max: 700, file: 'oswald-200700-latin.woff2' }],
+  'Playfair Display': [
+    { style: 'normal', min: 400, max: 900, file: 'playfairdisplay-400900-latin.woff2' },
+    { style: 'italic', min: 400, max: 900, file: 'playfairdisplay-400900i-latin.woff2' },
+  ],
+  Roboto: [
+    { style: 'normal', min: 400, max: 400, file: 'roboto-400-latin.woff2' },
+    { style: 'normal', min: 700, max: 700, file: 'roboto-700-latin.woff2' },
+    { style: 'italic', min: 400, max: 400, file: 'roboto-400i-latin.woff2' },
+    { style: 'italic', min: 700, max: 700, file: 'roboto-700i-latin.woff2' },
+  ],
+  'JetBrains Mono': [
+    { style: 'normal', min: 100, max: 800, file: 'jetbrainsmono-100800-latin.woff2' },
+    { style: 'italic', min: 100, max: 800, file: 'jetbrainsmono-100800i-latin.woff2' },
+  ],
+};
+
+function pickFontFile(family: string, weight: number, italic: boolean): FontFile | null {
+  const opts = FONT_FILES[family];
+  if (!opts) return null; // system stacks need no embedding
+  for (const st of italic ? ['italic', 'normal'] : ['normal', 'italic']) {
+    const cands = opts.filter((o) => o.style === st);
+    if (!cands.length) continue;
+    const inRange = cands.find((o) => weight >= o.min && weight <= o.max);
+    if (inRange) return inRange;
+    let best = cands[0];
+    let bestD = Infinity;
+    for (const o of cands) {
+      const d = weight < o.min ? o.min - weight : weight - o.max;
+      if (d < bestD) {
+        bestD = d;
+        best = o;
+      }
+    }
+    return best;
+  }
+  return null;
+}
+
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  const CHUNK = 0x8000;
+  let s = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    s += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(s);
+}
+
+const fontEmbedCache = new Map<string, string>(); // key → <style> ('' = none/failed)
+
+async function textFontEmbedCSS(): Promise<string> {
+  if (S.source !== 'text') return '';
+  const key = `${S.fontFamily}|${S.fontWeight}|${S.fontItalic}|${S.fontUnderline}`;
+  const hit = fontEmbedCache.get(key);
+  if (hit !== undefined) return hit;
+  let css = '';
+  try {
+    const pick = pickFontFile(S.fontFamily, S.fontWeight, S.fontItalic);
+    if (pick) {
+      const res = await fetch(`/fonts/icon-maker/${pick.file}`);
+      if (res.ok) {
+        const b64 = arrayBufferToBase64(await res.arrayBuffer());
+        // Declare the requested weight/style so this face always matches —
+        // variable ranges stay truthful, statics pin the closest file.
+        const weightDesc = pick.min === pick.max ? String(S.fontWeight) : `${pick.min} ${pick.max}`;
+        const styleDesc = S.fontItalic ? 'italic' : 'normal';
+        css =
+          `<style>@font-face{font-family:"${S.fontFamily}";` +
+          `font-style:${styleDesc};font-weight:${weightDesc};font-display:swap;` +
+          `src:url(data:font/woff2;base64,${b64}) format('woff2');}</style>`;
+      }
+    }
+  } catch {
+    /* fall back to system rendering */
+  }
+  fontEmbedCache.set(key, css);
+  return css;
+}
+
+// buildSVG plus the embedded typeface (when the text source needs one).
+// Used by every export path; the live preview uses document fonts instead.
+async function buildExportSVG(shapeOverride?: string): Promise<string> {
+  const svg = buildSVG(shapeOverride);
+  const css = await textFontEmbedCSS();
+  if (!css) return svg;
+  return svg.replace(/<svg[^>]*>/, (m) => m + css);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Build composite SVG
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSVG(shapeOverride?: string): string {
   const shape = shapeOverride ?? S.bgShape;
   const { iconColor, bgColor, iconScale } = S;
   const pad = (100 - iconScale) / 2;
+  const iy = pad + S.iconOffsetY;
   const rx = shape === 'circle' ? 50 : shape === 'rounded' ? 14 : 0;
   const bgEl =
     shape !== 'none' ? `<rect width="100" height="100" fill="${bgColor}" rx="${rx}"/>` : '';
 
   let iconEl = '';
 
-  if (S.source === 'fa' && S.paths) {
+  if ((S.source === 'fa' || S.source === 'bi') && S.paths) {
     const pathEls = S.paths.map(
-      (d, i) => `<path d="${d}" fill="${iconColor}"${S.paths!.length > 1 && i === 0 ? ' opacity="0.4"' : ''}/>`
+      (p) =>
+        `<path d="${p.d}" fill="${iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
     ).join('');
-    iconEl = `<svg x="${pad}" y="${pad}" width="${iconScale}" height="${iconScale}" viewBox="${S.viewBox}">${pathEls}</svg>`;
-  } else if (S.source !== 'fa' && S.emojiSvg) {
+    iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="${S.viewBox}">${pathEls}</svg>`;
+  } else if (S.source === 'text' && S.textValue) {
+    // Custom text/characters rendered as centered type in the chosen font.
+    // Built-ins use system stacks; Google Fonts fall back to Verdana so the
+    // SVG still renders anywhere (PNG exports are always fully rasterized).
+    const len = [...S.textValue].length || 1;
+    const fs = String(Math.round(textFontSize(len) * 10) / 10);
+    const fStyle = S.fontItalic ? ' font-style="italic"' : '';
+    const fDeco = S.fontUnderline ? ' text-decoration="underline"' : '';
+    // letter-spacing adds advance after every glyph (incl. the last), which
+    // would off-center anchored text — compensate with x = 50 + ls/2.
+    const ls = S.textSpacing;
+    const tx = Math.round((50 + ls / 2) * 10) / 10;
+    iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="0 0 100 100"><text x="${tx}" y="52" text-anchor="middle" dominant-baseline="central" font-family="${S.fontStack}" font-size="${fs}" font-weight="${S.fontWeight}" letter-spacing="${ls}"${fStyle}${fDeco} fill="${iconColor}">${escapeXml(S.textValue)}</text></svg>`;
+  } else if ((S.source === 'noto' || S.source === 'twemoji') && S.emojiSvg) {
     // Embed emoji as image using data URI — preserves all colors and gradients
     const uri = svgDataUri(S.emojiSvg);
-    iconEl = `<image x="${pad}" y="${pad}" width="${iconScale}" height="${iconScale}" href="${uri}" preserveAspectRatio="xMidYMid meet"/>`;
+    iconEl = `<image x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" href="${uri}" preserveAspectRatio="xMidYMid meet"/>`;
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">${bgEl}${iconEl}</svg>`;
@@ -211,32 +536,68 @@ function render(): void {
   loading.classList.remove('visible');
   meta.style.display = '';
 
-  const svg = new DOMParser().parseFromString(buildSVG(), 'image/svg+xml').documentElement;
+  const svgDoc = new DOMParser().parseFromString(buildSVG(), 'image/svg+xml');
+  if (svgDoc.documentElement.tagName === 'parsererror' || svgDoc.getElementsByTagName('parsererror').length) {
+    // Never swap a broken parse into the preview — keep the last good icon.
+    err(true);
+    return;
+  }
+  const svg = svgDoc.documentElement;
   svg.classList.add('live');
   svg.style.cssText = 'width:180px;height:180px;display:block;';
   if (old) old.replaceWith(svg);
   else container.appendChild(svg);
 
-  const sourceLabels: Record<string, string> = { fa: 'Font Awesome', noto: 'Noto', twemoji: 'Twemoji' };
+  const sourceLabels: Record<string, string> = { fa: 'Font Awesome', bi: 'Bootstrap', text: 'Text', noto: 'Noto', twemoji: 'Twemoji' };
   document.getElementById('meta-source')!.textContent = sourceLabels[S.source];
   document.getElementById('meta-icon')!.textContent = S.iconName;
   document.getElementById('meta-bg')!.textContent = S.bgShape === 'none' ? 'transparent' : S.bgColor;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Icon input handler (FA + emoji, shared input element)
+// Icon input handler (FA + Bootstrap + text + emoji, shared input element)
 // ─────────────────────────────────────────────────────────────────────────────
 let iconTimer: ReturnType<typeof setTimeout>;
+let biSeq = 0; // guards against out-of-order Bootstrap async lookups
 
 const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
 
-elIconInput.addEventListener('input', () => {
+function handleIconInput(): void {
   clearTimeout(iconTimer);
   const raw = elIconInput.value;
   const val = raw.trim();
 
   if (!val) {
     S.valid = false;
+    S.textValue = '';
+    err(false);
+    render();
+    return;
+  }
+
+  if (S.source === 'text') {
+    // Text: render immediately, no lookup or fetch. Keep only code points
+    // valid in XML 1.0 so a stray control character can't corrupt the preview.
+    const chars = [...val].filter((ch) => {
+      const cp = ch.codePointAt(0)!;
+      return (
+        cp === 0x9 ||
+        cp === 0xa ||
+        cp === 0xd ||
+        (cp >= 0x20 && cp <= 0xd7ff) ||
+        (cp >= 0xe000 && cp <= 0xfffd) ||
+        cp >= 0x10000
+      );
+    });
+    if (!chars.length) {
+      // Non-blank input with nothing usable in it (e.g. an in-progress mobile
+      // keystroke that hasn't produced characters yet) — leave the current
+      // icon and error state untouched and wait for the next input event.
+      return;
+    }
+    S.textValue = chars.slice(0, 8).join('');
+    S.iconName = S.textValue;
+    S.valid = true;
     err(false);
     render();
     return;
@@ -247,6 +608,22 @@ elIconInput.addEventListener('input', () => {
     const name = val.toLowerCase().replace(/^fa[srbl]?-/, '');
     iconTimer = setTimeout(() => {
       const r = findFAIcon(name);
+      if (r) {
+        Object.assign(S, { iconName: name, paths: r.paths, viewBox: r.viewBox, valid: true });
+        err(false);
+      } else {
+        S.valid = false;
+        err(true);
+      }
+      render();
+    }, 300);
+  } else if (S.source === 'bi') {
+    // Bootstrap: debounce local async lookup (no network involved)
+    const name = val.toLowerCase().replace(/^bi-/, '');
+    const seq = ++biSeq;
+    iconTimer = setTimeout(async () => {
+      const r = await findBootstrapIcon(name);
+      if (seq !== biSeq) return; // stale — user kept typing or switched source
       if (r) {
         Object.assign(S, { iconName: name, paths: r.paths, viewBox: r.viewBox, valid: true });
         err(false);
@@ -283,11 +660,72 @@ elIconInput.addEventListener('input', () => {
       render();
     }, 450);
   }
+}
+
+elIconInput.addEventListener('input', (e) => {
+  // Skip IME composition updates (mobile keyboards emit intermediate values
+  // that can look empty/invalid) — the final value is handled below.
+  if ((e as InputEvent).isComposing) return;
+  handleIconInput();
 });
+elIconInput.addEventListener('compositionend', handleIconInput);
 
 function err(show: boolean): void {
   document.getElementById('error-msg')!.classList.toggle('visible', show);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Text style controls (font family, weight, italic, underline)
+// ─────────────────────────────────────────────────────────────────────────────
+const elFontSelect = document.getElementById('font-select') as HTMLSelectElement;
+const elFontWeight = document.getElementById('font-weight') as HTMLSelectElement;
+const elStyleBold = document.getElementById('style-bold')!;
+const elStyleItalic = document.getElementById('style-italic')!;
+const elStyleUnderline = document.getElementById('style-underline')!;
+
+function syncStyleUI(): void {
+  elStyleBold.classList.toggle('active', S.fontWeight === 700);
+  elStyleItalic.classList.toggle('active', S.fontItalic);
+  elStyleUnderline.classList.toggle('active', S.fontUnderline);
+  if (elFontWeight.value !== String(S.fontWeight)) elFontWeight.value = String(S.fontWeight);
+  if (elFontSelect.value !== S.fontFamily) elFontSelect.value = S.fontFamily;
+}
+
+elFontSelect.addEventListener('change', () => setTextFont(elFontSelect.value));
+
+elStyleBold.addEventListener('click', () => {
+  // Bold toggles between Regular 400 and Bold 700
+  S.fontWeight = S.fontWeight === 700 ? 400 : 700;
+  syncStyleUI();
+  render();
+});
+
+elStyleItalic.addEventListener('click', () => {
+  S.fontItalic = !S.fontItalic;
+  syncStyleUI();
+  render();
+});
+
+elStyleUnderline.addEventListener('click', () => {
+  S.fontUnderline = !S.fontUnderline;
+  syncStyleUI();
+  render();
+});
+
+elFontWeight.addEventListener('change', () => {
+  S.fontWeight = Number(elFontWeight.value) || 700;
+  syncStyleUI();
+  render();
+});
+
+const elTextSpacing = document.getElementById('text-spacing') as HTMLInputElement;
+
+elTextSpacing.addEventListener('input', () => {
+  S.textSpacing = Number(elTextSpacing.value) || 0;
+  const n = S.textSpacing;
+  document.getElementById('spacing-label')!.textContent = (n > 0 ? '+' : '') + String(n);
+  render();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shape + scale
@@ -314,10 +752,20 @@ elIconScale.addEventListener('input', () => {
   render();
 });
 
+const elIconOffset = document.getElementById('icon-offset') as HTMLInputElement;
+
+elIconOffset.addEventListener('input', () => {
+  S.iconOffsetY = Number(elIconOffset.value);
+  const n = S.iconOffsetY;
+  document.getElementById('offset-label')!.textContent = (n > 0 ? '+' : '') + n + '%';
+  render();
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolution presets
 // ─────────────────────────────────────────────────────────────────────────────
 function setPreset(px: number): void {
+  if (!Number.isFinite(px) || px <= 0) return;
   (document.getElementById('custom-w') as HTMLInputElement).value = String(px);
   (document.getElementById('custom-h') as HTMLInputElement).value = String(px);
   document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) =>
@@ -326,7 +774,9 @@ function setPreset(px: number): void {
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.preset-btn')) {
-  b.addEventListener('click', () => setPreset(Number(b.textContent)));
+  // Button labels read like "128px" — parseInt stops at the unit suffix
+  // (Number("128px") would be NaN).
+  b.addEventListener('click', () => setPreset(parseInt(b.textContent ?? '', 10)));
 }
 
 for (const id of ['custom-w', 'custom-h']) {
@@ -338,24 +788,42 @@ for (const id of ['custom-w', 'custom-h']) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Standard export
 // ─────────────────────────────────────────────────────────────────────────────
-function exportAs(fmt: string): void {
+async function fontsReady(): Promise<void> {
+  // Don't rasterize mid-swap when a bundled font is still arriving.
+  try {
+    await Promise.race([
+      document.fonts.ready,
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
+  } catch {
+    /* rasterize with whatever is loaded */
+  }
+}
+
+async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
-    alert('Enter a valid icon or emoji first.');
+    alert('Enter a valid icon, text, or emoji first.');
     return;
   }
   const w = Number((document.getElementById('custom-w') as HTMLInputElement).value) || 128;
   const h = Number((document.getElementById('custom-h') as HTMLInputElement).value) || 128;
-  const fname = S.source === 'fa' ? `${S.iconName}-icon` : `emoji-icon`;
+  const fname =
+    S.source === 'fa' || S.source === 'bi'
+      ? `${S.iconName}-icon`
+      : S.source === 'text'
+        ? `${S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text'}-icon`
+        : `emoji-icon`;
 
   if (fmt === 'svg') {
-    dl(URL.createObjectURL(new Blob([buildSVG()], { type: 'image/svg+xml' })), fname + '.svg');
+    dl(URL.createObjectURL(new Blob([await buildExportSVG()], { type: 'image/svg+xml' })), fname + '.svg');
     return;
   }
-  svgToPngBlob(buildSVG(), w, h).then((b) => dl(URL.createObjectURL(b), `${fname}-${w}x${h}.png`));
+  await fontsReady();
+  svgToPngBlob(await buildExportSVG(), w, h).then((b) => dl(URL.createObjectURL(b), `${fname}-${w}x${h}.png`));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
-  b.addEventListener('click', () => exportAs(b.dataset.fmt!));
+  b.addEventListener('click', () => void exportAs(b.dataset.fmt!));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -539,8 +1007,8 @@ document.querySelectorAll<HTMLElement>('.cp-swatch').forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     const t = btn.dataset.target as 'icon' | 'bg';
-    // Don't open icon color picker when in emoji mode
-    if (t === 'icon' && S.source !== 'fa') return;
+    // Don't open icon color picker when in emoji mode (emoji use own colors)
+    if (t === 'icon' && (S.source === 'noto' || S.source === 'twemoji')) return;
     CP.target === t ? cpClose() : cpOpen(t);
   });
 });
@@ -629,7 +1097,7 @@ elCpHexPopup.addEventListener('input', () => {
   });
 
   hexEl.addEventListener('focus', function () {
-    if (target === 'icon' && S.source !== 'fa') return;
+    if (target === 'icon' && (S.source === 'noto' || S.source === 'twemoji')) return;
     if (CP.target !== target) cpOpen(target);
   });
 });
@@ -648,7 +1116,7 @@ window.addEventListener('resize', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Android XML builders (FA only)
+// Android XML builders (vector sources: FA + Bootstrap)
 // ─────────────────────────────────────────────────────────────────────────────
 function buildForegroundXML(): string {
   const [, , vbW, vbH] = S.viewBox.split(' ').map(Number);
@@ -657,13 +1125,15 @@ function buildForegroundXML(): string {
   const scaledW = vbW * scale,
     scaledH = vbH * scale;
   const tx = ((108 - scaledW) / 2).toFixed(4);
-  const ty = ((108 - scaledH) / 2).toFixed(4);
+  // Vertical offset: composite canvas units map 100 → 108dp
+  const ty = ((108 - scaledH) / 2 + (S.iconOffsetY * 108) / 100).toFixed(4);
   const sc = scale.toFixed(6);
 
   const pathEls = S.paths!
-    .map((d, i) => {
-      const alpha = S.paths!.length > 1 && i === 0 ? '\n        android:fillAlpha="0.4"' : '';
-      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}\n        android:pathData="${d}"/>`;
+    .map((p) => {
+      const alpha = p.opacity ? `\n        android:fillAlpha="${p.opacity}"` : '';
+      const fillType = p.fillRule === 'evenodd' ? `\n        android:fillType="evenOdd"` : '';
+      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}${fillType}\n        android:pathData="${p.d}"/>`;
     })
     .join('\n');
 
@@ -678,6 +1148,7 @@ function buildForegroundXML(): string {
     <!--
         Safe zone: center 72×72dp (18dp inset from each edge).
         Icon scale: ${S.iconScale}% — occupies ${safeDp.toFixed(1)}dp within the safe zone.
+        Icon offset: ${S.iconOffsetY}% vertical.
         Original viewBox: ${S.viewBox}
     -->
     <group
@@ -721,11 +1192,18 @@ function buildColorsXML(): string {
 }
 
 function buildReadme(withMonochrome: boolean): string {
-  const isFa = S.source === 'fa';
-  const srcLabel = { fa: 'Font Awesome', noto: 'Noto Emoji', twemoji: 'Twemoji' }[S.source];
+  const isVector = S.source === 'fa' || S.source === 'bi';
+  const isEmoji = S.source === 'noto' || S.source === 'twemoji';
+  const srcLabel = {
+    fa: 'Font Awesome',
+    bi: 'Bootstrap Icons',
+    text: 'Custom Text',
+    noto: 'Noto Emoji',
+    twemoji: 'Twemoji',
+  }[S.source];
 
-  const monoSection = !isFa
-    ? `N/A — emoji sources do not produce VectorDrawable XML files.`
+  const monoSection = !isVector
+    ? `N/A — ${isEmoji ? 'emoji' : 'text'} sources do not produce VectorDrawable XML files.`
     : withMonochrome
       ? `YES — <monochrome> element included in ic_launcher.xml and ic_launcher_round.xml.
    Android 13+ (API 33) will use this layer for Material You themed icons,
@@ -733,7 +1211,7 @@ function buildReadme(withMonochrome: boolean): string {
       : `NO  — not included. Re-export with "Include Material You / Themed Icons"
    checked to add the <monochrome> layer for Android 13+ support.`;
 
-  const xmlNote = isFa
+  const xmlNote = isVector
     ? `├── mipmap-anydpi-v26/
   │   ├── ic_launcher.xml           Adaptive icon${withMonochrome ? ' + monochrome (API 33+)' : ' (API 26+)'}
   │   └── ic_launcher_round.xml     Adaptive icon${withMonochrome ? ' + monochrome (API 33+)' : ' (API 26+)'}
@@ -744,21 +1222,26 @@ function buildReadme(withMonochrome: boolean): string {
   │   └── ic_launcher_foreground.xml   Foreground — explicit API 24+ copy
   └── values/
       └── colors.xml                   ic_launcher_background color resource`
-    : `  (No XML files — VectorDrawable adaptive icons require FA source.
-   PNG mipmaps are sufficient for all Android versions.)`;
+    : `  (No XML files — VectorDrawable adaptive icons require a vector source
+    (Font Awesome or Bootstrap). PNG mipmaps are sufficient for all
+    Android versions.)`;
 
-  const emojiNote = !isFa
+  const rasterNote = !isVector
     ? `
-NOTE FOR EMOJI ICONS
-  Emoji sources (Noto, Twemoji) export PNG mipmaps only. Android's
-  VectorDrawable format does not support the gradients and raster
-  references used in emoji SVGs. For full adaptive icon XML support
-  (API 26+ shape masking, Material You theming), use the
-  Font Awesome source instead.
-
+NOTE FOR ${isEmoji ? 'EMOJI' : 'TEXT'} ICONS
+  ${isEmoji ? 'Emoji sources (Noto, Twemoji)' : 'Text icons'} export PNG mipmaps only. Android's
+  VectorDrawable format does not support the ${isEmoji ? 'gradients and raster\n  references used in emoji SVGs' : 'text elements used in text icons'}. For full adaptive icon XML support
+  (API 26+ shape masking, Material You theming), use a vector
+  source (Font Awesome or Bootstrap) instead.
+${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface, so they\n  render identically anywhere. PNG exports are fully rasterized.\n`}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
     : '';
+
+  const fontLine =
+    S.source === 'text'
+      ? `  Font:              ${S.fontFamily} ${S.fontWeight}${S.fontItalic ? ' italic' : ''}${S.fontUnderline ? ' + underline' : ''}${S.textSpacing ? `, spacing ${S.textSpacing}` : ''}\n`
+      : '';
 
   return `╔══════════════════════════════════════════════════════════════╗
 ║           ANDROID ICON PACKAGE — s17 Labs Icon Maker         ║
@@ -767,8 +1250,9 @@ NOTE FOR EMOJI ICONS
 
 ICON DETAILS
   Source:            ${srcLabel}
-  Name / Emoji:      ${S.iconName}
-  Icon color:        ${isFa ? S.iconColor : '(emoji own colors)'}
+  Name / Text / Emoji: ${S.iconName}
+  Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
+${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
   Background color:  ${S.bgColor}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
   Material You:      ${monoSection}
@@ -810,7 +1294,7 @@ PACKAGE STRUCTURE
   play_store_icon.png                  512 × 512 px  (Play Store listing)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${emojiNote}${isFa ? `
+${rasterNote}${isVector ? `
 ABOUT ADAPTIVE ICONS  (Android 8.0 / API 26+)
 
   Adaptive icons use two separate layers that the launcher composites:
@@ -852,12 +1336,12 @@ const ANDROID_BTN_HTML = `<span style="font-size:1.05rem;display:inline-flex;">$
 
 async function exportAndroid(): Promise<void> {
   if (!S.valid) {
-    alert('Enter a valid icon or emoji first.');
+    alert('Enter a valid icon, text, or emoji first.');
     return;
   }
 
-  const isFa = S.source === 'fa';
-  const withMonochrome = isFa && (document.getElementById('material-toggle') as HTMLInputElement).checked;
+  const isVector = S.source === 'fa' || S.source === 'bi';
+  const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;
   const btn = document.getElementById('android-btn') as HTMLButtonElement;
   const progressWrap = document.getElementById('progress-wrap')!;
   const progressFill = document.getElementById('progress-fill')!;
@@ -867,6 +1351,8 @@ async function exportAndroid(): Promise<void> {
   btn.innerHTML = `${iconSvg('circle-notch', 'spin')} <span><span class="android-label">Building package…</span></span>`;
   progressWrap.classList.add('visible');
 
+  await fontsReady();
+
   function setProgress(pct: number, label: string): void {
     progressFill.style.width = pct + '%';
     progressLabel.textContent = label;
@@ -875,7 +1361,11 @@ async function exportAndroid(): Promise<void> {
   try {
     const zip = new JSZip();
     const res = zip.folder('res')!;
-    const safeName = isFa ? S.iconName.replace(/-/g, '_') : 'emoji_icon';
+    const safeName = isVector
+      ? S.iconName.replace(/-/g, '_')
+      : S.source === 'text'
+        ? S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text_icon'
+        : 'emoji_icon';
 
     const densities: [string, number][] = [
       ['mdpi', 48],
@@ -894,21 +1384,21 @@ async function exportAndroid(): Promise<void> {
     }
 
     for (const [density, size] of densities) {
-      const squareBlob = await svgToPngBlob(buildSVG(), size, size);
+      const squareBlob = await svgToPngBlob(await buildExportSVG(), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher.png', squareBlob);
       nextStep(`mipmap-${density}/ic_launcher.png  ${size}px`);
 
-      const roundBlob = await svgToPngBlob(buildSVG('circle'), size, size);
+      const roundBlob = await svgToPngBlob(await buildExportSVG('circle'), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher_round.png', roundBlob);
       nextStep(`mipmap-${density}/ic_launcher_round.png  ${size}px`);
     }
 
     setProgress(82, 'play_store_icon.png  512px…');
-    const playBlob = await svgToPngBlob(buildSVG(), 512, 512);
+    const playBlob = await svgToPngBlob(await buildExportSVG(), 512, 512);
     zip.file('play_store_icon.png', playBlob);
 
-    // XML files: FA only
-    if (isFa) {
+    // XML files: vector sources (FA, Bootstrap) only
+    if (isVector) {
       setProgress(86, 'Building adaptive icon XMLs…');
       const adaptiveXML = buildAdaptiveIconXML(withMonochrome);
       res.folder('mipmap-anydpi-v26')!.file('ic_launcher.xml', adaptiveXML);
@@ -933,7 +1423,7 @@ async function exportAndroid(): Promise<void> {
       compressionOptions: { level: 6 },
     });
 
-    const suffix = isFa ? ` + XMLs${withMonochrome ? ' + Material You' : ''}` : ' (PNG only)';
+    const suffix = isVector ? ` + XMLs${withMonochrome ? ' + Material You' : ''}` : ' (PNG only)';
     setProgress(100, `Done — ${densities.length * 2 + 1} images${suffix}`);
 
     showAndroidPreview(densities);
@@ -964,7 +1454,7 @@ async function showAndroidPreview(densities: [string, number][]): Promise<void> 
   container.innerHTML = '';
 
   for (const [label, size] of densities.filter(([d]) => ['mdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'].includes(d))) {
-    const url = URL.createObjectURL(new Blob([buildSVG('circle')], { type: 'image/svg+xml;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([await buildExportSVG('circle')], { type: 'image/svg+xml;charset=utf-8' }));
     await new Promise<void>((resolve) => {
       const img = new Image();
       img.onload = () => {

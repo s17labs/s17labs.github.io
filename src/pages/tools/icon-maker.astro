@@ -2,12 +2,13 @@
 import ToolLayout from '../../components/ToolLayout.astro';
 import Icon from '../../components/Icon.astro';
 import '../../styles/tools/icon-maker.css';
+import '../../styles/tools/icon-maker-fonts.css';
 
 const title = 'Icon Maker | s17 Labs Tools';
 const description =
-  'Generate and export custom icons from Font Awesome, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
+  'Generate and export custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
 const tagline =
-  'Generate custom icons from Font Awesome, Noto Emoji, or Twemoji. Control colors, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
+  'Generate custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Control colors, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
 ---
 
 <ToolLayout title={title} description={description} heading="Icon Maker" tagline={tagline} maxWidth={900}>
@@ -19,7 +20,7 @@ const tagline =
         <div id="preview-container">
           <div class="icon-placeholder" id="placeholder">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
-            <p>Enter an icon name or emoji to begin</p>
+            <p>Enter an icon name, text, or emoji to begin</p>
           </div>
           <div class="preview-loading" id="preview-loading">
             <span style="display:inline-flex;"><Icon name="circle-notch" class="spin-icon" /></span>
@@ -50,6 +51,14 @@ const tagline =
             <span class="src-ico"><Icon name="icons" /></span>
             <span class="src-lbl">Font Awesome</span>
           </button>
+          <button type="button" class="source-btn" data-source="bi">
+            <span class="src-ico"><Icon name="bootstrap" /></span>
+            <span class="src-lbl">Bootstrap</span>
+          </button>
+          <button type="button" class="source-btn" data-source="text">
+            <span class="src-ico"><Icon name="font" /></span>
+            <span class="src-lbl">Text</span>
+          </button>
           <button type="button" class="source-btn" data-source="noto">
             <span class="src-ico">🌈</span>
             <span class="src-lbl">Noto Emoji</span>
@@ -67,6 +76,53 @@ const tagline =
         </div>
       </div>
 
+      <!-- Text style panel (text source only) -->
+      <div class="panel" id="text-style-panel">
+        <div class="panel-title">Text Style</div>
+        <div class="field">
+          <label for="font-select">Font</label>
+          <select id="font-select" class="font-select">
+            <option value="System Sans" selected>System Sans</option>
+            <option value="System Serif">System Serif</option>
+            <option value="System Mono">System Mono</option>
+            <option value="Alien Block">Alien Block</option>
+            <option value="Anton">Anton</option>
+            <option value="Archivo Black">Archivo Black</option>
+            <option value="Bebas Neue">Bebas Neue</option>
+            <option value="Lobster">Lobster</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Oswald">Oswald</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Roboto">Roboto</option>
+            <option value="JetBrains Mono">JetBrains Mono</option>
+          </select>
+          <div class="font-note">Bundled with the tool — works offline.</div>
+        </div>
+        <div class="field">
+          <label>Style</label>
+          <div class="style-row">
+            <button type="button" class="style-btn active" id="style-bold" title="Bold"><b>B</b></button>
+            <button type="button" class="style-btn" id="style-italic" title="Italic"><i>I</i></button>
+            <button type="button" class="style-btn" id="style-underline" title="Underline"><u>U</u></button>
+            <select id="font-weight" class="weight-select" aria-label="Font weight">
+              <option value="100">Thin 100</option>
+              <option value="200">Extra Light 200</option>
+              <option value="300">Light 300</option>
+              <option value="400">Regular 400</option>
+              <option value="500">Medium 500</option>
+              <option value="600">Semi Bold 600</option>
+              <option value="700" selected>Bold 700</option>
+              <option value="800">Extra Bold 800</option>
+              <option value="900">Black 900</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="text-spacing">Character Spacing — <span id="spacing-label">0</span></label>
+          <input type="range" id="text-spacing" min="-10" max="30" step="0.5" value="0" />
+        </div>
+      </div>
+
       <!-- Colors panel -->
       <div class="panel">
         <div class="panel-title">Colors</div>
@@ -79,7 +135,7 @@ const tagline =
               </button>
               <input class="cp-hex-input" id="cp-hex-icon" type="text" value="#ffffff" maxlength="7" spellcheck="false" autocomplete="off" />
             </div>
-            <span class="cp-fa-only" id="cp-fa-only-note">FA only — emoji use own colors</span>
+            <span class="cp-fa-only" id="cp-fa-only-note">Emoji use their own colors</span>
           </div>
           <div class="color-field">
             <label>Background</label>
@@ -132,7 +188,12 @@ const tagline =
         <hr class="divider" />
         <div class="field">
           <label for="icon-scale">Icon Scale — <span id="size-label">70%</span></label>
-          <input type="range" id="icon-scale" min="20" max="90" value="70" />
+          <input type="range" id="icon-scale" min="20" max="120" value="70" />
+        </div>
+        <div class="field">
+          <label for="icon-offset">Icon Offset — <span id="offset-label">0%</span></label>
+          <input type="range" id="icon-offset" min="-50" max="50" value="0" />
+          <div class="font-note">− moves up · + moves down</div>
         </div>
       </div>
 
