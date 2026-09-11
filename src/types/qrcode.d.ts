@@ -27,11 +27,6 @@ declare module 'qrcode' {
       text: string,
       options: QRCodeOptions,
     ): Promise<string>;
-    toFile(
-      path: string,
-      text: string,
-      options?: QRCodeOptions,
-    ): Promise<void>;
   };
 
   export default QRCode;

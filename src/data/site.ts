@@ -7,6 +7,10 @@ export const SITE = {
   orgUrl: 'https://github.com/s17labs',
   sourceUrl: 'https://github.com/s17labs/s17labs.github.io',
   toolsUrl: '/tools/',
+  projects: {
+    koda: 'https://s17labs.github.io/koda/',
+    webshell: 'https://github.com/s17labs/webshell',
+  },
   parent: {
     name: 'Syntax 17',
     url: 'https://s17hq.github.io',
