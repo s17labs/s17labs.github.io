@@ -59,13 +59,15 @@ const INPUT_CONFIG = {
     label: 'Font Awesome Icon Name',
     placeholder: 'e.g. star, circle-check, bolt',
     cls: '',
-    error: 'Icon not found — check spelling at fontawesome.com/icons',
+    error:
+      'Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener">fontawesome.com</a>',
   },
   bi: {
     label: 'Bootstrap Icon Name',
     placeholder: 'e.g. star, alarm, rocket',
     cls: '',
-    error: 'Icon not found — check spelling at icons.getbootstrap.com',
+    error:
+      'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener">icons.getbootstrap.com</a>',
   },
   text: {
     label: 'Icon Text (letters, numbers, symbols)',
@@ -109,9 +111,9 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   if (src === 'text') input.setAttribute('maxlength', '8');
   else input.removeAttribute('maxlength');
 
-  // Error message text
+  // Error message text (contains a clickable link for FA / Bootstrap)
   const errorMsg = document.getElementById('error-msg')!;
-  errorMsg.textContent = cfg.error;
+  errorMsg.innerHTML = cfg.error;
   errorMsg.classList.remove('visible');
 
   // Icon color applies to vector sources (FA, Bootstrap) and text.
