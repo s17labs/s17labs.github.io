@@ -37,6 +37,14 @@ dropZone.addEventListener('click', (e) => {
   fileInput.click();
 });
 
+dropZone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
+    e.preventDefault();
+    fileInput.click();
+  }
+});
+
 dzChangeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   fileInput.click();
