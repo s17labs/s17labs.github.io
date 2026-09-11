@@ -906,6 +906,16 @@ input.cp-hue::-moz-range-thumb {
   opacity: 1;
 }
 
+.error-msg a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.error-msg a:hover {
+  color: #fff;
+}
+
 .icon-placeholder {
   display: flex;
   flex-direction: column;
