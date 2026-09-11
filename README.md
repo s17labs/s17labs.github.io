@@ -32,10 +32,9 @@ npm run preview  # preview the production build
 
 The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/tools](https://s17labs.github.io). Tools are native Astro pages sharing a common design system (`src/styles/tool.css`, `ToolLayout.astro`) with logic typechecked in `src/scripts/tools/` — see `src/data/tools.ts` for the registry.
 
-- **Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator** — rebuilt as Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
-- **m² Calc** — standalone app with its own design system (self-hosted Barlow fonts, dark/light/system themes, EN/SK/DE i18n), rebuilt as an Astro page
+- **Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator** — Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
 
-All tools are fully self-hosted — no CDN dependencies. Font Awesome icon data comes from npm packages; client logic is typechecked TypeScript in `src/scripts/tools/`. The registry lives in `src/data/tools.ts`.
+All tools run fully client-side — no server endpoints. Font Awesome icon data comes from npm packages; client logic is typechecked TypeScript in `src/scripts/tools/`. Note: emoji SVGs in Icon Maker are fetched from a CDN at runtime, so emoji sources need network access. The registry lives in `src/data/tools.ts`.
 
 ### Adding a new tool
 
