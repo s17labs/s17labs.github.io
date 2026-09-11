@@ -11,6 +11,9 @@ const toolsUrlBase = '/tools';
 <BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
   <div class="page">
     <div class="site-header">
+      <a href="/" class="back-link">
+        <Icon name="arrow-left" /> Home
+      </a>
       <h1><span class="cube"></span> <a href="/">{SITE.name}</a> Tools</h1>
     </div>
 
@@ -88,6 +91,31 @@ const toolsUrlBase = '/tools';
 
   .site-header a:hover {
     text-decoration: underline;
+  }
+
+  .site-header .back-link:hover {
+    text-decoration: none;
+  }
+
+  .back-link {
+    position: absolute;
+    left: 0;
+    background: none;
+    border: none;
+    color: var(--secondary-text);
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: Verdana, sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0;
+    transition: var(--t);
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    color: var(--accent);
   }
 
   .cube {
