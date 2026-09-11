@@ -47,23 +47,23 @@ const tagline =
 
         <!-- Source selector -->
         <div class="source-row">
-          <button type="button" class="source-btn active" data-source="fa">
+          <button type="button" class="source-btn active" data-source="fa" aria-pressed="true">
             <span class="src-ico"><Icon name="icons" /></span>
             <span class="src-lbl">Font Awesome</span>
           </button>
-          <button type="button" class="source-btn" data-source="bi">
+          <button type="button" class="source-btn" data-source="bi" aria-pressed="false">
             <span class="src-ico"><Icon name="bootstrap" /></span>
             <span class="src-lbl">Bootstrap</span>
           </button>
-          <button type="button" class="source-btn" data-source="text">
+          <button type="button" class="source-btn" data-source="text" aria-pressed="false">
             <span class="src-ico"><Icon name="font" /></span>
             <span class="src-lbl">Text</span>
           </button>
-          <button type="button" class="source-btn" data-source="noto">
+          <button type="button" class="source-btn" data-source="noto" aria-pressed="false">
             <span class="src-ico">🌈</span>
             <span class="src-lbl">Noto Emoji</span>
           </button>
-          <button type="button" class="source-btn" data-source="twemoji">
+          <button type="button" class="source-btn" data-source="twemoji" aria-pressed="false">
             <span class="src-ico">🐦</span>
             <span class="src-lbl">Twemoji</span>
           </button>
@@ -101,9 +101,9 @@ const tagline =
         <div class="field">
           <label>Style</label>
           <div class="style-row">
-            <button type="button" class="style-btn active" id="style-bold" title="Bold"><b>B</b></button>
-            <button type="button" class="style-btn" id="style-italic" title="Italic"><i>I</i></button>
-            <button type="button" class="style-btn" id="style-underline" title="Underline"><u>U</u></button>
+            <button type="button" class="style-btn active" id="style-bold" title="Bold" aria-pressed="true"><b>B</b></button>
+            <button type="button" class="style-btn" id="style-italic" title="Italic" aria-pressed="false"><i>I</i></button>
+            <button type="button" class="style-btn" id="style-underline" title="Underline" aria-pressed="false"><u>U</u></button>
             <select id="font-weight" class="weight-select" aria-label="Font weight">
               <option value="100">Thin 100</option>
               <option value="200">Extra Light 200</option>
@@ -168,19 +168,19 @@ const tagline =
       <div class="panel">
         <div class="panel-title">Background Shape</div>
         <div class="shape-row">
-          <button type="button" class="shape-btn" data-shape="none">
+          <button type="button" class="shape-btn" data-shape="none" aria-pressed="false">
             <div class="shape-icon none"></div>
             None
           </button>
-          <button type="button" class="shape-btn active" data-shape="circle">
+          <button type="button" class="shape-btn active" data-shape="circle" aria-pressed="true">
             <div class="shape-icon circle"></div>
             Circle
           </button>
-          <button type="button" class="shape-btn" data-shape="rounded">
+          <button type="button" class="shape-btn" data-shape="rounded" aria-pressed="false">
             <div class="shape-icon rounded"></div>
             Rounded
           </button>
-          <button type="button" class="shape-btn" data-shape="square">
+          <button type="button" class="shape-btn" data-shape="square" aria-pressed="false">
             <div class="shape-icon square"></div>
             Square
           </button>
@@ -203,14 +203,14 @@ const tagline =
 
         <label style="display:block;margin-bottom:0.45rem;">Resolution Presets</label>
         <div class="preset-grid">
-          <button type="button" class="preset-btn">16px</button>
-          <button type="button" class="preset-btn">32px</button>
-          <button type="button" class="preset-btn">64px</button>
-          <button type="button" class="preset-btn active">128px</button>
-          <button type="button" class="preset-btn">256px</button>
-          <button type="button" class="preset-btn">512px</button>
-          <button type="button" class="preset-btn">1024px</button>
-          <button type="button" class="preset-btn">2048px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">16px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">32px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">64px</button>
+          <button type="button" class="preset-btn active" aria-pressed="true">128px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">256px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">512px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">1024px</button>
+          <button type="button" class="preset-btn" aria-pressed="false">2048px</button>
         </div>
 
         <label style="display:block;margin-bottom:0.45rem;" for="custom-w">Custom Size</label>
