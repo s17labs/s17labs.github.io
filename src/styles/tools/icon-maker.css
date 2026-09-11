@@ -174,6 +174,21 @@ input[type='text']:focus {
   border-color: rgba(255, 65, 54, 0.5);
 }
 
+/* Visible keyboard focus — overrides the outline:none above for keyboard users */
+input[type='text']:focus-visible,
+.weight-select:focus-visible,
+.font-select:focus-visible,
+.cp-hex-input:focus-visible,
+.cp-hex-popup:focus-visible,
+.source-btn:focus-visible,
+.shape-btn:focus-visible,
+.preset-btn:focus-visible,
+.export-btn:focus-visible,
+.cp-swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 input[type='text']::placeholder {
   color: var(--secondary-text);
   opacity: 0.5;
