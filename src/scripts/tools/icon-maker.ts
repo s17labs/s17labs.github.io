@@ -1097,11 +1097,8 @@ elCpHexPopup.addEventListener('input', () => {
       render();
     }
   });
-
-  hexEl.addEventListener('focus', function () {
-    if (target === 'icon' && (S.source === 'noto' || S.source === 'twemoji')) return;
-    if (CP.target !== target) cpOpen(target);
-  });
+  // NOTE: intentionally no focus/click-to-open here — the picker opens
+  // only from the color swatch (.cp-swatch) so typing a hex stays undisturbed.
 });
 
 document.addEventListener('click', (e) => {
