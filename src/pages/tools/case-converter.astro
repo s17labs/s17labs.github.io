@@ -12,8 +12,8 @@ const tagline = 'Convert text between 15 programming conventions and writing for
 <ToolLayout title={title} description={description} heading="Case Converter" tagline={tagline}>
   <!-- Input -->
   <div class="panel">
-    <div class="panel-title">Input</div>
-    <textarea id="input" placeholder="Type or paste text here…" spellcheck="false" autocomplete="off"></textarea>
+    <div class="panel-title"><label for="input">Input</label></div>
+    <textarea id="input" placeholder="Type or paste text here…" spellcheck="false" autocomplete="off" aria-label="Text to convert"></textarea>
   </div>
 
   <!-- Format selector -->
@@ -26,6 +26,7 @@ const tagline = 'Convert text between 15 programming conventions and writing for
             type="button"
             class:list={['case-btn', { active: fmt.id === DEFAULT_FORMAT_ID }]}
             data-id={fmt.id}
+            aria-pressed={fmt.id === DEFAULT_FORMAT_ID}
           >
             <span>{fmt.label}</span>
             <span class="case-preview">{fmt.preview}</span>
@@ -37,10 +38,10 @@ const tagline = 'Convert text between 15 programming conventions and writing for
 
   <!-- Output -->
   <div class="panel">
-    <div class="panel-title">Output</div>
+    <div class="panel-title"><label for="output">Output</label></div>
     <div class="output-wrap">
-      <textarea id="output" readonly spellcheck="false"></textarea>
-      <button type="button" class="copy-btn" id="copy-btn">
+      <textarea id="output" readonly spellcheck="false" aria-label="Converted text" aria-live="polite"></textarea>
+      <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy output to clipboard">
         <span class="copy-state copy-idle"><Icon name="copy" /> Copy</span>
         <span class="copy-state copy-done"><Icon name="check" /> Copied</span>
       </button>

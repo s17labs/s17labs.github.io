@@ -12,7 +12,7 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
   <!-- Upload -->
   <div class="panel">
     <div class="panel-title">Upload</div>
-    <div class="drop-zone" id="drop-zone">
+    <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload images — activate to open the file picker">
       <div class="dz-empty" id="dz-empty">
         <Icon name="cloud-arrow-up" size={29} />
         <p>Drag &amp; drop images here, or click to select</p>
@@ -43,7 +43,7 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
       </div>
     </div>
     <div class="field">
-      <div class="toggle-row" id="aspect-toggle-row">
+      <div class="toggle-row" id="aspect-toggle-row" tabindex="0" role="switch" aria-checked="true" aria-label="Lock aspect ratio">
         <div class="toggle-track on" id="aspect-track">
           <div class="toggle-thumb"></div>
         </div>
