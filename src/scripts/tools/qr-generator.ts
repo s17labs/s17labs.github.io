@@ -19,6 +19,14 @@ const S: QrState = {
   ready: false,
 };
 
+/** Byte-mode capacity per error-correction level (matches the ec-hint copy). */
+const EC_CAPACITY: Record<QrState['ec'], number> = {
+  L: 2953,
+  M: 2331,
+  Q: 1663,
+  H: 1273,
+};
+
 const elInput = document.getElementById('qr-input') as HTMLTextAreaElement;
 const elSize = document.getElementById('qr-size') as HTMLInputElement;
 const elSizeVal = document.getElementById('size-val')!;
@@ -181,9 +189,7 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
 
 elInput.addEventListener('input', () => {
   S.text = elInput.value;
-  const len = elInput.value.length;
-  elCharCount.textContent = `${len} / 2953`;
-  elCharCount.classList.toggle('warn', len > 2000);
+  updateCharCount();
   if (S.text.trim()) showMsg(elErrorMsg, false);
   scheduleUpdate();
 });
@@ -196,11 +202,32 @@ elSize.addEventListener('input', () => {
 
 elEC.addEventListener('change', () => {
   S.ec = elEC.value as QrState['ec'];
+  updateCapacity();
   scheduleUpdate();
 });
 
 syncColor(elFgPicker, elFgHex, 'fg');
 syncColor(elBgPicker, elBgHex, 'bg');
+
+function updateCharCount(): void {
+  const max = EC_CAPACITY[S.ec];
+  const len = elInput.value.length;
+  elCharCount.textContent = `${len} / ${max}`;
+  elCharCount.classList.toggle('warn', len > max * 0.7);
+}
+
+/** Clamp the input to the selected level's capacity (also enforced by maxlength). */
+function updateCapacity(): void {
+  const max = EC_CAPACITY[S.ec];
+  elInput.maxLength = max;
+  if (elInput.value.length > max) {
+    elInput.value = elInput.value.slice(0, max);
+    S.text = elInput.value;
+  }
+  updateCharCount();
+}
+
+updateCapacity();
 
 elBtnPNG.addEventListener('click', exportPNG);
 elBtnSVG.addEventListener('click', exportSVG);
