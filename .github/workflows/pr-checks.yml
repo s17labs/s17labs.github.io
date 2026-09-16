@@ -1,5 +1,8 @@
 # Automated review bot for pull requests: typechecks and builds every PR
 # so broken changes are caught before they reach main (which auto-deploys).
+# On completion it posts (or updates) a single comment on the PR with the
+# result and the relevant log excerpt, so the failure reason is visible
+# without digging through Actions logs.
 name: PR Checks
 
 on:
@@ -8,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  issues: write
 
 concurrency:
   group: pr-checks-${{ github.ref }}
@@ -28,6 +33,62 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Typecheck
-        run: npx astro check
+        id: typecheck
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx astro check 2>&1 | tee typecheck.log
       - name: Build
-        run: npm run build
+        id: build
+        if: steps.typecheck.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+      - name: Report results on the PR
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- pr-checks-report -->';
+            const typecheckOk = '${{ steps.typecheck.outcome }}' === 'success';
+            const buildOk = '${{ steps.build.outcome }}' === 'success';
+
+            // Keep the comment readable: last 60 lines, max ~6000 chars.
+            const excerpt = (path) => {
+              if (!fs.existsSync(path)) return '_no log captured_';
+              const lines = fs.readFileSync(path, 'utf8').replace(/\x1b\[[0-9;]*m/g, '').split('\n');
+              const tail = lines.slice(-60).join('\n');
+              return tail.length > 6000 ? '…(truncated)…\n' + tail.slice(-6000) : tail;
+            };
+
+            let body;
+            if (!typecheckOk) {
+              body =
+                `${marker}\n## ❌ PR Checks failed — typecheck\n\n` +
+                `Run \`npx astro check\` locally to reproduce.\n\n` +
+                `<details><summary>Typecheck log</summary>\n\n\`\`\`\n${excerpt('typecheck.log')}\n\`\`\`\n</details>`;
+            } else if (!buildOk) {
+              body =
+                `${marker}\n## ❌ PR Checks failed — build\n\n` +
+                `Run \`npm run build\` locally to reproduce.\n\n` +
+                `<details><summary>Build log</summary>\n\n\`\`\`\n${excerpt('build.log')}\n\`\`\`\n</details>`;
+            } else {
+              body = `${marker}\n## ✅ PR Checks passed\n\nTypecheck (\`npx astro check\`) and production build both green.`;
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+      - name: Fail if checks failed
+        if: always() && (steps.typecheck.outcome == 'failure' || steps.build.outcome == 'failure')
+        run: exit 1
