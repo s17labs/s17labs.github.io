@@ -4,19 +4,22 @@ import Footer from '../../components/Footer.astro';
 import Icon from '../../components/Icon.astro';
 import { TOOLS, TOOLS_SECTION } from '../../data/tools';
 import { SITE } from '../../data/site';
+import '../../styles/tool.css';
 ---
 
 <BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
-  <div class="page">
-    <div class="site-header">
+  <div class="tool-top">
+    <div class="tool-header">
       <a href="/" class="back-link">
         <Icon name="arrow-left" /> Home
       </a>
       <h1><span class="cube"></span> Tools</h1>
     </div>
 
-    <p class="site-desc">{TOOLS_SECTION.description}</p>
+    <p class="tool-desc">{TOOLS_SECTION.description}</p>
+  </div>
 
+  <div class="page">
     <div class="tool-list">
       {
         TOOLS.map((tool) => (
@@ -65,74 +68,6 @@ import { SITE } from '../../data/site';
     display: flex;
     flex-direction: column;
     flex: 1;
-  }
-
-  /* Header */
-  .site-header {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 2.5rem 0 0.4rem;
-    position: relative;
-    min-height: 2.8rem;
-  }
-
-  .site-header h1 {
-    font-family: Aldrich, sans-serif;
-    font-size: 1.8rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-  }
-
-  .site-header a:hover {
-    text-decoration: underline;
-  }
-
-  .site-header .back-link:hover {
-    text-decoration: none;
-  }
-
-  .back-link {
-    position: absolute;
-    left: 0;
-    background: none;
-    border: none;
-    color: var(--secondary-text);
-    cursor: pointer;
-    font-size: 1rem;
-    font-family: Verdana, sans-serif;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0;
-    transition: var(--t);
-    text-decoration: none;
-  }
-
-  .back-link:hover {
-    color: var(--accent);
-  }
-
-  .cube {
-    display: inline-block;
-    width: 0.82em;
-    height: 0.82em;
-    background: var(--accent);
-    transform: translateY(-0.12em);
-    flex-shrink: 0;
-  }
-
-  .site-desc {
-    text-align: center;
-    color: var(--secondary-text);
-    font-size: 0.95rem;
-    margin: 0.6rem 0 2.5rem;
-    line-height: 1.6;
-    max-width: 520px;
-    align-self: center;
   }
 
   /* Tool list */
@@ -243,9 +178,6 @@ import { SITE } from '../../data/site';
   }
 
   @media (max-width: 580px) {
-    .site-header h1 {
-      font-size: 1.5rem;
-    }
     .tool-item {
       padding: 1rem;
     }
