@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { debounce, downloadUrl, normalizeHex } from './lib';
 
 interface QrState {
   text: string;
@@ -34,19 +35,8 @@ const elExportMsg = document.getElementById('export-msg')!;
 const elBtnPNG = document.getElementById('btn-png') as HTMLButtonElement;
 const elBtnSVG = document.getElementById('btn-svg') as HTMLButtonElement;
 
-function isValidHex(h: string): boolean {
-  return /^[0-9A-Fa-f]{6}$/.test(h.replace('#', ''));
-}
-
 function isSameColor(a: string, b: string): boolean {
   return a.replace('#', '').toLowerCase() === b.replace('#', '').toLowerCase();
-}
-
-function dl(url: string, name: string): void {
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
 }
 
 function showMsg(el: HTMLElement, show: boolean): void {
@@ -68,12 +58,7 @@ function clearPreview(): void {
   elBtnSVG.disabled = true;
 }
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-function scheduleUpdate(): void {
-  if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(generateQR, 300);
-}
+const scheduleUpdate = debounce(() => void generateQR(), 300);
 
 async function generateQR(): Promise<void> {
   const text = S.text.trim();
@@ -96,7 +81,6 @@ async function generateQR(): Promise<void> {
   elPlaceholder.style.display = 'none';
 
   const canvas = document.createElement('canvas');
-  canvas.id = 'qr-canvas-' + Date.now();
   elContainer.appendChild(canvas);
 
   try {
@@ -124,6 +108,7 @@ async function exportPNG(): Promise<void> {
   if (!text) return;
 
   try {
+    // 2× render size keeps PNG exports crisp on high-density screens.
     const dataURL = await QRCode.toDataURL(text, {
       width: S.size * 2,
       color: { dark: S.fg, light: S.bg },
@@ -131,7 +116,7 @@ async function exportPNG(): Promise<void> {
       margin: 4,
     });
 
-    dl(dataURL, 'qrcode.png');
+    downloadUrl(dataURL, 'qrcode.png');
     flashExport();
   } catch (err) {
     console.error('PNG export error:', err);
@@ -153,8 +138,7 @@ async function exportSVG(): Promise<void> {
 
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
-    dl(url, 'qrcode.svg');
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadUrl(url, 'qrcode.svg');
     flashExport();
   } catch (err) {
     console.error('SVG export error:', err);
@@ -169,12 +153,13 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
   });
 
   hexInput.addEventListener('input', () => {
-    const raw = hexInput.value.replace('#', '');
-    if (isValidHex(raw)) {
+    const hex = normalizeHex(hexInput.value);
+    if (hex) {
       hexInput.removeAttribute('aria-invalid');
-      hexInput.value = raw.toUpperCase();
-      S[key] = '#' + raw.toUpperCase();
-      picker.value = S[key];
+      hexInput.value = hex.replace('#', '');
+      S[key] = hex;
+      // <input type=color> expects lowercase #rrggbb.
+      picker.value = hex.toLowerCase();
       scheduleUpdate();
     } else {
       hexInput.setAttribute('aria-invalid', 'true');
@@ -182,14 +167,13 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
   });
 
   hexInput.addEventListener('blur', () => {
-    const raw = hexInput.value.replace('#', '');
-    if (isValidHex(raw)) {
-      hexInput.removeAttribute('aria-invalid');
-      hexInput.value = raw.toUpperCase();
-      S[key] = '#' + raw.toUpperCase();
-      picker.value = S[key];
+    const hex = normalizeHex(hexInput.value);
+    hexInput.removeAttribute('aria-invalid');
+    if (hex) {
+      hexInput.value = hex.replace('#', '');
+      S[key] = hex;
+      picker.value = hex.toLowerCase();
     } else {
-      hexInput.removeAttribute('aria-invalid');
       hexInput.value = S[key].replace('#', '').toUpperCase();
     }
   });

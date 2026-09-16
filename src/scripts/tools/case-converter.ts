@@ -1,4 +1,6 @@
-export function words(str: string): string[] {
+import { copyText } from './lib';
+
+function words(str: string): string[] {
   return str
     .replace(/([a-z])([A-Z])/g, '$1 $2') // split camelCase
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // split acronyms
@@ -13,7 +15,7 @@ function cap(w: string): string {
   return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
 }
 
-export interface CaseFormat {
+interface CaseFormat {
   id: string;
   label: string;
   preview: string;
@@ -91,28 +93,10 @@ if (typeof document !== 'undefined') {
     copyBtn.classList.add('copied');
     setTimeout(() => copyBtn.classList.remove('copied'), 1800);
   };
-  const fallbackCopy = (text: string): void => {
-    try {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      flashCopied();
-    } catch {
-      /* copy unavailable — leave button state unchanged */
-    }
-  };
   copyBtn.addEventListener('click', () => {
-    const val = outputEl.value;
-    if (!val) return;
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(val).then(flashCopied).catch(() => fallbackCopy(val));
-    } else {
-      fallbackCopy(val);
-    }
+    if (!outputEl.value) return;
+    void copyText(outputEl.value).then((ok) => {
+      if (ok) flashCopied();
+    });
   });
 }
