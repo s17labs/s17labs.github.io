@@ -3,7 +3,7 @@ export function words(str: string): string[] {
     .replace(/([a-z])([A-Z])/g, '$1 $2') // split camelCase
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // split acronyms
     .replace(/[-_./]+/g, ' ') // split separators
-    .replace(/[^a-zA-Z0-9\s]/g, '') // strip special chars
+    .replace(/[^\p{L}\p{N}\s]/gu, '') // strip special chars (unicode-aware)
     .trim()
     .split(/\s+/)
     .filter(Boolean);
@@ -29,6 +29,7 @@ export const FORMATS: CaseFormat[] = [
     preview: 'helloWorld',
     fn: (s) => {
       const w = words(s);
+      if (!w.length) return '';
       return w[0].toLowerCase() + w.slice(1).map(cap).join('');
     },
   },
@@ -86,12 +87,32 @@ if (typeof document !== 'undefined') {
   inputEl.addEventListener('input', convert);
 
   const copyBtn = document.getElementById('copy-btn')!;
+  const flashCopied = (): void => {
+    copyBtn.classList.add('copied');
+    setTimeout(() => copyBtn.classList.remove('copied'), 1800);
+  };
+  const fallbackCopy = (text: string): void => {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      flashCopied();
+    } catch {
+      /* copy unavailable — leave button state unchanged */
+    }
+  };
   copyBtn.addEventListener('click', () => {
     const val = outputEl.value;
     if (!val) return;
-    navigator.clipboard.writeText(val).then(() => {
-      copyBtn.classList.add('copied');
-      setTimeout(() => copyBtn.classList.remove('copied'), 1800);
-    });
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(val).then(flashCopied).catch(() => fallbackCopy(val));
+    } else {
+      fallbackCopy(val);
+    }
   });
 }

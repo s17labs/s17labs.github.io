@@ -4,7 +4,7 @@ Guidance for AI coding agents (OpenCode, Claude Code, etc.) working in this repo
 
 ## Project Overview
 
-Homepage and browser tools suite for s17 Labs, deployed at https://s17labs.github.io. An Astro static site (zero runtime JS frameworks) that also hosts the self-contained, privacy-first s17 Labs Tools (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator, m² Calc).
+Homepage and browser tools suite for s17 Labs, deployed at https://s17labs.github.io. An Astro static site (zero runtime JS frameworks) that also hosts the self-contained, privacy-first s17 Labs Tools (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator).
 
 - Language/stack: Astro 7 + Tailwind CSS v4 (`@tailwindcss/vite`), TypeScript (`astro/tsconfigs/strict`), a little client-side TS per tool
 - Toolchain: Node >= 22 (CI uses Node 22); npm
@@ -36,18 +36,17 @@ src/
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   styles/global.css           # homepage styles (Tailwind v4)
   styles/tool.css             # shared design system for the standard tools
-  styles/tools/               # per-tool overrides (icon-maker.css, m2-calc.css)
+  styles/tools/               # per-tool overrides (icon-maker.css)
   icons.ts                    # Font Awesome icon definitions
-public/                       # served as-is: fonts/ (Aldrich + self-hosted Barlow for m² Calc), robots.txt, link_preview.png
-public/tools/m2-calc/         # standalone assets for the m² Calc tool
+public/                       # served as-is: fonts/ (Aldrich + icon-maker bundles), robots.txt, link_preview.png
 ```
 
 Key patterns:
 
 - Adding a new tool touches exactly three places: create `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The `/tools` listing renders from that registry — never hardcode tool entries elsewhere.
-- Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`); m² Calc intentionally keeps its own design system (own themes, EN/SK/DE i18n). Do not force it onto the shared one.
-- Everything is fully self-hosted — no CDN dependencies. Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
-- User-facing strings for tools live in their page/component code; keep i18n strings of m² Calc intact.
+- Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
+- Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
+- User-facing strings for tools live in their page/component code.
 
 ## UI Conventions
 

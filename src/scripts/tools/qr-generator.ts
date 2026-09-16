@@ -38,6 +38,10 @@ function isValidHex(h: string): boolean {
   return /^[0-9A-Fa-f]{6}$/.test(h.replace('#', ''));
 }
 
+function isSameColor(a: string, b: string): boolean {
+  return a.replace('#', '').toLowerCase() === b.replace('#', '').toLowerCase();
+}
+
 function dl(url: string, name: string): void {
   const a = document.createElement('a');
   a.href = url;
@@ -75,6 +79,13 @@ async function generateQR(): Promise<void> {
   const text = S.text.trim();
 
   if (!text) {
+    elErrorMsg.textContent = 'Please enter some text or a URL.';
+    showMsg(elErrorMsg, true);
+    clearPreview();
+    return;
+  }
+  if (isSameColor(S.fg, S.bg)) {
+    elErrorMsg.textContent = 'Foreground and background colors match — the QR code would be unscannable.';
     showMsg(elErrorMsg, true);
     clearPreview();
     return;
@@ -93,7 +104,7 @@ async function generateQR(): Promise<void> {
       width: S.size,
       color: { dark: S.fg, light: S.bg },
       errorCorrectionLevel: S.ec,
-      margin: 0,
+      margin: 4,
     });
 
     canvas.style.borderRadius = '2px';
@@ -117,7 +128,7 @@ async function exportPNG(): Promise<void> {
       width: S.size * 2,
       color: { dark: S.fg, light: S.bg },
       errorCorrectionLevel: S.ec,
-      margin: 0,
+      margin: 4,
     });
 
     dl(dataURL, 'qrcode.png');
@@ -133,10 +144,10 @@ async function exportSVG(): Promise<void> {
 
   try {
     const svgString = await QRCode.toString(text, {
-      width: 256,
+      width: S.size,
       color: { dark: S.fg, light: S.bg },
       errorCorrectionLevel: S.ec,
-      margin: 0,
+      margin: 4,
       type: 'svg',
     });
 
@@ -160,20 +171,25 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
   hexInput.addEventListener('input', () => {
     const raw = hexInput.value.replace('#', '');
     if (isValidHex(raw)) {
+      hexInput.removeAttribute('aria-invalid');
       hexInput.value = raw.toUpperCase();
       S[key] = '#' + raw.toUpperCase();
       picker.value = S[key];
       scheduleUpdate();
+    } else {
+      hexInput.setAttribute('aria-invalid', 'true');
     }
   });
 
   hexInput.addEventListener('blur', () => {
     const raw = hexInput.value.replace('#', '');
     if (isValidHex(raw)) {
+      hexInput.removeAttribute('aria-invalid');
       hexInput.value = raw.toUpperCase();
       S[key] = '#' + raw.toUpperCase();
       picker.value = S[key];
     } else {
+      hexInput.removeAttribute('aria-invalid');
       hexInput.value = S[key].replace('#', '').toUpperCase();
     }
   });

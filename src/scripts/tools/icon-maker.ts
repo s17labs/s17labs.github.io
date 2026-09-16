@@ -541,6 +541,7 @@ function render(): void {
   placeholder.style.display = 'none';
   loading.classList.remove('visible');
   meta.style.display = '';
+  exportError(false);
 
   const svgDoc = new DOMParser().parseFromString(buildSVG(), 'image/svg+xml');
   if (svgDoc.documentElement.tagName === 'parsererror' || svgDoc.getElementsByTagName('parsererror').length) {
@@ -818,13 +819,26 @@ async function fontsReady(): Promise<void> {
   }
 }
 
+function exportError(show: boolean): void {
+  document.getElementById('export-error')?.classList.toggle('visible', show);
+}
+
+function clampExportSize(v: number): number {
+  return Number.isFinite(v) ? Math.min(4096, Math.max(16, Math.round(v))) : 128;
+}
+
 async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
-    alert('Enter a valid icon, text, or emoji first.');
+    exportError(true);
     return;
   }
-  const w = Number((document.getElementById('custom-w') as HTMLInputElement).value) || 128;
-  const h = Number((document.getElementById('custom-h') as HTMLInputElement).value) || 128;
+  exportError(false);
+  const wEl = document.getElementById('custom-w') as HTMLInputElement;
+  const hEl = document.getElementById('custom-h') as HTMLInputElement;
+  const w = clampExportSize(Number(wEl.value));
+  const h = clampExportSize(Number(hEl.value));
+  wEl.value = String(w);
+  hEl.value = String(h);
   const fname =
     S.source === 'fa' || S.source === 'bi'
       ? `${S.iconName}-icon`
@@ -848,7 +862,13 @@ for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 function dl(url: string, name: string): void {
-  Object.assign(document.createElement('a'), { href: url, download: name }).click();
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function svgToPngBlob(svgMarkup: string, w: number, h: number): Promise<Blob> {
@@ -1351,9 +1371,10 @@ const ANDROID_BTN_HTML = `<span style="font-size:1.05rem;display:inline-flex;">$
 
 async function exportAndroid(): Promise<void> {
   if (!S.valid) {
-    alert('Enter a valid icon, text, or emoji first.');
+    exportError(true);
     return;
   }
+  exportError(false);
 
   const isVector = S.source === 'fa' || S.source === 'bi';
   const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;

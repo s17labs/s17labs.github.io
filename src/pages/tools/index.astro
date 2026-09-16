@@ -3,8 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Footer from '../../components/Footer.astro';
 import Icon from '../../components/Icon.astro';
 import { TOOLS, TOOLS_SECTION } from '../../data/tools';
-
-const toolsUrlBase = '/tools';
+import { SITE } from '../../data/site';
 ---
 
 <BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
@@ -21,7 +20,7 @@ const toolsUrlBase = '/tools';
     <div class="tool-list">
       {
         TOOLS.map((tool) => (
-          <a href={`${toolsUrlBase}/${tool.slug}/`} class="tool-item">
+          <a href={`${SITE.toolsUrl}${tool.slug}/`} class="tool-item">
             <div class="tool-item-left">
               <div class="tool-item-icon">
                 <Icon name={tool.icon} />

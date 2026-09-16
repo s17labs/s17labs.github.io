@@ -73,17 +73,34 @@ fileInput.addEventListener('change', () => {
 // ── Add files ─────────────────────────────────────────────────────────────
 function addFiles(newFiles: File[]): void {
   if (!newFiles.length) return;
-  files = newFiles;
+  // Append (dedupe) so picking more files never discards the current selection
+  const seen = new Set(files.map((f) => `${f.name}|${f.size}|${f.lastModified}`));
+  for (const f of newFiles) {
+    const key = `${f.name}|${f.size}|${f.lastModified}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      files.push(f);
+    }
+  }
+  if (!files.length) return;
   renderUploadPreview();
   clearResults();
   resizeBtn.disabled = false;
   resizeBtn.classList.add('ready');
 }
 
+// Object URLs for upload previews (revoked on re-render to avoid leaks)
+let previewUrls: string[] = [];
+
+// Object URLs for result thumbnails (revoked when results are cleared)
+let thumbUrls: string[] = [];
+
 // ── Upload preview grid ────────────────────────────────────────────────────
 // Desktop: 6 cols — show up to 5 plain + 1 solid overflow tile
 // Mobile:  4 cols — show up to 7 plain + 1 dimmed-image overflow tile
 function renderUploadPreview(): void {
+  for (const u of previewUrls) URL.revokeObjectURL(u);
+  previewUrls = [];
   dzGrid.innerHTML = '';
 
   const mobile = isMobile();
@@ -98,7 +115,9 @@ function renderUploadPreview(): void {
     tile.className = 'dz-thumb';
     const img = document.createElement('img');
     img.alt = file.name;
-    img.src = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    previewUrls.push(url);
+    img.src = url;
     tile.appendChild(img);
     dzGrid.appendChild(tile);
   }
@@ -114,7 +133,9 @@ function renderUploadPreview(): void {
 
       const img = document.createElement('img');
       img.alt = extraFile.name;
-      img.src = URL.createObjectURL(extraFile);
+      const overflowUrl = URL.createObjectURL(extraFile);
+      previewUrls.push(overflowUrl);
+      img.src = overflowUrl;
       tile.appendChild(img);
 
       const dim = document.createElement('div');
@@ -201,8 +222,10 @@ resizeBtn.addEventListener('click', () => {
 });
 
 function processFile(file: File, onDone?: () => void): void {
-  const targetW = Number(inputW.value) || 800;
-  const targetH = Number(inputH.value) || 600;
+  const clampDim = (v: number, fallback: number): number =>
+    Number.isFinite(v) ? Math.min(8000, Math.max(1, Math.round(v))) : fallback;
+  const targetW = clampDim(Number(inputW.value), 800);
+  const targetH = clampDim(Number(inputH.value), 600);
   const ext = file.name.split('.').pop()!.toLowerCase();
   const isJpeg = ext === 'jpg' || ext === 'jpeg';
   const mime = isJpeg ? 'image/jpeg' : 'image/png';
@@ -221,8 +244,15 @@ function processFile(file: File, onDone?: () => void): void {
   resultsList.appendChild(item);
 
   const reader = new FileReader();
+  const fail = (msg: string): void => {
+    const meta = item.querySelector('.result-meta');
+    if (meta) meta.textContent = msg;
+    onDone?.();
+  };
+  reader.onerror = () => fail(`Failed to read ${file.name}.`);
   reader.onload = (ev) => {
     const img = new Image();
+    img.onerror = () => fail(`Failed to load ${file.name} — file may be corrupt.`);
     img.onload = () => {
       let outW = targetW,
         outH = targetH;
@@ -241,8 +271,12 @@ function processFile(file: File, onDone?: () => void): void {
 
       canvas.toBlob(
         (blob) => {
-          if (!blob) return;
+          if (!blob) {
+            fail(`Failed to encode ${file.name}.`);
+            return;
+          }
           const thumbUrl = URL.createObjectURL(blob);
+          thumbUrls.push(thumbUrl);
 
           const thumb = document.createElement('img');
           thumb.src = thumbUrl;
@@ -348,6 +382,8 @@ function triggerDownload(blob: Blob, name: string): void {
 
 // ── Clear results ──────────────────────────────────────────────────────────
 function clearResults(): void {
+  for (const u of thumbUrls) URL.revokeObjectURL(u);
+  thumbUrls = [];
   results = [];
   resultsList.innerHTML = '';
   resultsPanel.style.display = 'none';
