@@ -203,6 +203,7 @@ a {
 .footer-logo {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: 0.45em;
   font-family: Aldrich, sans-serif;
   font-size: 1.05rem;
