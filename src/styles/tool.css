@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════
    s17 Labs Tools — shared design system.
-   Ported from tools/_template.html; imported by ToolLayout.
-   Tool-specific styles live scoped in each page.
+   Imported globally by ToolLayout; the /tools index also uses
+   the header classes. Tool-specific styles live scoped in each
+   tool page — promote anything used twice here instead.
    ═══════════════════════════════════════════════════ */
 
 :root {
@@ -9,6 +10,12 @@
   --surface-3: #222226;
   --border: rgba(255, 255, 255, 0.07);
   --accent-dim: rgba(255, 65, 54, 0.12);
+  --accent-soft: rgba(255, 65, 54, 0.4);
+  --accent-focus: rgba(255, 65, 54, 0.5);
+  --accent-hover: #e8382e;
+  --android: #3ddc84;
+  --tile-bg: rgba(255, 255, 255, 0.05);
+  --overlay-dim: rgba(14, 14, 16, 0.72);
   --radius: 4px;
   --t: 0.25s ease;
 }
@@ -150,6 +157,18 @@ a {
   margin-bottom: 1.1rem;
 }
 
+/* Section header row inside a panel (title + inline actions) */
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.1rem;
+}
+
+.panel-header-row .panel-title {
+  margin-bottom: 0;
+}
+
 /* ═══════════════════════════════════════════════════
    FORM ELEMENTS
    ═══════════════════════════════════════════════════ */
@@ -189,7 +208,7 @@ textarea {
 input[type='text']:focus,
 input[type='number']:focus,
 textarea:focus {
-  border-color: rgba(255, 65, 54, 0.5);
+  border-color: var(--accent-focus);
 }
 
 /* Visible keyboard focus — border-color shift alone is too subtle */
@@ -221,6 +240,50 @@ textarea {
   resize: vertical;
   min-height: 90px;
   line-height: 1.5;
+}
+
+/* Dropdown — same treatment as text inputs, with a chevron */
+select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--primary-text);
+  font-family: Verdana, sans-serif;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--t);
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23868686'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+}
+
+select:focus {
+  border-color: var(--accent-focus);
+}
+
+/* Small hint under a field */
+.field-note {
+  font-size: 0.72rem;
+  color: var(--secondary-text);
+  opacity: 0.7;
+}
+
+/* Side-by-side color pickers */
+.color-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 /* Divider */
@@ -284,6 +347,125 @@ input[type='range']::-webkit-slider-thumb {
   margin-top: 0.3rem;
 }
 
+/* ── Upload preview grid (filled drop-zone state) ── */
+.dz-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dz-empty svg {
+  color: var(--secondary-text);
+  transition: var(--t);
+}
+
+.drop-zone:hover .dz-empty svg,
+.drop-zone.drag-over .dz-empty svg {
+  color: var(--accent);
+}
+
+.dz-empty p {
+  color: var(--secondary-text);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.dz-empty span {
+  font-size: 0.72rem;
+  color: var(--secondary-text);
+  opacity: 0.6;
+}
+
+.dz-filled {
+  display: none;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.dz-filled.visible {
+  display: flex;
+}
+
+/* Desktop: 6 columns */
+.dz-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.4rem;
+}
+
+.dz-thumb {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+  background: var(--surface-3);
+}
+
+/* Solid "+N" overflow tile (desktop) */
+.dz-thumb.overflow-solid {
+  background: var(--tile-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dz-thumb.overflow-solid span {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.82rem;
+  color: var(--primary-text);
+}
+
+/* Dimmed-image "+N" overflow tile (mobile) */
+.dz-thumb.overflow-img .overflow-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.dz-thumb.overflow-img .overflow-dim span {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.82rem;
+  color: var(--primary-text);
+}
+
+.dz-filled-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--secondary-text);
+}
+
+.dz-change {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  padding: 0.25rem 0.65rem;
+  font-size: 0.72rem;
+  font-family: Verdana, sans-serif;
+  cursor: pointer;
+  transition: all var(--t);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dz-change:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#file-input {
+  display: none;
+}
+
 /* ═══════════════════════════════════════════════════
    BUTTONS
    ═══════════════════════════════════════════════════ */
@@ -312,13 +494,26 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 .btn:disabled {
-  opacity: 0.35;
+  opacity: 0.38;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .btn:disabled:hover {
   background: var(--btn-bg);
   color: var(--secondary-text);
+}
+
+/* Accent state once the action has something to work on */
+.btn.ready {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn.ready:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 /* Inline / small button */
@@ -341,6 +536,30 @@ input[type='range']::-webkit-slider-thumb {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+/* Small selectable option (size presets, format pickers, …) */
+.choice-btn {
+  padding: 0.4rem 0.75rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  transition: all var(--t);
+  white-space: nowrap;
+}
+
+.choice-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--primary-text);
+}
+
+.choice-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
 }
 
 /* Two-column export row */
@@ -377,14 +596,165 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 .status-msg.success {
-  color: #3ddc84;
+  color: var(--android);
 }
 
 .status-msg.visible {
   opacity: 1;
 }
 
-/* Spinner (replaces Font Awesome fa-spin) */
+/* ═══════════════════════════════════════════════════
+   BATCH RESULTS (file tools: upload → process → download)
+   ═══════════════════════════════════════════════════ */
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.result-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 3px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+}
+
+.result-thumb.placeholder {
+  background-image: none;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  font-size: 0.8rem;
+  font-family: 'Courier New', monospace;
+  color: var(--primary-text);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-meta {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.result-dl {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  padding: 0.38rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: Verdana, sans-serif;
+  transition: all var(--t);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.result-dl:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.result-dl:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Full-width Download All — accent */
+.dl-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1.4rem;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 1rem;
+  font-family: Verdana, sans-serif;
+  cursor: pointer;
+  transition: all var(--t);
+}
+
+.dl-all-btn svg {
+  display: inline-flex;
+}
+
+.dl-all-btn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.dl-all-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ZIP packing progress */
+.zip-progress-wrap {
+  display: none;
+  margin-bottom: 0.75rem;
+}
+
+.zip-progress-wrap.visible {
+  display: block;
+}
+
+.zip-progress-track {
+  width: 100%;
+  height: 3px;
+  background: var(--surface-3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.zip-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.15s ease;
+}
+
+.zip-progress-label {
+  font-size: 0.7rem;
+  color: var(--secondary-text);
+  margin-top: 0.4rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Spinner (replaces icon spin states) */
 .spin {
   animation: s17-spin 2s infinite linear;
   display: inline-flex;
@@ -395,7 +765,7 @@ input[type='range']::-webkit-slider-thumb {
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(359deg);
+    transform: rotate(360deg);
   }
 }
 
@@ -445,10 +815,6 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* ═══════════════════════════════════════════════════
-   FOOTER — see Footer.astro / global.css (shared site-wide)
-   ═══════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 @media (max-width: 580px) {
@@ -457,5 +823,9 @@ input[type='range']::-webkit-slider-thumb {
   }
   .btn-row {
     grid-template-columns: 1fr;
+  }
+  /* 4-column preview grid → 2 rows of 4 = 8 tiles max */
+  .dz-preview-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }

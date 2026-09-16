@@ -24,7 +24,7 @@ const tagline = 'Convert text between 15 programming conventions and writing for
         FORMATS.map((fmt) => (
           <button
             type="button"
-            class:list={['case-btn', { active: fmt.id === DEFAULT_FORMAT_ID }]}
+            class:list={['choice-btn', { active: fmt.id === DEFAULT_FORMAT_ID }]}
             data-id={fmt.id}
             aria-pressed={fmt.id === DEFAULT_FORMAT_ID}
           >
@@ -72,33 +72,15 @@ const tagline = 'Convert text between 15 programming conventions and writing for
     gap: 0.4rem;
   }
 
-  .case-btn {
+  /* Format buttons: shared .choice-btn + column layout for label/preview */
+  #case-grid .choice-btn {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.15rem;
     padding: 0.5rem 0.75rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all var(--t);
-    color: var(--secondary-text);
-    font-family: 'Courier New', monospace;
     font-size: 0.8rem;
-    white-space: nowrap;
     text-align: left;
-  }
-
-  .case-btn:hover {
-    border-color: rgba(255, 65, 54, 0.4);
-    color: var(--primary-text);
-  }
-
-  .case-btn.active {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-    color: var(--primary-text);
   }
 
   .case-preview {
@@ -108,7 +90,7 @@ const tagline = 'Convert text between 15 programming conventions and writing for
     font-family: 'Courier New', monospace;
   }
 
-  .case-btn.active .case-preview {
+  #case-grid .choice-btn.active .case-preview {
     opacity: 0.8;
   }
 

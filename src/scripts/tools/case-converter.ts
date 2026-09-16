@@ -73,12 +73,12 @@ if (typeof document !== 'undefined') {
   }
 
   grid.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLElement>('.case-btn');
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.choice-btn');
     if (!btn) return;
     const fmt = FORMATS.find((f) => f.id === btn.dataset.id);
     if (!fmt) return;
     activeFormat = fmt;
-    for (const b of grid.querySelectorAll<HTMLElement>('.case-btn')) {
+    for (const b of grid.querySelectorAll<HTMLElement>('.choice-btn')) {
       const on = b.dataset.id === fmt.id;
       b.classList.toggle('active', on);
       b.setAttribute('aria-pressed', String(on));
