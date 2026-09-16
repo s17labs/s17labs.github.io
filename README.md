@@ -10,7 +10,7 @@
 
 ## Stack
 
-Built with [Astro](https://astro.build) + Tailwind CSS v4. Static output, zero runtime JavaScript frameworks, deployed to GitHub Pages via GitHub Actions.
+Built with [Astro](https://astro.build) + [Tailwind CSS](https://tailwindcss.com) v4. Static output, zero runtime JavaScript frameworks, deployed to GitHub Pages via GitHub Actions.
 
 - **src/pages/** — routes (`/`, `/tools`, `/404`)
 - **src/components/** — shared UI (`BaseHead`, `Icon`, `Footer`, …)

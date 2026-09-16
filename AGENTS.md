@@ -6,7 +6,7 @@ Guidance for AI coding agents (OpenCode, Claude Code, etc.) working in this repo
 
 Homepage and browser tools suite for s17 Labs, deployed at https://s17labs.github.io. An Astro static site (zero runtime JS frameworks) that also hosts the self-contained, privacy-first s17 Labs Tools (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator).
 
-- Language/stack: Astro 7 + Tailwind CSS v4 (`@tailwindcss/vite`), TypeScript (`astro/tsconfigs/strict`), a little client-side TS per tool
+- Language/stack: Astro 7 + [Tailwind CSS](https://tailwindcss.com) v4 (`@tailwindcss/vite`), TypeScript (`astro/tsconfigs/strict`), a little client-side TS per tool
 - Toolchain: Node >= 22 (CI uses Node 22); npm
 - Author/maintainer: yungsamd17 (https://github.com/yungsamd17)
 
