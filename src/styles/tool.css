@@ -118,15 +118,7 @@ a {
   gap: 0.25em;
 }
 
-/* Red cube logo mark */
-.cube {
-  display: inline-block;
-  width: 0.82em;
-  height: 0.82em;
-  background: var(--accent);
-  transform: translateY(-0.12em);
-  flex-shrink: 0;
-}
+/* Red cube logo mark — defined once in global.css (.cube) */
 
 /* Subtitle below header — same 520px centered measure as /tools index */
 .tool-desc {

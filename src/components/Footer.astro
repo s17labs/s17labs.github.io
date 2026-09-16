@@ -1,5 +1,6 @@
 ---
 import Icon from './Icon.astro';
+import type { IconName } from '../icons';
 import { SITE } from '../data/site';
 
 const year = new Date().getFullYear();
@@ -7,22 +8,29 @@ const year = new Date().getFullYear();
 interface LinkItem {
   label: string;
   href: string;
-  icon?: 'github' | 'x' | 'globe' | 'discord';
+  icon?: IconName;
   external?: boolean;
 }
 
-const projects: LinkItem[] = [
-  { label: 'Tools', href: SITE.toolsUrl },
-  { label: 'Koda', href: SITE.projects.koda, external: true },
-  { label: 'WebShell', href: SITE.projects.webshell, external: true },
-  { label: 'More on GitHub', href: SITE.orgUrl, external: true },
-];
-
-const links: LinkItem[] = [
-  { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
-  { label: SITE.socials.x.name, href: SITE.socials.x.url, icon: 'x', external: true },
-  { label: SITE.socials.discord.name, href: SITE.socials.discord.url, icon: 'discord', external: true },
-  { label: SITE.parent.name, href: SITE.parent.url, icon: 'globe', external: true },
+const sections: { title: string; items: LinkItem[] }[] = [
+  {
+    title: 'Projects',
+    items: [
+      { label: 'Tools', href: SITE.toolsUrl },
+      { label: 'Koda', href: SITE.projects.koda, external: true },
+      { label: 'WebShell', href: SITE.projects.webshell, external: true },
+      { label: 'More on GitHub', href: SITE.orgUrl, external: true },
+    ],
+  },
+  {
+    title: 'Links',
+    items: [
+      { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
+      { label: SITE.socials.x.name, href: SITE.socials.x.url, icon: 'x', external: true },
+      { label: SITE.socials.discord.name, href: SITE.socials.discord.url, icon: 'discord', external: true },
+      { label: SITE.parent.name, href: SITE.parent.url, icon: 'globe', external: true },
+    ],
+  },
 ];
 ---
 
@@ -32,42 +40,32 @@ const links: LinkItem[] = [
       <div class="footer-col">
         <a href="/" class="footer-logo">
           <span class="cube"></span>
-          {SITE.name}.
+          {SITE.title}
         </a>
-        <p class="footer-tagline">{SITE.tagline}</p>
+        <p class="footer-tagline">{SITE.description}</p>
       </div>
 
-      <div class="footer-col">
-        <span class="footer-col-title">Projects</span>
-        <ul class="footer-links">
-          {
-            projects.map((item) => (
-              <li>
-                <a href={item.href} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}>
-                  {item.icon && <Icon name={item.icon} />}
-                  {item.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <span class="footer-col-title">Links</span>
-        <ul class="footer-links">
-          {
-            links.map((item) => (
-              <li>
-                <a href={item.href} target={item.external ? '_blank' : undefined} rel={item.external ? 'noopener noreferrer' : undefined}>
-                  {item.icon && <Icon name={item.icon} />}
-                  {item.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+      {
+        sections.map((section) => (
+          <div class="footer-col">
+            <span class="footer-col-title">{section.title}</span>
+            <ul class="footer-links">
+              {section.items.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    target={item.external ? '_blank' : undefined}
+                    rel={item.external ? 'noopener noreferrer' : undefined}
+                  >
+                    {item.icon && <Icon name={item.icon} />}
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
     </div>
 
     <hr class="footer-divider" />
