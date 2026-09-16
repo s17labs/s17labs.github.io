@@ -1,5 +1,17 @@
-import JSZip from 'jszip';
 import { iconSvg } from '../../icons';
+import {
+  appendDedupeFiles,
+  downloadBlob,
+  formatKB,
+  makePlaceholderItem,
+  makeResultItem,
+  rasterizeSvg,
+  readFileAsText,
+  renderUploadGrid,
+  resetResultsUI,
+  setupDropZone,
+} from './lib';
+import { downloadResultsAsZip, updateZipButton, type ZipExportOptions } from './zip-export';
 
 // ── State ──────────────────────────────────────────────────────────────────
 let files: File[] = []; // File objects
@@ -24,64 +36,44 @@ const zipWrap = document.getElementById('zip-progress-wrap')!;
 const zipFill = document.getElementById('zip-progress-fill')!;
 const zipLabel = document.getElementById('zip-progress-label')!;
 
-// ── Mobile detection ───────────────────────────────────────────────────────
-const isMobile = (): boolean => window.innerWidth <= 580;
+// Object URLs for result thumbnails (revoked when results are cleared)
+let thumbUrls: string[] = [];
 
-// ── Drop zone ──────────────────────────────────────────────────────────────
-dropZone.addEventListener('click', (e) => {
-  if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
-  fileInput.click();
-});
-
-dropZone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
-    e.preventDefault();
-    fileInput.click();
-  }
-});
-
-dzChangeBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  fileInput.click();
-});
-
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
-
-dropZone.addEventListener('dragleave', (e) => {
-  if (!dropZone.contains(e.relatedTarget as Node)) dropZone.classList.remove('drag-over');
-});
-
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  addFiles([...e.dataTransfer!.files].filter(isSVG));
-});
-
-fileInput.addEventListener('change', () => {
-  addFiles([...(fileInput.files ?? [])].filter(isSVG));
-  fileInput.value = '';
+const zipOpts = (): ZipExportOptions => ({
+  results,
+  zipName: () => `svg-to-png-${Date.now()}.zip`,
+  kindWord: 'PNGs',
+  packingHtml: `${iconSvg('circle-notch', 'spin')} Packing ZIP…`,
+  singleIconHtml: iconSvg('download'),
+  multiIconHtml: iconSvg('file-zipper'),
+  singleLabel: 'Save PNG',
+  multiLabel: (n) => `Download All (${n})`,
+  ui: {
+    button: dlAllBtn,
+    iconSlot: dlIcon,
+    labelSlot: dlLabel,
+    progressWrap: zipWrap,
+    progressFill: zipFill,
+    progressLabel: zipLabel,
+  },
 });
 
 function isSVG(f: File): boolean {
   return f.name.toLowerCase().endsWith('.svg') || f.type === 'image/svg+xml';
 }
 
+// ── Drop zone ──────────────────────────────────────────────────────────────
+setupDropZone({
+  zone: dropZone,
+  input: fileInput,
+  changeButton: dzChangeBtn,
+  accept: isSVG,
+  onFiles: addFiles,
+});
+
 // ── Add files & render preview ─────────────────────────────────────────────
 function addFiles(newFiles: File[]): void {
-  if (!newFiles.length) return;
-  // Append (dedupe) so picking more files never discards the current selection
-  const seen = new Set(files.map((f) => `${f.name}|${f.size}|${f.lastModified}`));
-  for (const f of newFiles) {
-    const key = `${f.name}|${f.size}|${f.lastModified}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      files.push(f);
-    }
-  }
+  appendDedupeFiles(files, newFiles);
   if (!files.length) return;
   renderUploadPreview();
   clearResults();
@@ -89,46 +81,16 @@ function addFiles(newFiles: File[]): void {
   convertBtn.classList.add('ready');
 }
 
-// Object URLs for result thumbnails (revoked when results are cleared)
-let thumbUrls: string[] = [];
-
-// Desktop: 5 plain + 1 solid overflow = 6 tiles
-// Mobile:  7 plain + 1 dimmed overflow = 8 tiles
 function renderUploadPreview(): void {
-  dzGrid.innerHTML = '';
-
-  const mobile = isMobile();
-  const maxPlain = mobile ? 7 : 5;
-  const overflow = files.length - maxPlain;
-
-  for (const file of files.slice(0, maxPlain)) {
-    dzGrid.appendChild(makeSVGTile(file));
-  }
-
-  if (overflow > 0) {
-    if (mobile) {
-      // Dimmed tile — still shows the SVG icon underneath
-      const overflowFile = files[maxPlain];
-      const tile = makeSVGTile(overflowFile);
-      tile.classList.add('overflow-img');
-      const dim = document.createElement('div');
-      dim.className = 'overflow-dim';
-      dim.innerHTML = `<span>+${overflow}</span>`;
-      tile.appendChild(dim);
-      dzGrid.appendChild(tile);
-    } else {
-      // Solid tile, desktop
-      const tile = document.createElement('div');
-      tile.className = 'dz-thumb overflow-solid';
-      tile.innerHTML = `<span>+${overflow}</span>`;
-      dzGrid.appendChild(tile);
-    }
-  }
-
-  const n = files.length;
-  dzCountLbl.textContent = `${n} SVG file${n !== 1 ? 's' : ''} selected`;
-  dzEmpty.style.display = 'none';
-  dzFilled.classList.add('visible');
+  renderUploadGrid({
+    grid: dzGrid,
+    emptyEl: dzEmpty,
+    filledEl: dzFilled,
+    countLabel: dzCountLbl,
+    files,
+    countText: (n) => `${n} SVG file${n !== 1 ? 's' : ''} selected`,
+    renderTile: makeSVGTile,
+  });
 }
 
 // Build a simple SVG file tile (icon + truncated filename — no canvas rendering)
@@ -158,17 +120,17 @@ window.addEventListener('resize', () => {
 // ── Width preset buttons ───────────────────────────────────────────────────
 function setW(px: number): void {
   inputW.value = String(px);
-  document.querySelectorAll<HTMLElement>('.scale-btn').forEach((b) => {
+  document.querySelectorAll<HTMLElement>('.choice-btn').forEach((b) => {
     b.classList.toggle('active', Number(b.textContent) === px);
   });
 }
 
-for (const b of document.querySelectorAll<HTMLElement>('.scale-btn')) {
+for (const b of document.querySelectorAll<HTMLElement>('.choice-btn')) {
   b.addEventListener('click', () => setW(Number(b.textContent)));
 }
 
 inputW.addEventListener('input', () =>
-  document.querySelectorAll<HTMLElement>('.scale-btn').forEach((b) => b.classList.remove('active'))
+  document.querySelectorAll<HTMLElement>('.choice-btn').forEach((b) => b.classList.remove('active')),
 );
 
 // ── Convert ────────────────────────────────────────────────────────────────
@@ -186,7 +148,7 @@ convertBtn.addEventListener('click', () => {
       done++;
       if (done === files.length) {
         // All done — update download button
-        updateDlButton();
+        updateZipButton(zipOpts(), results.length);
         dlAllBtn.disabled = false;
       }
     });
@@ -197,169 +159,46 @@ function convertFile(file: File, onDone?: () => void): void {
   const targetW = Number(inputW.value) || 512;
   const baseName = file.name.replace(/\.svg$/i, '');
 
-  // Placeholder row
-  const item = document.createElement('div');
-  item.className = 'result-item';
-  item.innerHTML = `
-      <div class="result-thumb placeholder"></div>
-      <div class="result-info">
-        <div class="result-name">${file.name}</div>
-        <div class="result-meta">${iconSvg('circle-notch', 'spin')} Converting…</div>
-      </div>
-      <button class="result-dl" disabled>${iconSvg('download')} Save</button>`;
+  const item = makePlaceholderItem({
+    fileName: file.name,
+    statusHtml: `${iconSvg('circle-notch', 'spin')} Converting…`,
+    downloadIconHtml: iconSvg('download'),
+  });
   resultsList.appendChild(item);
 
-  const reader = new FileReader();
   const fail = (msg: string): void => {
-    item.querySelector('.result-meta')!.textContent = msg;
+    const meta = item.querySelector('.result-meta');
+    if (meta) meta.textContent = msg;
     onDone?.();
   };
-  reader.onerror = () => fail(`Failed to read ${file.name}.`);
-  reader.onload = (ev) => {
-    const svgText = ev.target!.result as string;
-    const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const img = new Image();
 
-    img.onload = () => {
-      const ratio = (img.naturalHeight || img.naturalWidth) / img.naturalWidth;
-      const outW = targetW;
-      const outH = Math.max(1, Math.round(outW * ratio));
-      const outName = `${baseName}-${outW}x${outH}.png`;
+  readFileAsText(file).then(
+    (svgText) =>
+      rasterizeSvg(svgText, targetW).then(
+        ({ blob: pngBlob, width: outW, height: outH }) => {
+          const outName = `${baseName}-${outW}x${outH}.png`;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = outW;
-      canvas.height = outH;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, outW, outH);
-      URL.revokeObjectURL(svgUrl);
+          const thumbUrl = URL.createObjectURL(pngBlob);
+          thumbUrls.push(thumbUrl);
+          const thumb = document.createElement('img');
+          thumb.src = thumbUrl;
+          thumb.className = 'result-thumb';
+          thumb.alt = outName;
 
-      canvas.toBlob((pngBlob) => {
-        if (!pngBlob) {
-          fail(`Failed to encode ${file.name}.`);
-          return;
-        }
+          const { item: doneItem } = makeResultItem({
+            thumb,
+            name: outName,
+            metaHtml: `${outW} &times; ${outH} px &middot; ${formatKB(pngBlob.size)} &middot; transparent`,
+            downloadIconHtml: iconSvg('download'),
+            onDownload: () => downloadBlob(pngBlob, outName),
+          });
+          item.replaceWith(doneItem);
 
-        // Thumbnail
-        const thumbUrl = URL.createObjectURL(pngBlob);
-        thumbUrls.push(thumbUrl);
-        const thumb = document.createElement('img');
-        thumb.src = thumbUrl;
-        thumb.className = 'result-thumb';
-        thumb.alt = outName;
-
-        const info = document.createElement('div');
-        info.className = 'result-info';
-        info.innerHTML = `
-            <div class="result-name">${outName}</div>
-            <div class="result-meta">${outW} &times; ${outH} px &middot; ${(pngBlob.size / 1024).toFixed(1)} KB &middot; transparent</div>`;
-
-        const dlBtn = document.createElement('button');
-        dlBtn.className = 'result-dl';
-        dlBtn.type = 'button';
-        dlBtn.innerHTML = `${iconSvg('download')} Save`;
-        dlBtn.addEventListener('click', () => triggerDownload(pngBlob, outName));
-
-        item.innerHTML = '';
-        item.appendChild(thumb);
-        item.appendChild(info);
-        item.appendChild(dlBtn);
-
-        results.push({ blob: pngBlob, name: outName });
-        onDone?.();
-      }, 'image/png');
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(svgUrl);
-      item.querySelector('.result-meta')!.textContent = 'Failed to render SVG — check the file is valid.';
-      onDone?.();
-    };
-
-    img.src = svgUrl;
-  };
-
-  reader.readAsText(file);
-}
-
-// ── Update download button label based on result count ─────────────────────
-function updateDlButton(): void {
-  const n = results.length;
-  if (n <= 1) {
-    // Single file
-    dlIcon.innerHTML = iconSvg('download');
-    dlLabel.textContent = 'Save PNG';
-  } else {
-    // Multiple files → ZIP
-    dlIcon.innerHTML = iconSvg('file-zipper');
-    dlLabel.textContent = `Download All (${n})`;
-  }
-}
-
-// ── Download All handler ───────────────────────────────────────────────────
-dlAllBtn.addEventListener('click', async () => {
-  if (!results.length) return;
-
-  // Single file — just download directly, no zip
-  if (results.length === 1) {
-    triggerDownload(results[0].blob, results[0].name);
-    return;
-  }
-
-  // Multiple — pack into ZIP
-  dlAllBtn.disabled = true;
-  dlAllBtn.innerHTML = `${iconSvg('circle-notch', 'spin')} Packing ZIP…`;
-  zipWrap.classList.add('visible');
-
-  const zip = new JSZip();
-  for (const r of results) zip.file(r.name, r.blob);
-
-  zipFill.style.width = '50%';
-  zipLabel.textContent = `Adding ${results.length} PNGs…`;
-
-  const zipBlob = await zip.generateAsync(
-    { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 4 } },
-    (meta) => {
-      zipFill.style.width = 50 + meta.percent * 0.5 + '%';
-      zipLabel.textContent = `Compressing… ${Math.round(meta.percent)}%`;
-    }
+          results.push({ blob: pngBlob, name: outName });
+          onDone?.();
+        },
+        () => fail('Failed to render SVG — check the file is valid.'),
+      ),
+    (err: Error) => fail(err.message),
   );
-
-  zipFill.style.width = '100%';
-  zipLabel.textContent = 'Done!';
-
-  const zipName = `svg-to-png-${Date.now()}.zip`;
-  triggerDownload(zipBlob, zipName);
-
-  setTimeout(() => {
-    dlAllBtn.disabled = false;
-    updateDlButton();
-    zipWrap.classList.remove('visible');
-    zipFill.style.width = '0%';
-  }, 1800);
-});
-
-// ── Trigger download helper ────────────────────────────────────────────────
-function triggerDownload(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
-}
-
-// ── Clear ─────────────────────────────────────────────────────────────────
-function clearResults(): void {
-  for (const u of thumbUrls) URL.revokeObjectURL(u);
-  thumbUrls = [];
-  results = [];
-  resultsList.innerHTML = '';
-  resultsPanel.style.display = 'none';
-  zipWrap.classList.remove('visible');
-  zipFill.style.width = '0%';
-  dlAllBtn.disabled = true;
 }

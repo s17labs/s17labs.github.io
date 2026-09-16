@@ -1,5 +1,17 @@
-import JSZip from 'jszip';
 import { iconSvg } from '../../icons';
+import {
+  appendDedupeFiles,
+  downloadBlob,
+  formatKB,
+  makePlaceholderItem,
+  makeResultItem,
+  readFileAsDataURL,
+  renderUploadGrid,
+  resetResultsUI,
+  setupDropZone,
+  splitFileName,
+} from './lib';
+import { downloadResultsAsZip, updateZipButton, type ZipExportOptions } from './zip-export';
 
 // ── State ──────────────────────────────────────────────────────────────────
 let files: File[] = [];
@@ -28,60 +40,43 @@ const zipWrap = document.getElementById('zip-progress-wrap')!;
 const zipFill = document.getElementById('zip-progress-fill')!;
 const zipLabel = document.getElementById('zip-progress-label')!;
 
-// ── Mobile detection (for preview grid logic) ─────────────────────────────
-const isMobile = (): boolean => window.innerWidth <= 580;
+// Object URLs for upload previews (revoked on re-render to avoid leaks)
+let previewUrls: string[] = [];
+
+// Object URLs for result thumbnails (revoked when results are cleared)
+let thumbUrls: string[] = [];
+
+const zipOpts = (): ZipExportOptions => ({
+  results,
+  zipName: () => `resized-images-${Date.now()}.zip`,
+  kindWord: 'images',
+  packingHtml: `${iconSvg('circle-notch', 'spin')} Packing ZIP…`,
+  singleIconHtml: iconSvg('download'),
+  multiIconHtml: iconSvg('file-zipper'),
+  singleLabel: 'Download Image',
+  multiLabel: (n) => `Download All (${n})`,
+  ui: {
+    button: dlAllBtn,
+    iconSlot: dlIcon,
+    labelSlot: dlLabel,
+    progressWrap: zipWrap,
+    progressFill: zipFill,
+    progressLabel: zipLabel,
+  },
+});
 
 // ── Drop zone interactions ─────────────────────────────────────────────────
-dropZone.addEventListener('click', (e) => {
-  if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
-  fileInput.click();
-});
-
-dropZone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
-    e.preventDefault();
-    fileInput.click();
-  }
-});
-
-dzChangeBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  fileInput.click();
-});
-
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
-
-dropZone.addEventListener('dragleave', (e) => {
-  if (!dropZone.contains(e.relatedTarget as Node)) dropZone.classList.remove('drag-over');
-});
-
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  addFiles([...e.dataTransfer!.files].filter((f) => f.type.startsWith('image/')));
-});
-
-fileInput.addEventListener('change', () => {
-  addFiles([...(fileInput.files ?? [])].filter((f) => f.type.startsWith('image/')));
-  fileInput.value = '';
+setupDropZone({
+  zone: dropZone,
+  input: fileInput,
+  changeButton: dzChangeBtn,
+  accept: (f) => f.type.startsWith('image/'),
+  onFiles: addFiles,
 });
 
 // ── Add files ─────────────────────────────────────────────────────────────
 function addFiles(newFiles: File[]): void {
-  if (!newFiles.length) return;
-  // Append (dedupe) so picking more files never discards the current selection
-  const seen = new Set(files.map((f) => `${f.name}|${f.size}|${f.lastModified}`));
-  for (const f of newFiles) {
-    const key = `${f.name}|${f.size}|${f.lastModified}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      files.push(f);
-    }
-  }
+  appendDedupeFiles(files, newFiles);
   if (!files.length) return;
   renderUploadPreview();
   clearResults();
@@ -89,75 +84,29 @@ function addFiles(newFiles: File[]): void {
   resizeBtn.classList.add('ready');
 }
 
-// Object URLs for upload previews (revoked on re-render to avoid leaks)
-let previewUrls: string[] = [];
-
-// Object URLs for result thumbnails (revoked when results are cleared)
-let thumbUrls: string[] = [];
-
 // ── Upload preview grid ────────────────────────────────────────────────────
-// Desktop: 6 cols — show up to 5 plain + 1 solid overflow tile
-// Mobile:  4 cols — show up to 7 plain + 1 dimmed-image overflow tile
 function renderUploadPreview(): void {
   for (const u of previewUrls) URL.revokeObjectURL(u);
   previewUrls = [];
-  dzGrid.innerHTML = '';
-
-  const mobile = isMobile();
-  const maxPlain = mobile ? 7 : 5; // plain thumbs before overflow
-
-  const show = files.slice(0, maxPlain);
-  const overflow = files.length - maxPlain; // > 0 means we need overflow tile
-
-  // Plain thumbnail tiles
-  for (const file of show) {
-    const tile = document.createElement('div');
-    tile.className = 'dz-thumb';
-    const img = document.createElement('img');
-    img.alt = file.name;
-    const url = URL.createObjectURL(file);
-    previewUrls.push(url);
-    img.src = url;
-    tile.appendChild(img);
-    dzGrid.appendChild(tile);
-  }
-
-  // Overflow tile
-  if (overflow > 0) {
-    const extraFile = files[maxPlain]; // the actual next image
-
-    if (mobile && extraFile) {
-      // Mobile: show the actual image dimmed with overlay
+  renderUploadGrid({
+    grid: dzGrid,
+    emptyEl: dzEmpty,
+    filledEl: dzFilled,
+    countLabel: dzCountLabel,
+    files,
+    countText: (n) => `${n} image${n !== 1 ? 's' : ''} selected`,
+    renderTile: (file) => {
       const tile = document.createElement('div');
-      tile.className = 'dz-thumb overflow-img';
-
+      tile.className = 'dz-thumb';
       const img = document.createElement('img');
-      img.alt = extraFile.name;
-      const overflowUrl = URL.createObjectURL(extraFile);
-      previewUrls.push(overflowUrl);
-      img.src = overflowUrl;
+      img.alt = file.name;
+      const url = URL.createObjectURL(file);
+      previewUrls.push(url);
+      img.src = url;
       tile.appendChild(img);
-
-      const dim = document.createElement('div');
-      dim.className = 'overflow-dim';
-      dim.innerHTML = `<span>+${overflow}</span>`;
-      tile.appendChild(dim);
-
-      dzGrid.appendChild(tile);
-    } else {
-      // Desktop: solid tile, no image
-      const tile = document.createElement('div');
-      tile.className = 'dz-thumb overflow-solid';
-      tile.innerHTML = `<span>+${overflow}</span>`;
-      dzGrid.appendChild(tile);
-    }
-  }
-
-  const n = files.length;
-  dzCountLabel.textContent = `${n} image${n !== 1 ? 's' : ''} selected`;
-
-  dzEmpty.style.display = 'none';
-  dzFilled.classList.add('visible');
+      return tile;
+    },
+  });
 }
 
 // Re-render on resize so desktop↔mobile switch works
@@ -212,7 +161,7 @@ resizeBtn.addEventListener('click', () => {
     processFile(file, () => {
       done++;
       if (done === files.length) {
-        updateDlButton();
+        updateZipButton(zipOpts(), results.length);
         dlAllBtn.disabled = false;
       }
     });
@@ -226,168 +175,92 @@ function processFile(file: File, onDone?: () => void): void {
     Number.isFinite(v) ? Math.min(8000, Math.max(1, Math.round(v))) : fallback;
   const targetW = clampDim(Number(inputW.value), 800);
   const targetH = clampDim(Number(inputH.value), 600);
-  const ext = file.name.split('.').pop()!.toLowerCase();
+  const { base: baseName, ext } = splitFileName(file.name);
   const isJpeg = ext === 'jpg' || ext === 'jpeg';
   const mime = isJpeg ? 'image/jpeg' : 'image/png';
-  const baseName = file.name.replace(/\.[^.]+$/, '');
 
-  // Placeholder row
-  const item = document.createElement('div');
-  item.className = 'result-item';
-  item.innerHTML = `
-      <div class="result-thumb" style="background:var(--surface-3)"></div>
-      <div class="result-info">
-        <div class="result-name">${file.name}</div>
-        <div class="result-meta">${iconSvg('circle-notch', 'spin')} Processing…</div>
-      </div>
-      <button class="result-dl" disabled>${iconSvg('download')} Save</button>`;
+  const item = makePlaceholderItem({
+    fileName: file.name,
+    statusHtml: `${iconSvg('circle-notch', 'spin')} Processing…`,
+    downloadIconHtml: iconSvg('download'),
+  });
   resultsList.appendChild(item);
 
-  const reader = new FileReader();
   const fail = (msg: string): void => {
     const meta = item.querySelector('.result-meta');
     if (meta) meta.textContent = msg;
     onDone?.();
   };
-  reader.onerror = () => fail(`Failed to read ${file.name}.`);
-  reader.onload = (ev) => {
-    const img = new Image();
-    img.onerror = () => fail(`Failed to load ${file.name} — file may be corrupt.`);
-    img.onload = () => {
-      let outW = targetW,
-        outH = targetH;
-      if (aspectLocked) {
-        const r = img.naturalWidth / img.naturalHeight;
-        if (lastChanged === 'w') outH = Math.round(outW / r);
-        else outW = Math.round(outH * r);
-      }
 
-      const canvas = document.createElement('canvas');
-      canvas.width = outW;
-      canvas.height = outH;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, outW, outH);
+  readFileAsDataURL(file).then(
+    (dataUrl) => {
+      const img = new Image();
+      img.onerror = () => fail(`Failed to load ${file.name} — file may be corrupt.`);
+      img.onload = () => {
+        let outW = targetW,
+          outH = targetH;
+        if (aspectLocked) {
+          const r = img.naturalWidth / img.naturalHeight;
+          if (lastChanged === 'w') outH = Math.round(outW / r);
+          else outW = Math.round(outH * r);
+        }
 
-      const outName = `${baseName}-${outW}x${outH}.${isJpeg ? 'jpg' : 'png'}`;
+        const canvas = document.createElement('canvas');
+        canvas.width = outW;
+        canvas.height = outH;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, outW, outH);
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            fail(`Failed to encode ${file.name}.`);
-            return;
-          }
-          const thumbUrl = URL.createObjectURL(blob);
-          thumbUrls.push(thumbUrl);
+        const outName = `${baseName}-${outW}x${outH}.${isJpeg ? 'jpg' : 'png'}`;
 
-          const thumb = document.createElement('img');
-          thumb.src = thumbUrl;
-          thumb.className = 'result-thumb';
-          thumb.alt = outName;
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              fail(`Failed to encode ${file.name}.`);
+              return;
+            }
+            const thumbUrl = URL.createObjectURL(blob);
+            thumbUrls.push(thumbUrl);
 
-          const info = document.createElement('div');
-          info.className = 'result-info';
-          info.innerHTML = `
-            <div class="result-name">${outName}</div>
-            <div class="result-meta">${outW} &times; ${outH} px &middot; ${(blob.size / 1024).toFixed(1)} KB</div>`;
+            const thumb = document.createElement('img');
+            thumb.src = thumbUrl;
+            thumb.className = 'result-thumb';
+            thumb.alt = outName;
 
-          const dlBtn = document.createElement('button');
-          dlBtn.className = 'result-dl';
-          dlBtn.type = 'button';
-          dlBtn.innerHTML = `${iconSvg('download')} Save`;
-          dlBtn.addEventListener('click', () => triggerDownload(blob, outName));
+            const { item: doneItem } = makeResultItem({
+              thumb,
+              name: outName,
+              metaHtml: `${outW} &times; ${outH} px &middot; ${formatKB(blob.size)}`,
+              downloadIconHtml: iconSvg('download'),
+              onDownload: () => downloadBlob(blob, outName),
+            });
+            item.replaceWith(doneItem);
 
-          item.innerHTML = '';
-          item.appendChild(thumb);
-          item.appendChild(info);
-          item.appendChild(dlBtn);
-
-          results.push({ blob, name: outName });
-          onDone?.();
-        },
-        mime,
-        isJpeg ? 0.92 : undefined
-      );
-    };
-    img.src = ev.target!.result as string;
-  };
-  reader.readAsDataURL(file);
-}
-
-// ── Update download button label based on result count ────────────────────
-function updateDlButton(): void {
-  const n = results.length;
-  if (n <= 1) {
-    dlIcon.innerHTML = iconSvg('download');
-    dlLabel.textContent = 'Download Image';
-  } else {
-    dlIcon.innerHTML = iconSvg('file-zipper');
-    dlLabel.textContent = `Download All (${n})`;
-  }
+            results.push({ blob, name: outName });
+            onDone?.();
+          },
+          mime,
+          isJpeg ? 0.92 : undefined,
+        );
+      };
+      img.src = dataUrl;
+    },
+    (err: Error) => fail(err.message),
+  );
 }
 
 // ── Download All → single or ZIP ───────────────────────────────────────────
-dlAllBtn.addEventListener('click', async () => {
-  if (!results.length) return;
-
-  // Single file — direct download, no ZIP
-  if (results.length === 1) {
-    triggerDownload(results[0].blob, results[0].name);
-    return;
-  }
-
-  // Multiple — pack into ZIP
-  dlAllBtn.disabled = true;
-  dlAllBtn.innerHTML = `${iconSvg('circle-notch', 'spin')} Packing ZIP…`;
-  zipWrap.classList.add('visible');
-
-  const zip = new JSZip();
-  for (const r of results) zip.file(r.name, r.blob);
-
-  zipFill.style.width = '50%';
-  zipLabel.textContent = `Adding ${results.length} images…`;
-
-  const zipBlob = await zip.generateAsync(
-    { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 4 } },
-    (meta) => {
-      zipFill.style.width = 50 + meta.percent * 0.5 + '%';
-      zipLabel.textContent = `Compressing… ${Math.round(meta.percent)}%`;
-    }
-  );
-
-  zipFill.style.width = '100%';
-  zipLabel.textContent = 'Done!';
-
-  triggerDownload(zipBlob, `resized-images-${Date.now()}.zip`);
-
-  setTimeout(() => {
-    dlAllBtn.disabled = false;
-    updateDlButton();
-    zipWrap.classList.remove('visible');
-    zipFill.style.width = '0%';
-  }, 1800);
-});
-
-// ── Download helper ────────────────────────────────────────────────────────
-function triggerDownload(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 500);
-}
+dlAllBtn.addEventListener('click', () => void downloadResultsAsZip(zipOpts()));
 
 // ── Clear results ──────────────────────────────────────────────────────────
 function clearResults(): void {
   for (const u of thumbUrls) URL.revokeObjectURL(u);
   thumbUrls = [];
   results = [];
-  resultsList.innerHTML = '';
-  resultsPanel.style.display = 'none';
-  zipWrap.classList.remove('visible');
-  zipFill.style.width = '0%';
-  dlAllBtn.disabled = true;
+  resetResultsUI({
+    list: resultsList,
+    panel: resultsPanel,
+    progressWrap: zipWrap,
+    progressFill: zipFill,
+    actionBtn: dlAllBtn,
+  });
 }

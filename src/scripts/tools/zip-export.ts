@@ -15,8 +15,8 @@ export interface ZipExportUI {
 
 export interface ZipExportOptions {
   results: { blob: Blob; name: string }[];
-  /** e.g. `resized-images-1700000000000.zip` */
-  zipName: string;
+  /** e.g. `resized-images-1700000000000.zip` (function = evaluated at click time). */
+  zipName: string | (() => string);
   /** Word used in the "Adding N …" progress label, e.g. `images` or `PNGs`. */
   kindWord: string;
   /** Raw HTML for the in-progress button state (spinner + text). */
@@ -72,7 +72,7 @@ export async function downloadResultsAsZip(opts: ZipExportOptions): Promise<void
   ui.progressFill.style.width = '100%';
   ui.progressLabel.textContent = 'Done!';
 
-  downloadBlob(zipBlob, zipName);
+  downloadBlob(zipBlob, typeof zipName === 'function' ? zipName() : zipName);
 
   setTimeout(() => {
     ui.button.disabled = false;

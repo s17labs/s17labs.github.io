@@ -233,6 +233,35 @@ export function svgTextToPngBlob(svgText: string, w: number, h: number): Promise
   });
 }
 
+export interface RasterizedSvg {
+  blob: Blob;
+  width: number;
+  height: number;
+}
+
+/** Rasterize an SVG string, auto-sizing height from its aspect ratio. */
+export function rasterizeSvg(svgText: string, targetW: number): Promise<RasterizedSvg> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
+    const probe = new Image();
+    probe.onload = () => {
+      const ratio = (probe.naturalHeight || probe.naturalWidth) / probe.naturalWidth;
+      const outW = targetW;
+      const outH = Math.max(1, Math.round(outW * ratio));
+      URL.revokeObjectURL(url);
+      svgTextToPngBlob(svgText, outW, outH).then(
+        (blob) => resolve({ blob, width: outW, height: outH }),
+        reject,
+      );
+    };
+    probe.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('SVG render failed'));
+    };
+    probe.src = url;
+  });
+}
+
 export interface ResultItemOptions {
   thumb: HTMLElement;
   name: string;
