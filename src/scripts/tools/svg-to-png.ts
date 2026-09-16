@@ -65,12 +65,24 @@ function isSVG(f: File): boolean {
 // ── Add files & render preview ─────────────────────────────────────────────
 function addFiles(newFiles: File[]): void {
   if (!newFiles.length) return;
-  files = newFiles;
+  // Append (dedupe) so picking more files never discards the current selection
+  const seen = new Set(files.map((f) => `${f.name}|${f.size}|${f.lastModified}`));
+  for (const f of newFiles) {
+    const key = `${f.name}|${f.size}|${f.lastModified}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      files.push(f);
+    }
+  }
+  if (!files.length) return;
   renderUploadPreview();
   clearResults();
   convertBtn.disabled = false;
   convertBtn.classList.add('ready');
 }
+
+// Object URLs for result thumbnails (revoked when results are cleared)
+let thumbUrls: string[] = [];
 
 // Desktop: 5 plain + 1 solid overflow = 6 tiles
 // Mobile:  7 plain + 1 dimmed overflow = 8 tiles
@@ -190,6 +202,11 @@ function convertFile(file: File, onDone?: () => void): void {
   resultsList.appendChild(item);
 
   const reader = new FileReader();
+  const fail = (msg: string): void => {
+    item.querySelector('.result-meta')!.textContent = msg;
+    onDone?.();
+  };
+  reader.onerror = () => fail(`Failed to read ${file.name}.`);
   reader.onload = (ev) => {
     const svgText = ev.target!.result as string;
     const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
@@ -209,10 +226,14 @@ function convertFile(file: File, onDone?: () => void): void {
       URL.revokeObjectURL(svgUrl);
 
       canvas.toBlob((pngBlob) => {
-        if (!pngBlob) return;
+        if (!pngBlob) {
+          fail(`Failed to encode ${file.name}.`);
+          return;
+        }
 
         // Thumbnail
         const thumbUrl = URL.createObjectURL(pngBlob);
+        thumbUrls.push(thumbUrl);
         const thumb = document.createElement('img');
         thumb.src = thumbUrl;
         thumb.className = 'result-thumb';
@@ -325,6 +346,8 @@ function triggerDownload(blob: Blob, name: string): void {
 
 // ── Clear ─────────────────────────────────────────────────────────────────
 function clearResults(): void {
+  for (const u of thumbUrls) URL.revokeObjectURL(u);
+  thumbUrls = [];
   results = [];
   resultsList.innerHTML = '';
   resultsPanel.style.display = 'none';
