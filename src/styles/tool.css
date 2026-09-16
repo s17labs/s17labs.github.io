@@ -581,7 +581,10 @@ input[type='range']::-webkit-slider-thumb {
   font-size: 0.75rem;
   min-height: 1.1em;
   opacity: 0;
-  transition: opacity var(--t);
+  visibility: hidden;
+  transition:
+    opacity var(--t),
+    visibility var(--t);
 }
 
 .status-msg.error {
@@ -594,6 +597,7 @@ input[type='range']::-webkit-slider-thumb {
 
 .status-msg.visible {
   opacity: 1;
+  visibility: visible;
 }
 
 .status-msg a {
