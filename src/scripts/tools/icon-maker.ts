@@ -4,6 +4,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { far } from '@fortawesome/free-regular-svg-icons';
 import { fab } from '@fortawesome/free-brands-svg-icons';
 import { iconSvg } from '../../icons';
+import { downloadBlob, downloadUrl, normalizeHex, svgTextToPngBlob } from './lib';
 
 library.add(fas);
 library.add(far);
@@ -442,7 +443,9 @@ const fontEmbedCache = new Map<string, string>(); // key → <style> ('' = none/
 
 async function textFontEmbedCSS(): Promise<string> {
   if (S.source !== 'text') return '';
-  const key = `${S.fontFamily}|${S.fontWeight}|${S.fontItalic}|${S.fontUnderline}`;
+  // Underline only decorates the rendered text — it never changes the font
+  // file, so it stays out of the cache key.
+  const key = `${S.fontFamily}|${S.fontWeight}|${S.fontItalic}`;
   const hit = fontEmbedCache.get(key);
   if (hit !== undefined) return hit;
   let css = '';
@@ -847,48 +850,15 @@ async function exportAs(fmt: string): Promise<void> {
         : `emoji-icon`;
 
   if (fmt === 'svg') {
-    dl(URL.createObjectURL(new Blob([await buildExportSVG()], { type: 'image/svg+xml' })), fname + '.svg');
+    downloadBlob(new Blob([await buildExportSVG()], { type: 'image/svg+xml' }), fname + '.svg');
     return;
   }
   await fontsReady();
-  svgToPngBlob(await buildExportSVG(), w, h).then((b) => dl(URL.createObjectURL(b), `${fname}-${w}x${h}.png`));
+  svgTextToPngBlob(await buildExportSVG(), w, h).then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
   b.addEventListener('click', () => void exportAs(b.dataset.fmt!));
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-function dl(url: string, name: string): void {
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function svgToPngBlob(svgMarkup: string, w: number, h: number): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' }));
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = w;
-      c.height = h;
-      c.getContext('2d')!.drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject();
-    };
-    img.src = url;
-  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1106,10 +1076,9 @@ elCpHue.addEventListener('input', () => {
 const elCpHexPopup = document.getElementById('cp-hex-popup') as HTMLInputElement;
 
 elCpHexPopup.addEventListener('input', () => {
-  let v = elCpHexPopup.value.trim();
-  if (!v.startsWith('#')) v = '#' + v;
-  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-    cpFromHex(v, true);
+  const hex = normalizeHex(elCpHexPopup.value);
+  if (hex) {
+    cpFromHex(hex, true);
     cpDraw();
     cpCommit();
   }
@@ -1119,14 +1088,13 @@ elCpHexPopup.addEventListener('input', () => {
   const hexEl = document.getElementById(`cp-hex-${target}`) as HTMLInputElement;
 
   hexEl.addEventListener('input', function () {
-    let v = this.value.trim();
-    if (!v.startsWith('#')) v = '#' + v;
-    if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-      if (target === 'icon') S.iconColor = v;
-      if (target === 'bg') S.bgColor = v;
-      (document.getElementById(`cp-fill-${target}`) as HTMLElement).style.background = v;
+    const hex = normalizeHex(this.value);
+    if (hex) {
+      if (target === 'icon') S.iconColor = hex;
+      if (target === 'bg') S.bgColor = hex;
+      (document.getElementById(`cp-fill-${target}`) as HTMLElement).style.background = hex;
       if (CP.target === target) {
-        cpFromHex(v, true);
+        cpFromHex(hex, true);
         cpDraw();
         cpSync();
       }
@@ -1420,17 +1388,17 @@ async function exportAndroid(): Promise<void> {
     }
 
     for (const [density, size] of densities) {
-      const squareBlob = await svgToPngBlob(await buildExportSVG(), size, size);
+      const squareBlob = await svgTextToPngBlob(await buildExportSVG(), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher.png', squareBlob);
       nextStep(`mipmap-${density}/ic_launcher.png  ${size}px`);
 
-      const roundBlob = await svgToPngBlob(await buildExportSVG('circle'), size, size);
+      const roundBlob = await svgTextToPngBlob(await buildExportSVG('circle'), size, size);
       res.folder(`mipmap-${density}`)!.file('ic_launcher_round.png', roundBlob);
       nextStep(`mipmap-${density}/ic_launcher_round.png  ${size}px`);
     }
 
     setProgress(82, 'play_store_icon.png  512px…');
-    const playBlob = await svgToPngBlob(await buildExportSVG(), 512, 512);
+    const playBlob = await svgTextToPngBlob(await buildExportSVG(), 512, 512);
     zip.file('play_store_icon.png', playBlob);
 
     // XML files: vector sources (FA, Bootstrap) only
@@ -1463,7 +1431,7 @@ async function exportAndroid(): Promise<void> {
     setProgress(100, `Done — ${densities.length * 2 + 1} images${suffix}`);
 
     showAndroidPreview(densities);
-    dl(URL.createObjectURL(zipBlob), `${safeName}-android-icons.zip`);
+    downloadBlob(zipBlob, `${safeName}-android-icons.zip`);
 
     setTimeout(() => {
       btn.disabled = false;
