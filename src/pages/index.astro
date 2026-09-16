@@ -10,12 +10,10 @@ import { SITE } from '../data/site';
     <div class="main">
       <div class="wrapper">
         <div id="home-view">
-          <header class="header">
+          <header class="header header-col">
             <h1><span class="cube"></span> s17 Labs.</h1>
+            <p>{SITE.tagline}</p>
           </header>
-          <div class="header" style="margin-top: -2.5rem;">
-            <p>Building efficient, lightweight software<br />for the modern web.</p>
-          </div>
           <div class="card">
             <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
             <div class="card-link">
@@ -42,5 +40,14 @@ import { SITE } from '../data/site';
     display: flex;
     flex-direction: column;
     flex: 1 0 auto;
+  }
+
+  .header-col {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .header-col p {
+    max-width: 34ch;
   }
 </style>

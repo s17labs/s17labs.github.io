@@ -99,7 +99,11 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   biSeq++; // invalidate any in-flight Bootstrap lookup
 
   // Update source buttons
-  document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => b.classList.toggle('active', b.dataset.source === src));
+  document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => {
+    const on = b.dataset.source === src;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
 
   // Update input appearance
   const cfg = INPUT_CONFIG[src];
@@ -688,8 +692,11 @@ const elStyleUnderline = document.getElementById('style-underline')!;
 
 function syncStyleUI(): void {
   elStyleBold.classList.toggle('active', S.fontWeight === 700);
+  elStyleBold.setAttribute('aria-pressed', String(S.fontWeight === 700));
   elStyleItalic.classList.toggle('active', S.fontItalic);
+  elStyleItalic.setAttribute('aria-pressed', String(S.fontItalic));
   elStyleUnderline.classList.toggle('active', S.fontUnderline);
+  elStyleUnderline.setAttribute('aria-pressed', String(S.fontUnderline));
   if (elFontWeight.value !== String(S.fontWeight)) elFontWeight.value = String(S.fontWeight);
   if (elFontSelect.value !== S.fontFamily) elFontSelect.value = S.fontFamily;
 }
@@ -735,7 +742,11 @@ elTextSpacing.addEventListener('input', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 function setShape(s: string): void {
   S.bgShape = s;
-  document.querySelectorAll<HTMLElement>('.shape-btn').forEach((b) => b.classList.toggle('active', b.dataset.shape === s));
+  document.querySelectorAll<HTMLElement>('.shape-btn').forEach((b) => {
+    const on = b.dataset.shape === s;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
   render();
 }
 
@@ -771,9 +782,11 @@ function setPreset(px: number): void {
   if (!Number.isFinite(px) || px <= 0) return;
   (document.getElementById('custom-w') as HTMLInputElement).value = String(px);
   (document.getElementById('custom-h') as HTMLInputElement).value = String(px);
-  document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) =>
-    b.classList.toggle('active', b.textContent === px + 'px')
-  );
+  document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) => {
+    const on = b.textContent === px + 'px';
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.preset-btn')) {
@@ -784,7 +797,10 @@ for (const b of document.querySelectorAll<HTMLElement>('.preset-btn')) {
 
 for (const id of ['custom-w', 'custom-h']) {
   document.getElementById(id)!.addEventListener('input', () =>
-    document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) => b.classList.remove('active'))
+    document.querySelectorAll<HTMLElement>('.preset-btn').forEach((b) => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    })
   );
 }
 

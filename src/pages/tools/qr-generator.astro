@@ -42,6 +42,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
         <option value="Q">Q — Quartile (25%)</option>
         <option value="H">H — High (30%)</option>
       </select>
+      <div class="ec-hint">Max chars (byte mode): L ≈ 2953 · M ≈ 2331 · Q ≈ 1663 · H ≈ 1273. Higher levels survive damage but hold less.</div>
     </div>
 
     <hr class="divider" />
@@ -254,6 +255,14 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
     text-align: right;
     margin-top: 0.3rem;
     opacity: 0.6;
+  }
+
+  .ec-hint {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    margin-top: 0.4rem;
+    line-height: 1.5;
+    opacity: 0.75;
   }
 
   .char-count.warn {

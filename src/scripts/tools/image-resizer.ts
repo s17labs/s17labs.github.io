@@ -37,6 +37,14 @@ dropZone.addEventListener('click', (e) => {
   fileInput.click();
 });
 
+dropZone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    if ((e.target as HTMLElement).closest('#dz-change-btn')) return;
+    e.preventDefault();
+    fileInput.click();
+  }
+});
+
 dzChangeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   fileInput.click();
@@ -158,12 +166,22 @@ window.addEventListener('resize', () => {
 });
 
 // ── Aspect ratio ───────────────────────────────────────────────────────────
-document.getElementById('aspect-toggle-row')!.addEventListener('click', () => {
-  aspectLocked = !aspectLocked;
-  document.getElementById('aspect-track')!.classList.toggle('on', aspectLocked);
-  document.getElementById('aspect-label')!.textContent = aspectLocked ? 'Lock Aspect Ratio' : 'Free Resize';
-  if (aspectLocked && Number(inputW.value) && Number(inputH.value))
+function setAspectLocked(locked: boolean): void {
+  aspectLocked = locked;
+  document.getElementById('aspect-track')!.classList.toggle('on', locked);
+  document.getElementById('aspect-label')!.textContent = locked ? 'Lock Aspect Ratio' : 'Free Resize';
+  document.getElementById('aspect-toggle-row')!.setAttribute('aria-checked', String(locked));
+  if (locked && Number(inputW.value) && Number(inputH.value))
     aspectRatio = Number(inputW.value) / Number(inputH.value);
+}
+
+const aspectRow = document.getElementById('aspect-toggle-row')!;
+aspectRow.addEventListener('click', () => setAspectLocked(!aspectLocked));
+aspectRow.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    setAspectLocked(!aspectLocked);
+  }
 });
 
 inputW.addEventListener('input', () => {

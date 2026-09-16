@@ -77,7 +77,9 @@ if (typeof document !== 'undefined') {
     if (!fmt) return;
     activeFormat = fmt;
     for (const b of grid.querySelectorAll<HTMLElement>('.case-btn')) {
-      b.classList.toggle('active', b.dataset.id === fmt.id);
+      const on = b.dataset.id === fmt.id;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
     }
     convert();
   });
