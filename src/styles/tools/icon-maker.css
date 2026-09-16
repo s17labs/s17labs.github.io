@@ -10,14 +10,10 @@
   --android-dim: rgba(61, 220, 132, 0.12);
 }
 
-/* Layout overrides: workspace is a grid, panels have no bottom margin */
-.page {
-  max-width: 900px;
-}
+/* Layout overrides: workspace is a grid, panels have no bottom margin
+   (page width comes from ToolLayout maxWidth={900}) */
 
-.tool-desc {
-  margin: 0.6rem 0 2.5rem;
-}
+
 
 .panel {
   margin-bottom: 0;
