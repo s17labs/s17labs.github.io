@@ -24,7 +24,7 @@ const {
 ---
 
 <BaseLayout title={title} description={description}>
-  <div class="page" style={`max-width:${maxWidth}px`}>
+  <div class="tool-top">
     <slot name="pre" />
     {
       chrome && (
@@ -40,11 +40,15 @@ const {
       )
     }
     {chrome && tagline && <p class="tool-desc">{tagline}</p>}
+  </div>
 
+  <div class="page" style={`max-width:${maxWidth}px`}>
     <slot />
+  </div>
 
-    {
-      chrome && (
+  {
+    chrome && (
+      <div class="tool-bottom">
         <div class="more-tools">
           <h3>More s17 Labs Tools</h3>
           <p>Discover more free, browser-based utilities designed for creators and developers.</p>
@@ -52,8 +56,8 @@ const {
             <Icon name="arrow-left" /> View More Tools
           </a>
         </div>
-      )
-    }
-  </div>
+      </div>
+    )
+  }
   <Footer />
 </BaseLayout>

@@ -37,14 +37,33 @@ a {
 
 /* ═══════════════════════════════════════════════════
    PAGE WRAPPER
+   Content width varies per tool (640–900px); the header
+   lives in .tool-top with a fixed 680px width so the
+   back link + title never shift between pages.
    ═══════════════════════════════════════════════════ */
 .page {
   width: 100%;
   max-width: 680px;
-  padding: 0 20px 4.5rem;
+  padding: 0 20px;
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+/* Fixed-width shell for header + footer CTA — matches
+   /tools index (.page 680px + 20px padding). */
+.tool-top,
+.tool-bottom {
+  width: 100%;
+  max-width: 680px;
+  padding: 0 20px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-bottom {
+  padding-bottom: 4.5rem;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -101,13 +120,14 @@ a {
   flex-shrink: 0;
 }
 
-/* Subtitle below header */
+/* Subtitle below header — same 520px centered measure as /tools index */
 .tool-desc {
   text-align: center;
   color: var(--secondary-text);
   font-size: 0.95rem;
-  margin: 0.6rem 0 2rem;
-  line-height: 1.55;
+  margin: 0.6rem auto 2.5rem;
+  line-height: 1.6;
+  max-width: 520px;
 }
 
 /* ═══════════════════════════════════════════════════
