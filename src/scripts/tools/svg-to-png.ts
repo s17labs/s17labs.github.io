@@ -202,3 +202,20 @@ function convertFile(file: File, onDone?: () => void): void {
     (err: Error) => fail(err.message),
   );
 }
+
+// ── Download All → single or ZIP ───────────────────────────────────────────
+dlAllBtn.addEventListener('click', () => void downloadResultsAsZip(zipOpts()));
+
+// ── Clear ─────────────────────────────────────────────────────────────────
+function clearResults(): void {
+  for (const u of thumbUrls) URL.revokeObjectURL(u);
+  thumbUrls = [];
+  results = [];
+  resetResultsUI({
+    list: resultsList,
+    panel: resultsPanel,
+    progressWrap: zipWrap,
+    progressFill: zipFill,
+    actionBtn: dlAllBtn,
+  });
+}
