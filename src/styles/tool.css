@@ -14,6 +14,7 @@
   --accent-focus: rgba(255, 65, 54, 0.5);
   --accent-hover: #e8382e;
   --android: #3ddc84;
+  --android-dim: rgba(61, 220, 132, 0.12);
   --tile-bg: rgba(255, 255, 255, 0.05);
   --overlay-dim: rgba(14, 14, 16, 0.72);
   --radius: 4px;
@@ -601,6 +602,16 @@ input[type='range']::-webkit-slider-thumb {
 
 .status-msg.visible {
   opacity: 1;
+}
+
+.status-msg a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.status-msg a:hover {
+  color: #fff;
 }
 
 /* ═══════════════════════════════════════════════════

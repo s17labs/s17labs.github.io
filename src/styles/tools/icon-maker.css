@@ -2,19 +2,11 @@
    s17 Labs Tools — Icon Maker page styles.
    Imported globally by src/pages/tools/icon-maker.astro
    (JS-generated markup relies on unscoped selectors).
-   Shared design system lives in tool.css.
+   Shared design system lives in tool.css (--android* tokens too).
    ═══════════════════════════════════════════════════ */
-
-:root {
-  --android: #3ddc84;
-  --android-dim: rgba(61, 220, 132, 0.12);
-}
 
 /* Layout overrides: workspace is a grid, panels have no bottom margin
    (page width comes from ToolLayout maxWidth={900}) */
-
-
-
 .panel {
   margin-bottom: 0;
 }
@@ -153,41 +145,35 @@
   gap: 1rem;
 }
 
-input[type='text'] {
+/* Text inputs use the shared tool.css base; only icon-maker extras live here. */
+/* ── Option buttons — one shared base, per-group layout below ── */
+.source-btn,
+.style-btn,
+.shape-btn,
+.preset-btn {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--primary-text);
-  font-family: 'Courier New', monospace;
-  font-size: 0.88rem;
-  padding: 0.6rem 0.8rem;
-  width: 100%;
-  outline: none;
-  transition: border-color var(--t);
-}
-
-input[type='text']:focus {
-  border-color: rgba(255, 65, 54, 0.5);
-}
-
-/* Visible keyboard focus — overrides the outline:none above for keyboard users */
-input[type='text']:focus-visible,
-.weight-select:focus-visible,
-.font-select:focus-visible,
-.cp-hex-input:focus-visible,
-.cp-hex-popup:focus-visible,
-.source-btn:focus-visible,
-.shape-btn:focus-visible,
-.preset-btn:focus-visible,
-.export-btn:focus-visible,
-.cp-swatch:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-input[type='text']::placeholder {
   color: var(--secondary-text);
-  opacity: 0.5;
+  cursor: pointer;
+  transition: all var(--t);
+}
+
+.source-btn:hover,
+.style-btn:hover,
+.shape-btn:hover,
+.preset-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--primary-text);
+}
+
+.source-btn.active,
+.style-btn.active,
+.shape-btn.active,
+.preset-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
 }
 
 /* ── Source selector ── */
@@ -204,25 +190,8 @@ input[type='text']::placeholder {
   align-items: center;
   gap: 0.3rem;
   padding: 0.55rem 0.25rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all var(--t);
-  color: var(--secondary-text);
   font-size: 0.68rem;
   font-family: Verdana, sans-serif;
-}
-
-.source-btn:hover {
-  border-color: rgba(255, 65, 54, 0.4);
-  color: var(--primary-text);
-}
-
-.source-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
 }
 
 .source-btn .src-ico {
@@ -276,26 +245,9 @@ input.text-input {
 
 .style-btn {
   padding: 0.45rem 0.25rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--secondary-text);
   font-size: 0.95rem;
-  cursor: pointer;
   text-align: center;
-  transition: all var(--t);
   font-family: Verdana, sans-serif;
-}
-
-.style-btn:hover {
-  border-color: rgba(255, 65, 54, 0.4);
-  color: var(--primary-text);
-}
-
-.style-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
 }
 
 .weight-select,
@@ -315,7 +267,7 @@ input.text-input {
 
 .weight-select:focus,
 .font-select:focus {
-  border-color: rgba(255, 65, 54, 0.5);
+  border-color: var(--accent-focus);
 }
 
 .font-select {
@@ -342,19 +294,7 @@ input.text-input {
   display: block;
 }
 
-/* Custom color picker */
-.color-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.7rem;
-}
-
-.color-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-}
-
+/* Custom color picker (.color-row/.color-field come from shared tool.css) */
 .cp-row {
   display: flex;
   align-items: stretch;
@@ -367,7 +307,7 @@ input.text-input {
 
 .cp-row:focus-within,
 .cp-row.open {
-  border-color: rgba(255, 65, 54, 0.5);
+  border-color: var(--accent-focus);
 }
 
 .cp-swatch {
@@ -385,7 +325,9 @@ input.text-input {
   filter: brightness(1.18);
 }
 
-.cp-swatch::before {
+/* Transparency checkerboard shared by the swatch + preview wells */
+.cp-swatch::before,
+.cp-preview::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -393,13 +335,16 @@ input.text-input {
     linear-gradient(-45deg, #555 25%, transparent 25%),
     linear-gradient(45deg, transparent 75%, #555 75%),
     linear-gradient(-45deg, transparent 75%, #555 75%);
+  background-color: #2a2a2a;
+}
+
+.cp-swatch::before {
   background-size: 8px 8px;
   background-position:
     0 0,
     0 4px,
     4px -4px,
     -4px 0;
-  background-color: #2a2a2a;
 }
 
 .cp-swatch-fill {
@@ -527,20 +472,12 @@ input.cp-hue::-moz-range-thumb {
 }
 
 .cp-preview::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(45deg, #555 25%, transparent 25%),
-    linear-gradient(-45deg, #555 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #555 75%),
-    linear-gradient(-45deg, transparent 75%, #555 75%);
   background-size: 7px 7px;
   background-position:
     0 0,
     0 3.5px,
     3.5px -3.5px,
     -3.5px 0;
-  background-color: #2a2a2a;
 }
 
 .cp-preview-fill {
@@ -564,7 +501,7 @@ input.cp-hue::-moz-range-thumb {
 }
 
 .cp-hex-popup:focus {
-  border-color: rgba(255, 65, 54, 0.5);
+  border-color: var(--accent-focus);
 }
 
 /* Shape buttons */
@@ -580,25 +517,8 @@ input.cp-hue::-moz-range-thumb {
   align-items: center;
   gap: 0.35rem;
   padding: 0.55rem 0.25rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all var(--t);
-  color: var(--secondary-text);
   font-size: 0.68rem;
   font-family: Verdana, sans-serif;
-}
-
-.shape-btn:hover {
-  border-color: rgba(255, 65, 54, 0.4);
-  color: var(--primary-text);
-}
-
-.shape-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
 }
 
 .shape-icon {
@@ -637,26 +557,9 @@ input.cp-hue::-moz-range-thumb {
 
 .preset-btn {
   padding: 0.4rem 0.25rem;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--secondary-text);
   font-size: 0.7rem;
   font-family: 'Courier New', monospace;
-  cursor: pointer;
   text-align: center;
-  transition: all var(--t);
-}
-
-.preset-btn:hover {
-  border-color: rgba(255, 65, 54, 0.4);
-  color: var(--primary-text);
-}
-
-.preset-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
 }
 
 .custom-res {
@@ -678,36 +581,9 @@ input.cp-hue::-moz-range-thumb {
   margin-top: 0.9rem;
 }
 
+/* Export buttons reuse the shared .btn (see markup) — only padding differs. */
 .export-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  font-size: 1rem;
-  background: var(--btn-bg);
-  border: 1px solid transparent;
-  color: var(--secondary-text);
-  cursor: pointer;
   padding: 0.7rem 1.2rem;
-  border-radius: var(--radius);
-  font-family: Verdana, sans-serif;
-  transition: var(--t);
-}
-
-.export-btn:hover {
-  background: var(--accent);
-  color: var(--primary-text);
-}
-
-.fmt {
-  font-family: Aldrich, sans-serif;
-  font-size: 0.85rem;
-  color: var(--accent);
-  transition: color var(--t);
-}
-
-.export-btn:hover .fmt {
-  color: #fff;
 }
 
 /* Android */
@@ -903,28 +779,6 @@ input.cp-hue::-moz-range-thumb {
   margin-top: 0.4rem;
   text-align: center;
   font-family: 'Courier New', monospace;
-}
-
-.error-msg {
-  color: var(--accent);
-  font-size: 0.75rem;
-  min-height: 1.1em;
-  opacity: 0;
-  transition: opacity var(--t);
-}
-
-.error-msg.visible {
-  opacity: 1;
-}
-
-.error-msg a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.error-msg a:hover {
-  color: #fff;
 }
 
 .icon-placeholder {

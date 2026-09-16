@@ -23,7 +23,7 @@ const tagline =
             <p>Enter an icon name, text, or emoji to begin</p>
           </div>
           <div class="preview-loading" id="preview-loading">
-            <span style="display:inline-flex;"><Icon name="circle-notch" class="spin-icon" /></span>
+            <span style="display:inline-flex;"><Icon name="circle-notch" class="spin" /></span>
             <span>Fetching emoji…</span>
           </div>
         </div>
@@ -72,7 +72,7 @@ const tagline =
         <div class="field">
           <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
           <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
-          <div class="error-msg" id="error-msg">Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener">fontawesome.com</a></div>
+          <div class="status-msg error" id="error-msg">Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener">fontawesome.com</a></div>
         </div>
       </div>
 
@@ -222,10 +222,10 @@ const tagline =
         </div>
 
         <div class="export-row">
-          <button type="button" class="export-btn" data-fmt="svg"><span class="fmt">SVG</span> Export</button>
-          <button type="button" class="export-btn" data-fmt="png"><span class="fmt">PNG</span> Export</button>
+          <button type="button" class="btn export-btn" data-fmt="svg"><span class="btn-fmt">SVG</span> Export</button>
+          <button type="button" class="btn export-btn" data-fmt="png"><span class="btn-fmt">PNG</span> Export</button>
         </div>
-        <div class="error-msg" id="export-error">Enter a valid icon, text, or emoji first.</div>
+        <div class="status-msg error" id="export-error">Enter a valid icon, text, or emoji first.</div>
 
         <div class="android-divider"><hr /><span>Android</span><hr /></div>
 
@@ -260,10 +260,3 @@ const tagline =
 <script>
   import '../../scripts/tools/icon-maker';
 </script>
-
-<style is:global>
-  .spin-icon {
-    animation: s17-spin 2s infinite linear;
-    display: inline-flex;
-  }
-</style>
