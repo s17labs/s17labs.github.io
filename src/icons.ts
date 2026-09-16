@@ -95,7 +95,9 @@ export const icons = {
 
 export type IconName = keyof typeof icons;
 
-/** Inline SVG string for client-side dynamic markup (matches Icon.astro output). */
+/** Inline SVG string for client-side dynamic markup.
+    Same shapes as Icon.astro; sizing is fixed to 1em here (the component
+    takes an optional `size` prop instead) — size dynamic icons via CSS. */
 export function iconSvg(name: IconName, className = ''): string {
   const icon = icons[name];
   const cls = className ? ` class="${className}"` : '';

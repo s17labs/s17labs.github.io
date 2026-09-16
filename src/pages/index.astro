@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Footer from '../components/Footer.astro';
 import Icon from '../components/Icon.astro';
 import { SITE } from '../data/site';
 ---
@@ -11,8 +10,8 @@ import { SITE } from '../data/site';
       <div class="wrapper">
         <div id="home-view">
           <header class="header header-col">
-            <h1><span class="cube"></span> s17 Labs.</h1>
-            <p>{SITE.tagline}</p>
+            <h1><span class="cube"></span> {SITE.title}</h1>
+            <p>{SITE.description}</p>
           </header>
           <div class="card">
             <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
@@ -29,19 +28,9 @@ import { SITE } from '../data/site';
       </div>
     </div>
   </div>
-  <Footer />
 </BaseLayout>
 
 <style is:global>
-  .shell {
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    flex: 1 0 auto;
-  }
-
   .header-col {
     flex-direction: column;
     gap: 0.5rem;

@@ -14,8 +14,8 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
     <div class="panel-title">Input</div>
     <div class="field">
       <label for="qr-input">Text / URL</label>
-      <textarea id="qr-input" placeholder="https://example.com or any text…" maxlength="2953"></textarea>
-      <div class="char-count" id="char-count">0 / 2953</div>
+      <textarea id="qr-input" placeholder="https://example.com or any text…" maxlength="2331"></textarea>
+      <div class="char-count" id="char-count">0 / 2331</div>
       <div class="status-msg error" id="error-msg">Please enter some text or a URL.</div>
     </div>
   </div>
@@ -114,44 +114,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
     min-height: 80px;
   }
 
-  /* Select */
-  select {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--primary-text);
-    font-family: Verdana, sans-serif;
-    font-size: 0.88rem;
-    padding: 0.6rem 0.8rem;
-    width: 100%;
-    outline: none;
-    cursor: pointer;
-    transition: border-color var(--t);
-    -webkit-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23868686'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.8rem center;
-  }
-
-  select:focus {
-    border-color: rgba(255, 65, 54, 0.5);
-  }
-
   /* Color picker row */
-  .color-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.8rem;
-  }
-
-  .color-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-  }
-
-  .color-input-wrap {
     display: flex;
     align-items: center;
     gap: 0.6rem;

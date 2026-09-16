@@ -1,4 +1,5 @@
 import QRCode from 'qrcode';
+import { debounce, downloadUrl, normalizeHex } from './lib';
 
 interface QrState {
   text: string;
@@ -18,6 +19,14 @@ const S: QrState = {
   ready: false,
 };
 
+/** Byte-mode capacity per error-correction level (matches the ec-hint copy). */
+const EC_CAPACITY: Record<QrState['ec'], number> = {
+  L: 2953,
+  M: 2331,
+  Q: 1663,
+  H: 1273,
+};
+
 const elInput = document.getElementById('qr-input') as HTMLTextAreaElement;
 const elSize = document.getElementById('qr-size') as HTMLInputElement;
 const elSizeVal = document.getElementById('size-val')!;
@@ -34,19 +43,8 @@ const elExportMsg = document.getElementById('export-msg')!;
 const elBtnPNG = document.getElementById('btn-png') as HTMLButtonElement;
 const elBtnSVG = document.getElementById('btn-svg') as HTMLButtonElement;
 
-function isValidHex(h: string): boolean {
-  return /^[0-9A-Fa-f]{6}$/.test(h.replace('#', ''));
-}
-
 function isSameColor(a: string, b: string): boolean {
   return a.replace('#', '').toLowerCase() === b.replace('#', '').toLowerCase();
-}
-
-function dl(url: string, name: string): void {
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
 }
 
 function showMsg(el: HTMLElement, show: boolean): void {
@@ -68,12 +66,7 @@ function clearPreview(): void {
   elBtnSVG.disabled = true;
 }
 
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-function scheduleUpdate(): void {
-  if (debounceTimer) clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(generateQR, 300);
-}
+const scheduleUpdate = debounce(() => void generateQR(), 300);
 
 async function generateQR(): Promise<void> {
   const text = S.text.trim();
@@ -96,7 +89,6 @@ async function generateQR(): Promise<void> {
   elPlaceholder.style.display = 'none';
 
   const canvas = document.createElement('canvas');
-  canvas.id = 'qr-canvas-' + Date.now();
   elContainer.appendChild(canvas);
 
   try {
@@ -124,6 +116,7 @@ async function exportPNG(): Promise<void> {
   if (!text) return;
 
   try {
+    // 2× render size keeps PNG exports crisp on high-density screens.
     const dataURL = await QRCode.toDataURL(text, {
       width: S.size * 2,
       color: { dark: S.fg, light: S.bg },
@@ -131,7 +124,7 @@ async function exportPNG(): Promise<void> {
       margin: 4,
     });
 
-    dl(dataURL, 'qrcode.png');
+    downloadUrl(dataURL, 'qrcode.png');
     flashExport();
   } catch (err) {
     console.error('PNG export error:', err);
@@ -153,8 +146,7 @@ async function exportSVG(): Promise<void> {
 
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
-    dl(url, 'qrcode.svg');
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadUrl(url, 'qrcode.svg');
     flashExport();
   } catch (err) {
     console.error('SVG export error:', err);
@@ -169,12 +161,13 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
   });
 
   hexInput.addEventListener('input', () => {
-    const raw = hexInput.value.replace('#', '');
-    if (isValidHex(raw)) {
+    const hex = normalizeHex(hexInput.value);
+    if (hex) {
       hexInput.removeAttribute('aria-invalid');
-      hexInput.value = raw.toUpperCase();
-      S[key] = '#' + raw.toUpperCase();
-      picker.value = S[key];
+      hexInput.value = hex.replace('#', '');
+      S[key] = hex;
+      // <input type=color> expects lowercase #rrggbb.
+      picker.value = hex.toLowerCase();
       scheduleUpdate();
     } else {
       hexInput.setAttribute('aria-invalid', 'true');
@@ -182,14 +175,13 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
   });
 
   hexInput.addEventListener('blur', () => {
-    const raw = hexInput.value.replace('#', '');
-    if (isValidHex(raw)) {
-      hexInput.removeAttribute('aria-invalid');
-      hexInput.value = raw.toUpperCase();
-      S[key] = '#' + raw.toUpperCase();
-      picker.value = S[key];
+    const hex = normalizeHex(hexInput.value);
+    hexInput.removeAttribute('aria-invalid');
+    if (hex) {
+      hexInput.value = hex.replace('#', '');
+      S[key] = hex;
+      picker.value = hex.toLowerCase();
     } else {
-      hexInput.removeAttribute('aria-invalid');
       hexInput.value = S[key].replace('#', '').toUpperCase();
     }
   });
@@ -197,9 +189,7 @@ function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'f
 
 elInput.addEventListener('input', () => {
   S.text = elInput.value;
-  const len = elInput.value.length;
-  elCharCount.textContent = `${len} / 2953`;
-  elCharCount.classList.toggle('warn', len > 2000);
+  updateCharCount();
   if (S.text.trim()) showMsg(elErrorMsg, false);
   scheduleUpdate();
 });
@@ -212,11 +202,32 @@ elSize.addEventListener('input', () => {
 
 elEC.addEventListener('change', () => {
   S.ec = elEC.value as QrState['ec'];
+  updateCapacity();
   scheduleUpdate();
 });
 
 syncColor(elFgPicker, elFgHex, 'fg');
 syncColor(elBgPicker, elBgHex, 'bg');
+
+function updateCharCount(): void {
+  const max = EC_CAPACITY[S.ec];
+  const len = elInput.value.length;
+  elCharCount.textContent = `${len} / ${max}`;
+  elCharCount.classList.toggle('warn', len > max * 0.7);
+}
+
+/** Clamp the input to the selected level's capacity (also enforced by maxlength). */
+function updateCapacity(): void {
+  const max = EC_CAPACITY[S.ec];
+  elInput.maxLength = max;
+  if (elInput.value.length > max) {
+    elInput.value = elInput.value.slice(0, max);
+    S.text = elInput.value;
+  }
+  updateCharCount();
+}
+
+updateCapacity();
 
 elBtnPNG.addEventListener('click', exportPNG);
 elBtnSVG.addEventListener('click', exportSVG);

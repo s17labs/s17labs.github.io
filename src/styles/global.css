@@ -1,13 +1,13 @@
-/* Tailwind v4 without preflight — keeps UA defaults (h1 sizing etc.) for
-   pixel parity with the legacy site; utilities remain available. */
+/* Tailwind v4 without preflight — UA defaults (h1 sizing, etc.) are kept
+   and utilities remain available. Component styles use raw CSS vars. */
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — shared across all s17 pages/tools.
-   Exposed to Tailwind via @theme (bg-primary, text-secondary-text, ...)
-   and as raw CSS variables for component styles.
+   Mirrored to Tailwind via @theme and as raw CSS variables
+   for component styles (which use the var(--…) form).
    ═══════════════════════════════════════════════════ */
 @theme {
   --color-primary: #0e0e10;
@@ -67,6 +67,16 @@ a {
   padding-bottom: 4.5rem;
 }
 
+/* Centered single-column shell (home + 404) */
+.shell {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+}
+
 .wrapper {
   width: 100%;
   padding: 20px;
@@ -84,21 +94,23 @@ a {
   min-height: 2.8rem;
 }
 
+/* Red cube logo mark — single definition shared by all pages */
+.cube {
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  background: var(--accent);
+  transform: translateY(-0.12em);
+  flex-shrink: 0;
+}
+
 .header h1 {
   margin: 0;
   font-family: Aldrich;
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  gap: 0.2em;
-}
-
-.header .cube {
-  display: inline-block;
-  width: 0.85em;
-  height: 0.85em;
-  background-color: var(--accent);
-  transform: translateY(-0.1em);
+  gap: 0.25em;
 }
 
 .header p {
@@ -148,7 +160,7 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════
-   FOOTER — solid variant (ported from Minimal-UI)
+   FOOTER
    ═══════════════════════════════════════════════════ */
 .footer {
   width: 100%;
@@ -197,15 +209,6 @@ a {
   color: var(--primary-text);
   text-decoration: none;
   transition: 0.2s;
-}
-
-.footer-logo .cube {
-  display: inline-block;
-  width: 0.82em;
-  height: 0.82em;
-  background-color: var(--accent);
-  transform: translateY(-0.12em);
-  flex-shrink: 0;
 }
 
 .footer-tagline {
@@ -275,9 +278,6 @@ a {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
-}
-
-@media (max-width: 580px) {
   .main {
     padding-top: 4rem;
     padding-bottom: 11rem;
