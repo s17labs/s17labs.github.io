@@ -998,10 +998,12 @@ function cpPosition(anchor: HTMLElement): void {
 function cpOpen(target: 'icon' | 'bg'): void {
   CP.target = target;
   cpFromHex(target === 'icon' ? S.iconColor : S.bgColor, true);
-  cpDraw();
-  cpSync();
+  // Show first: cpSync measures the canvas box to place the cursor dot,
+  // which reads 0×0 while the popup is display:none.
   document.getElementById('cp-popup')!.classList.add('visible');
   document.getElementById(`cp-row-${target}`)!.classList.add('open');
+  cpDraw();
+  cpSync();
   cpPosition(document.getElementById(`cp-row-${target}`)!);
 }
 
