@@ -910,6 +910,19 @@ function clampExportSize(v: number): number {
   return Number.isFinite(v) ? Math.min(4096, Math.max(16, Math.round(v))) : 128;
 }
 
+// Export base name: <provider>_<name>_<fill>
+// e.g. fontawesome_star_gradient, bootstrap_alarm_solid,
+// text_hi_solid, emoji_1f600_gradient
+function exportBaseName(): string {
+  const provider =
+    S.source === 'fa' ? 'fontawesome' : S.source === 'bi' ? 'bootstrap' : S.source === 'text' ? 'text' : 'emoji';
+  let name: string;
+  if (S.source === 'fa' || S.source === 'bi') name = S.iconName;
+  else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
+  else name = emojiCodepoints(S.iconName).join('-') || 'emoji';
+  return `${provider}_${name}_${S.bgType === 'gradient' ? 'gradient' : 'solid'}`;
+}
+
 async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
     exportError(true);
@@ -922,12 +935,7 @@ async function exportAs(fmt: string): Promise<void> {
   const h = clampExportSize(Number(hEl.value));
   wEl.value = String(w);
   hEl.value = String(h);
-  const fname =
-    S.source === 'fa' || S.source === 'bi'
-      ? `${S.iconName}-icon`
-      : S.source === 'text'
-        ? `${S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text'}-icon`
-        : `emoji-icon`;
+  const fname = exportBaseName();
 
   if (fmt === 'svg') {
     downloadBlob(new Blob([await buildExportSVG()], { type: 'image/svg+xml' }), fname + '.svg');
@@ -1477,11 +1485,7 @@ async function exportAndroid(): Promise<void> {
   try {
     const zip = new JSZip();
     const res = zip.folder('res')!;
-    const safeName = isVector
-      ? S.iconName.replace(/-/g, '_')
-      : S.source === 'text'
-        ? S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text_icon'
-        : 'emoji_icon';
+    const safeName = exportBaseName();
 
     const densities: [string, number][] = [
       ['mdpi', 48],

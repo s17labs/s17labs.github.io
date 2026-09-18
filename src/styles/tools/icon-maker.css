@@ -352,6 +352,10 @@ input.text-input {
   color: var(--primary-text);
 }
 
+#icon-scale {
+  margin-bottom: 6px;
+}
+
 /* Custom color picker (.color-row/.color-field come from shared tool.css) */
 .cp-row {
   display: flex;
@@ -416,6 +420,9 @@ input.text-input {
   background: none;
   border: none;
   outline: none;
+  /* Square on the swatch side — the row clips the outer corners */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   color: var(--primary-text);
   font-family: 'Courier New', monospace;
   font-size: 0.82rem;
