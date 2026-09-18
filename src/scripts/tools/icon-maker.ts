@@ -1035,7 +1035,11 @@ function cpMoveCursor(): void {
 
 function cpSync(): void {
   const hex = cpHex();
-  (document.getElementById('cp-preview-fill') as HTMLElement).style.background = hex;
+  // In gradient mode the popup preview shows the full background fill
+  // (both stops at the current angle); the hex field keeps the stop value.
+  const isBg = CP.target === 'bg' || CP.target === 'bg2';
+  (document.getElementById('cp-preview-fill') as HTMLElement).style.background =
+    isBg && S.bgType === 'gradient' ? bgSwatchBackground() : hex;
   (document.getElementById('cp-hex-popup') as HTMLInputElement).value = hex;
   (document.getElementById('cp-hue') as HTMLInputElement).value = String(CP.h);
   cpMoveCursor();

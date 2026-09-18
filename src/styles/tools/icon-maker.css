@@ -294,6 +294,11 @@ input.text-input {
   display: block;
 }
 
+/* Stack the Colors panel vertically — the gradient controls need full width */
+.color-row {
+  grid-template-columns: 1fr;
+}
+
 /* Background fill type toggle + gradient controls */
 .bgtype-row {
   display: flex;
