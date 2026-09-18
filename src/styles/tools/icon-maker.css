@@ -420,21 +420,12 @@ input.text-input {
   background: none;
   border: none;
   outline: none;
-  /* Square on the swatch side — the row clips the outer corners */
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
   color: var(--primary-text);
   font-family: 'Courier New', monospace;
   font-size: 0.82rem;
   padding: 0 0.65rem;
   caret-color: var(--accent);
   height: 36px;
-}
-
-/* No inner focus ring — the row itself signals focus (:focus-within),
-   so no rounded outline ever overlaps the swatch seam */
-.cp-row .cp-hex-input:focus-visible {
-  outline: none;
 }
 
 /* Picker popup */
