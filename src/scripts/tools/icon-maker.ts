@@ -499,15 +499,10 @@ function bgGradientVector(): { x1: number; y1: number; x2: number; y2: number } 
   return { x1: c(-dx), y1: c(-dy), x2: c(dx), y2: c(dy) };
 }
 
-// Live CSS preview of the background fill for the swatch well.
-function bgSwatchBackground(): string {
-  return S.bgType === 'gradient'
-    ? `linear-gradient(${S.bgAngle}deg, ${S.bgColor}, ${S.bgColor2})`
-    : S.bgColor;
-}
-
+// Each background stop well shows its own solid stop color.
 function syncBgSwatches(): void {
-  (document.getElementById('cp-fill-bg') as HTMLElement).style.background = bgSwatchBackground();
+  (document.getElementById('cp-fill-bg') as HTMLElement).style.background = S.bgColor;
+  (document.getElementById('cp-fill-bg2') as HTMLElement).style.background = S.bgColor2;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1035,19 +1030,14 @@ function cpMoveCursor(): void {
 
 function cpSync(): void {
   const hex = cpHex();
-  // In gradient mode the popup preview shows the full background fill
-  // (both stops at the current angle); the hex field keeps the stop value.
-  const isBg = CP.target === 'bg' || CP.target === 'bg2';
-  (document.getElementById('cp-preview-fill') as HTMLElement).style.background =
-    isBg && S.bgType === 'gradient' ? bgSwatchBackground() : hex;
+  // The popup preview shows the single color being edited; each background
+  // stop well keeps its own solid stop color via syncBgSwatches.
+  (document.getElementById('cp-preview-fill') as HTMLElement).style.background = hex;
   (document.getElementById('cp-hex-popup') as HTMLInputElement).value = hex;
   (document.getElementById('cp-hue') as HTMLInputElement).value = String(CP.h);
   cpMoveCursor();
   if (CP.target) {
-    // The background swatch previews the full fill (solid or gradient),
-    // so route both background targets through the shared sync.
-    if (CP.target === 'bg' || CP.target === 'bg2') syncBgSwatches();
-    else (document.getElementById(`cp-fill-${CP.target}`) as HTMLElement).style.background = hex;
+    (document.getElementById(`cp-fill-${CP.target}`) as HTMLElement).style.background = hex;
     (document.getElementById(`cp-hex-${CP.target}`) as HTMLInputElement).value = hex;
   }
 }
