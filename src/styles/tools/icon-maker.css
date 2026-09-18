@@ -431,6 +431,12 @@ input.text-input {
   height: 36px;
 }
 
+/* No inner focus ring — the row itself signals focus (:focus-within),
+   so no rounded outline ever overlaps the swatch seam */
+.cp-row .cp-hex-input:focus-visible {
+  outline: none;
+}
+
 /* Picker popup */
 .cp-popup {
   position: fixed;
