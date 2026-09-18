@@ -294,6 +294,68 @@ input.text-input {
   display: block;
 }
 
+/* Stack the Colors panel vertically — the gradient controls need full width */
+.color-row {
+  grid-template-columns: 1fr;
+}
+
+/* Background fill type toggle + gradient controls */
+.bgtype-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.bgtype-row .choice-btn {
+  flex: 1;
+}
+
+.bg-gradient-panel {
+  display: none;
+  margin-top: 0.55rem;
+}
+
+.bg-gradient-panel.visible {
+  display: block;
+}
+
+.angle-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.3rem;
+  margin: 0.55rem 0;
+}
+
+.angle-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  cursor: pointer;
+  transition: all var(--t);
+}
+
+.angle-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--primary-text);
+}
+
+.angle-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+#icon-scale {
+  margin-bottom: 6px;
+}
+
 /* Custom color picker (.color-row/.color-field come from shared tool.css) */
 .cp-row {
   display: flex;

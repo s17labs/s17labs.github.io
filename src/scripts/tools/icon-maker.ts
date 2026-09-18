@@ -41,6 +41,9 @@ const S = {
   textSpacing: 0, // letter-spacing in inner text-viewport units
   iconColor: '#ffffff',
   bgColor: '#ff4136',
+  bgType: 'solid', // 'solid' | 'gradient' (linear, two stops)
+  bgColor2: '#ffffff', // gradient end stop
+  bgAngle: 90, // CSS gradient angle in degrees (0 = up, 90 = right)
   bgShape: 'circle',
   iconScale: 70,
   iconOffsetY: 0, // vertical icon offset in canvas units (− up · + down)
@@ -482,6 +485,27 @@ async function buildExportSVG(shapeOverride?: string): Promise<string> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Background gradient helpers
+//
+// CSS gradient angle → SVG objectBoundingBox vector. CSS 0° points up with
+// angles growing clockwise; SVG y grows downward, so the direction is
+// (sin θ, −cos θ) around the 0.5 center.
+// ─────────────────────────────────────────────────────────────────────────────
+function bgGradientVector(): { x1: number; y1: number; x2: number; y2: number } {
+  const rad = (S.bgAngle * Math.PI) / 180;
+  const dx = Math.sin(rad) / 2;
+  const dy = -Math.cos(rad) / 2;
+  const c = (n: number): number => Math.round((0.5 + n) * 10000) / 10000;
+  return { x1: c(-dx), y1: c(-dy), x2: c(dx), y2: c(dy) };
+}
+
+// Each background stop well shows its own solid stop color.
+function syncBgSwatches(): void {
+  (document.getElementById('cp-fill-bg') as HTMLElement).style.background = S.bgColor;
+  (document.getElementById('cp-fill-bg2') as HTMLElement).style.background = S.bgColor2;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Build composite SVG
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSVG(shapeOverride?: string): string {
@@ -490,8 +514,18 @@ function buildSVG(shapeOverride?: string): string {
   const pad = (100 - iconScale) / 2;
   const iy = pad + S.iconOffsetY;
   const rx = shape === 'circle' ? 50 : shape === 'rounded' ? 14 : 0;
-  const bgEl =
-    shape !== 'none' ? `<rect width="100" height="100" fill="${bgColor}" rx="${rx}"/>` : '';
+  let bgEl = '';
+  if (shape !== 'none') {
+    if (S.bgType === 'gradient') {
+      const v = bgGradientVector();
+      bgEl =
+        `<defs><linearGradient id="s17-im-bg-grad" x1="${v.x1}" y1="${v.y1}" x2="${v.x2}" y2="${v.y2}">` +
+        `<stop offset="0" stop-color="${bgColor}"/><stop offset="1" stop-color="${S.bgColor2}"/>` +
+        `</linearGradient></defs><rect width="100" height="100" fill="url(#s17-im-bg-grad)" rx="${rx}"/>`;
+    } else {
+      bgEl = `<rect width="100" height="100" fill="${bgColor}" rx="${rx}"/>`;
+    }
+  }
 
   let iconEl = '';
 
@@ -561,7 +595,12 @@ function render(): void {
   const sourceLabels: Record<string, string> = { fa: 'Font Awesome', bi: 'Bootstrap', text: 'Text', noto: 'Noto', twemoji: 'Twemoji' };
   document.getElementById('meta-source')!.textContent = sourceLabels[S.source];
   document.getElementById('meta-icon')!.textContent = S.iconName;
-  document.getElementById('meta-bg')!.textContent = S.bgShape === 'none' ? 'transparent' : S.bgColor;
+  document.getElementById('meta-bg')!.textContent =
+    S.bgShape === 'none'
+      ? 'transparent'
+      : S.bgType === 'gradient'
+        ? `${S.bgColor} → ${S.bgColor2} ${S.bgAngle}°`
+        : S.bgColor;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -779,6 +818,47 @@ elIconOffset.addEventListener('input', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Background fill: solid vs gradient + gradient angle
+// ─────────────────────────────────────────────────────────────────────────────
+function setBgType(t: string): void {
+  S.bgType = t;
+  document.querySelectorAll<HTMLElement>('.bgtype-btn').forEach((b) => {
+    const on = b.dataset.bgtype === t;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  document.getElementById('bg-gradient-panel')!.classList.toggle('visible', t === 'gradient');
+  syncBgSwatches();
+  render();
+}
+
+for (const b of document.querySelectorAll<HTMLElement>('.bgtype-btn')) {
+  b.addEventListener('click', () => setBgType(b.dataset.bgtype!));
+}
+
+const elBgAngle = document.getElementById('bg-angle') as HTMLInputElement;
+
+function setBgAngle(a: number): void {
+  // Normalize to 0–359 so 360° and 0° compare equal for preset highlighting.
+  S.bgAngle = ((Math.round(a) % 360) + 360) % 360;
+  elBgAngle.value = String(S.bgAngle);
+  document.getElementById('angle-label')!.textContent = S.bgAngle + '°';
+  document.querySelectorAll<HTMLElement>('.angle-btn').forEach((b) => {
+    const on = Number(b.dataset.angle) === S.bgAngle;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  syncBgSwatches();
+  render();
+}
+
+elBgAngle.addEventListener('input', () => setBgAngle(Number(elBgAngle.value)));
+
+for (const b of document.querySelectorAll<HTMLElement>('.angle-btn')) {
+  b.addEventListener('click', () => setBgAngle(Number(b.dataset.angle)));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Resolution presets
 // ─────────────────────────────────────────────────────────────────────────────
 function setPreset(px: number): void {
@@ -830,6 +910,19 @@ function clampExportSize(v: number): number {
   return Number.isFinite(v) ? Math.min(4096, Math.max(16, Math.round(v))) : 128;
 }
 
+// Export base name: <provider>_<name>_<fill>
+// e.g. fontawesome_star_gradient, bootstrap_alarm_solid,
+// text_hi_solid, emoji_1f600_gradient
+function exportBaseName(): string {
+  const provider =
+    S.source === 'fa' ? 'fontawesome' : S.source === 'bi' ? 'bootstrap' : S.source === 'text' ? 'text' : 'emoji';
+  let name: string;
+  if (S.source === 'fa' || S.source === 'bi') name = S.iconName;
+  else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
+  else name = emojiCodepoints(S.iconName).join('-') || 'emoji';
+  return `${provider}_${name}_${S.bgType === 'gradient' ? 'gradient' : 'solid'}`;
+}
+
 async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
     exportError(true);
@@ -842,12 +935,7 @@ async function exportAs(fmt: string): Promise<void> {
   const h = clampExportSize(Number(hEl.value));
   wEl.value = String(w);
   hEl.value = String(h);
-  const fname =
-    S.source === 'fa' || S.source === 'bi'
-      ? `${S.iconName}-icon`
-      : S.source === 'text'
-        ? `${S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text'}-icon`
-        : `emoji-icon`;
+  const fname = exportBaseName();
 
   if (fmt === 'svg') {
     downloadBlob(new Blob([await buildExportSVG()], { type: 'image/svg+xml' }), fname + '.svg');
@@ -864,7 +952,7 @@ for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Custom color picker
 // ─────────────────────────────────────────────────────────────────────────────
-const CP = { target: null as 'icon' | 'bg' | null, h: 0, s: 1, v: 1 };
+const CP = { target: null as 'icon' | 'bg' | 'bg2' | null, h: 0, s: 1, v: 1 };
 
 type Rgb = { r: number; g: number; b: number };
 
@@ -950,6 +1038,8 @@ function cpMoveCursor(): void {
 
 function cpSync(): void {
   const hex = cpHex();
+  // The popup preview shows the single color being edited; each background
+  // stop well keeps its own solid stop color via syncBgSwatches.
   (document.getElementById('cp-preview-fill') as HTMLElement).style.background = hex;
   (document.getElementById('cp-hex-popup') as HTMLInputElement).value = hex;
   (document.getElementById('cp-hue') as HTMLInputElement).value = String(CP.h);
@@ -964,6 +1054,7 @@ function cpCommit(): void {
   const hex = cpHex();
   if (CP.target === 'icon') S.iconColor = hex;
   if (CP.target === 'bg') S.bgColor = hex;
+  if (CP.target === 'bg2') S.bgColor2 = hex;
   cpSync();
   render();
 }
@@ -995,9 +1086,9 @@ function cpPosition(anchor: HTMLElement): void {
   popup.style.left = left + 'px';
 }
 
-function cpOpen(target: 'icon' | 'bg'): void {
+function cpOpen(target: 'icon' | 'bg' | 'bg2'): void {
   CP.target = target;
-  cpFromHex(target === 'icon' ? S.iconColor : S.bgColor, true);
+  cpFromHex(target === 'icon' ? S.iconColor : target === 'bg' ? S.bgColor : S.bgColor2, true);
   // Show first: cpSync measures the canvas box to place the cursor dot,
   // which reads 0×0 while the popup is display:none.
   document.getElementById('cp-popup')!.classList.add('visible');
@@ -1016,7 +1107,7 @@ function cpClose(): void {
 document.querySelectorAll<HTMLElement>('.cp-swatch').forEach((btn) => {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const t = btn.dataset.target as 'icon' | 'bg';
+    const t = btn.dataset.target as 'icon' | 'bg' | 'bg2';
     // Don't open icon color picker when in emoji mode (emoji use own colors)
     if (t === 'icon' && (S.source === 'noto' || S.source === 'twemoji')) return;
     CP.target === t ? cpClose() : cpOpen(t);
@@ -1086,7 +1177,7 @@ elCpHexPopup.addEventListener('input', () => {
   }
 });
 
-(['icon', 'bg'] as const).forEach((target) => {
+(['icon', 'bg', 'bg2'] as const).forEach((target) => {
   const hexEl = document.getElementById(`cp-hex-${target}`) as HTMLInputElement;
 
   hexEl.addEventListener('input', function () {
@@ -1094,7 +1185,9 @@ elCpHexPopup.addEventListener('input', () => {
     if (hex) {
       if (target === 'icon') S.iconColor = hex;
       if (target === 'bg') S.bgColor = hex;
-      (document.getElementById(`cp-fill-${target}`) as HTMLElement).style.background = hex;
+      if (target === 'bg2') S.bgColor2 = hex;
+      if (target === 'bg' || target === 'bg2') syncBgSwatches();
+      else (document.getElementById(`cp-fill-${target}`) as HTMLElement).style.background = hex;
       if (CP.target === target) {
         cpFromHex(hex, true);
         cpDraw();
@@ -1112,7 +1205,7 @@ document.addEventListener('click', (e) => {
   const popup = document.getElementById('cp-popup')!;
   const inside =
     popup.contains(e.target as Node) ||
-    (['icon', 'bg'] as const).some((t) => document.getElementById(`cp-row-${t}`)!.contains(e.target as Node));
+    (['icon', 'bg', 'bg2'] as const).some((t) => document.getElementById(`cp-row-${t}`)!.contains(e.target as Node));
   if (!inside) cpClose();
 });
 
@@ -1166,7 +1259,28 @@ ${pathEls}
 </vector>`;
 }
 
+// Android gradients only accept multiples of 45° (0 = left→right,
+// 90 = bottom→top). CSS 0° points up, so android = (90 − css) mod 360.
+// PNG/SVG exports always keep the exact angle; only the XML rounds.
+function bgAndroidAngle(): { css: number; android: number } {
+  const css = (Math.round(S.bgAngle / 45) * 45) % 360;
+  return { css, android: (90 - css + 360) % 360 };
+}
+
 function buildBackgroundXML(): string {
+  if (S.bgType === 'gradient') {
+    const { android } = bgAndroidAngle();
+    return `<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon background — generated by s17 Labs Icon Maker -->
+<!-- https://s17labs.github.io/tools/icon-maker/ -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="${android}"
+        android:startColor="${S.bgColor}"
+        android:endColor="${S.bgColor2}"
+        android:type="linear"/>
+</shape>`;
+  }
   return `<?xml version="1.0" encoding="utf-8"?>
 <!-- Adaptive icon background — generated by s17 Labs Icon Maker -->
 <!-- https://s17labs.github.io/tools/icon-maker/ -->
@@ -1221,7 +1335,7 @@ function buildReadme(withMonochrome: boolean): string {
   │   ├── ic_launcher.xml           Adaptive icon${withMonochrome ? ' + monochrome (API 33+)' : ' (API 26+)'}
   │   └── ic_launcher_round.xml     Adaptive icon${withMonochrome ? ' + monochrome (API 33+)' : ' (API 26+)'}
   ├── drawable/
-  │   ├── ic_launcher_background.xml   Solid color background layer
+  │   ├── ic_launcher_background.xml   ${S.bgType === 'gradient' ? 'Gradient background layer' : 'Solid color background layer'}
   │   └── ic_launcher_foreground.xml   Vector foreground (scale: ${S.iconScale}%)
   ├── drawable-v24/
   │   └── ic_launcher_foreground.xml   Foreground — explicit API 24+ copy
@@ -1258,7 +1372,7 @@ ICON DETAILS
   Name / Text / Emoji: ${S.iconName}
   Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
-  Background color:  ${S.bgColor}
+  Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
   Material You:      ${monoSection}
   Generated:         ${new Date().toUTCString()}
@@ -1305,7 +1419,11 @@ ABOUT ADAPTIVE ICONS  (Android 8.0 / API 26+)
   Adaptive icons use two separate layers that the launcher composites:
 
     Background (ic_launcher_background.xml)
-      A solid-color shape using the chosen background color (${S.bgColor}).
+${S.bgType === 'gradient'
+  ? `      A linear gradient (${S.bgColor} → ${S.bgColor2} at ${S.bgAngle}°).
+      Android gradients only support multiples of 45°, so the XML rounds
+      to ${bgAndroidAngle().css}° — PNG/SVG exports keep the exact angle.`
+  : `      A solid-color shape using the chosen background color (${S.bgColor}).`}
 
     Foreground (ic_launcher_foreground.xml)
       A VectorDrawable on a 108 × 108dp canvas. The icon is scaled to
@@ -1367,11 +1485,7 @@ async function exportAndroid(): Promise<void> {
   try {
     const zip = new JSZip();
     const res = zip.folder('res')!;
-    const safeName = isVector
-      ? S.iconName.replace(/-/g, '_')
-      : S.source === 'text'
-        ? S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text_icon'
-        : 'emoji_icon';
+    const safeName = exportBaseName();
 
     const densities: [string, number][] = [
       ['mdpi', 48],

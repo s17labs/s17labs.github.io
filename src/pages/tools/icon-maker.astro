@@ -8,7 +8,7 @@ const title = 'Icon Maker | s17 Labs Tools';
 const description =
   'Generate and export custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
 const tagline =
-  'Generate custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Control colors, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
+  'Generate custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Control colors, gradients, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
 ---
 
 <ToolLayout title={title} description={description} heading="Icon Maker" tagline={tagline} maxWidth={900}>
@@ -139,11 +139,38 @@ const tagline =
           </div>
           <div class="color-field">
             <label>Background</label>
+            <div class="bgtype-row">
+              <button type="button" class="choice-btn bgtype-btn active" data-bgtype="solid" aria-pressed="true">Solid</button>
+              <button type="button" class="choice-btn bgtype-btn" data-bgtype="gradient" aria-pressed="false">Gradient</button>
+            </div>
             <div class="cp-row" id="cp-row-bg">
               <button type="button" class="cp-swatch" id="cp-swatch-bg" data-target="bg" aria-label="Pick background color">
                 <div class="cp-swatch-fill" id="cp-fill-bg" style="background:#ff4136"></div>
               </button>
               <input class="cp-hex-input" id="cp-hex-bg" type="text" value="#ff4136" maxlength="7" spellcheck="false" autocomplete="off" />
+            </div>
+            <div class="bg-gradient-panel" id="bg-gradient-panel">
+              <div class="cp-row" id="cp-row-bg2">
+                <button type="button" class="cp-swatch" id="cp-swatch-bg2" data-target="bg2" aria-label="Pick gradient end color">
+                  <div class="cp-swatch-fill" id="cp-fill-bg2" style="background:#ffffff"></div>
+                </button>
+                <input class="cp-hex-input" id="cp-hex-bg2" type="text" value="#ffffff" maxlength="7" spellcheck="false" autocomplete="off" />
+              </div>
+              <div class="angle-row" role="group" aria-label="Gradient direction">
+                <button type="button" class="angle-btn" data-angle="0" aria-pressed="false" title="Up (0°)">↑</button>
+                <button type="button" class="angle-btn" data-angle="45" aria-pressed="false" title="Up-right (45°)">↗</button>
+                <button type="button" class="angle-btn active" data-angle="90" aria-pressed="true" title="Right (90°)">→</button>
+                <button type="button" class="angle-btn" data-angle="135" aria-pressed="false" title="Down-right (135°)">↘</button>
+                <button type="button" class="angle-btn" data-angle="180" aria-pressed="false" title="Down (180°)">↓</button>
+                <button type="button" class="angle-btn" data-angle="225" aria-pressed="false" title="Down-left (225°)">↙</button>
+                <button type="button" class="angle-btn" data-angle="270" aria-pressed="false" title="Left (270°)">←</button>
+                <button type="button" class="angle-btn" data-angle="315" aria-pressed="false" title="Up-left (315°)">↖</button>
+              </div>
+              <div class="field">
+                <label for="bg-angle">Angle — <span id="angle-label">90°</span></label>
+                <input type="range" id="bg-angle" min="0" max="360" step="1" value="90" />
+                <div class="font-note">0° points up · 90° points right</div>
+              </div>
             </div>
           </div>
         </div>
