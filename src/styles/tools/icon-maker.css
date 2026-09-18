@@ -6,12 +6,14 @@
    ═══════════════════════════════════════════════════ */
 
 /* Layout overrides: workspace is a grid, panels have no bottom margin
-   (page width comes from ToolLayout maxWidth={900}) */
-.panel {
+   (page width comes from ToolLayout maxWidth={900}).
+   Scoped under .workspace: the shared tool.css bundle loads AFTER this file
+   in production, so bare selectors would lose at equal specificity. */
+.workspace .panel {
   margin-bottom: 0;
 }
 
-.field {
+.workspace .field {
   margin-bottom: 0;
 }
 
@@ -294,8 +296,10 @@ input.text-input {
   display: block;
 }
 
-/* Stack the Colors panel vertically — the gradient controls need full width */
-.color-row {
+/* Stack the Colors panel vertically — the gradient controls need full width.
+   Same .workspace scoping as above: must beat shared tool.css regardless
+   of bundle order. */
+.workspace .color-row {
   grid-template-columns: 1fr;
 }
 
