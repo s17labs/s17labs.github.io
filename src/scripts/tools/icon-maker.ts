@@ -802,7 +802,6 @@ function setShape(s: string): void {
 // leaves the checkbox as-is.
 // ─────────────────────────────────────────────────────────────────────────────
 let shapeDialogMode: 'export' | 'material' | null = null;
-let pendingFmt: string | null = null; // export format awaiting dialog choice (null = Android package)
 
 function nonSquareBg(): boolean {
   return S.bgShape === 'circle' || S.bgShape === 'rounded';
@@ -825,27 +824,24 @@ function closeShapeDialog(): void {
   shapeDialogMode = null;
 }
 
-// Run the export the dialog interrupted (package, or SVG/PNG via pendingFmt).
-// Takes mode/fmt as args because closeShapeDialog clears the globals.
-function continuePendingExport(mode: 'export' | 'material' | null, fmt: string | null): void {
+// Run the Android export the dialog interrupted.
+// Takes mode as an arg because closeShapeDialog clears the global.
+function continuePendingExport(mode: 'export' | 'material' | null): void {
   if (mode !== 'export') return;
-  if (fmt) void exportAs(fmt);
-  else void exportAndroid();
+  void exportAndroid();
 }
 
 document.getElementById('shape-dialog-primary')!.addEventListener('click', () => {
   const mode = shapeDialogMode;
-  const fmt = pendingFmt;
   setShape('square');
   closeShapeDialog();
-  continuePendingExport(mode, fmt);
+  continuePendingExport(mode);
 });
 
 document.getElementById('shape-dialog-secondary')!.addEventListener('click', () => {
   const mode = shapeDialogMode;
-  const fmt = pendingFmt;
   closeShapeDialog();
-  continuePendingExport(mode, fmt);
+  continuePendingExport(mode);
 });
 
 document.getElementById('shape-dialog')!.addEventListener('click', (e) => {
@@ -998,13 +994,6 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   exportError(false);
-  // Baked-in circle/rounded backgrounds fight launcher and store masks — stop
-  // and ask before exporting (applies to SVG/PNG as well as the package).
-  if (nonSquareBg()) {
-    pendingFmt = fmt;
-    openShapeDialog('export');
-    return;
-  }
   const wEl = document.getElementById('custom-w') as HTMLInputElement;
   const hEl = document.getElementById('custom-h') as HTMLInputElement;
   const w = clampExportSize(Number(wEl.value));
@@ -1546,7 +1535,6 @@ async function exportAndroid(): Promise<void> {
   // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
   // ask before building the package.
   if (nonSquareBg()) {
-    pendingFmt = null;
     openShapeDialog('export');
     return;
   }
