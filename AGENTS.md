@@ -72,6 +72,15 @@ Keep commits atomic — one logical change per commit.
 Scope is a short area name for this project (e.g. `tools`, `home`, `css`, `ci`).
 Use plain `type:` only when a change genuinely spans everything (rare).
 
+- Never add a `Co-authored-by` / `Signed-off-by` trailer for the same identity
+  that authors the commit — a self co-author is a redundant duplicate. Only
+  credit a genuinely different human co-author, and only when asked. No AI
+  co-author trailers in commits either; AI attribution stays only in the PR body.
+- Keep the body free of trailers entirely unless explicitly asked for one.
+  When squash-merging via `gh pr merge --squash`, pass an explicit
+  `--subject` and an empty `--body ""` so GitHub doesn't re-inject branch
+  trailers or auto-credit the branch author as a co-author.
+
 ## Agent Guardrails
 
 - Never commit or push directly to `main`; all changes land through pull requests.
