@@ -987,6 +987,9 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   exportError(false);
+  // TEMPORARY diagnostic readout (removed before merge).
+  const domShape = document.querySelector<HTMLElement>('.shape-btn.active')?.dataset.shape;
+  alert(`DBG state=${S.bgShape} ui=${domShape}`);
   // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
   // ask before building the package.
   if (nonSquareBg()) {
