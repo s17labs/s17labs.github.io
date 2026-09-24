@@ -802,6 +802,7 @@ function setShape(s: string): void {
 // leaves the checkbox as-is.
 // ─────────────────────────────────────────────────────────────────────────────
 let shapeDialogMode: 'export' | 'material' | null = null;
+let pendingFmt: string | null = null; // export format awaiting dialog choice (null = Android package)
 
 function nonSquareBg(): boolean {
   return S.bgShape === 'circle' || S.bgShape === 'rounded';
@@ -824,17 +825,27 @@ function closeShapeDialog(): void {
   shapeDialogMode = null;
 }
 
+// Run the export the dialog interrupted (package, or SVG/PNG via pendingFmt).
+// Takes mode/fmt as args because closeShapeDialog clears the globals.
+function continuePendingExport(mode: 'export' | 'material' | null, fmt: string | null): void {
+  if (mode !== 'export') return;
+  if (fmt) void exportAs(fmt);
+  else void exportAndroid();
+}
+
 document.getElementById('shape-dialog-primary')!.addEventListener('click', () => {
   const mode = shapeDialogMode;
+  const fmt = pendingFmt;
   setShape('square');
   closeShapeDialog();
-  if (mode === 'export') void exportAndroid();
+  continuePendingExport(mode, fmt);
 });
 
 document.getElementById('shape-dialog-secondary')!.addEventListener('click', () => {
   const mode = shapeDialogMode;
+  const fmt = pendingFmt;
   closeShapeDialog();
-  if (mode === 'export') void exportAndroid();
+  continuePendingExport(mode, fmt);
 });
 
 document.getElementById('shape-dialog')!.addEventListener('click', (e) => {
@@ -987,12 +998,10 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   exportError(false);
-  // TEMPORARY diagnostic readout (removed before merge).
-  const domShape = document.querySelector<HTMLElement>('.shape-btn.active')?.dataset.shape;
-  alert(`DBG state=${S.bgShape} ui=${domShape}`);
-  // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
-  // ask before building the package.
+  // Baked-in circle/rounded backgrounds fight launcher and store masks — stop
+  // and ask before exporting (applies to SVG/PNG as well as the package).
   if (nonSquareBg()) {
+    pendingFmt = fmt;
     openShapeDialog('export');
     return;
   }
@@ -1534,6 +1543,13 @@ async function exportAndroid(): Promise<void> {
     return;
   }
   exportError(false);
+  // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
+  // ask before building the package.
+  if (nonSquareBg()) {
+    pendingFmt = null;
+    openShapeDialog('export');
+    return;
+  }
 
   const isVector = S.source === 'fa' || S.source === 'bi';
   const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;
