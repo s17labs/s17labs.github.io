@@ -356,6 +356,27 @@ input.text-input {
   color: var(--primary-text);
 }
 
+/* Non-square background warning (Export panel) */
+.status-msg.warning {
+  color: var(--warn, #ffb020);
+  line-height: 1.5;
+}
+
+.shape-warn-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.shape-warn-btn:hover {
+  color: var(--primary-text);
+}
+
 #icon-scale {
   margin-bottom: 6px;
 }

@@ -784,11 +784,13 @@ elTextSpacing.addEventListener('input', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 function setShape(s: string): void {
   S.bgShape = s;
+  shapeWarnSticky = false;
   document.querySelectorAll<HTMLElement>('.shape-btn').forEach((b) => {
     const on = b.dataset.shape === s;
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  syncShapeWarn();
   render();
 }
 
@@ -857,6 +859,31 @@ elBgAngle.addEventListener('input', () => setBgAngle(Number(elBgAngle.value)));
 for (const b of document.querySelectorAll<HTMLElement>('.angle-btn')) {
   b.addEventListener('click', () => setBgAngle(Number(b.dataset.angle)));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Non-square background warning.
+//
+// Adaptive-icon launchers apply their own mask (circle, squircle, …) to both
+// layers. A baked-in circle/rounded background fights that mask, so warn
+// whenever one is active: when Material You is checked, or when an Android
+// package export is attempted. Switch to square and the warning clears.
+// ─────────────────────────────────────────────────────────────────────────────
+let shapeWarnSticky = false; // export attempted with a non-square background
+
+function nonSquareBg(): boolean {
+  return S.bgShape === 'circle' || S.bgShape === 'rounded';
+}
+
+function syncShapeWarn(): void {
+  const materialOn = (document.getElementById('material-toggle') as HTMLInputElement).checked;
+  document
+    .getElementById('shape-warn')!
+    .classList.toggle('visible', nonSquareBg() && (materialOn || shapeWarnSticky));
+}
+
+document.getElementById('material-toggle')!.addEventListener('change', syncShapeWarn);
+
+document.getElementById('shape-warn-square')!.addEventListener('click', () => setShape('square'));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolution presets
@@ -929,6 +956,10 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   exportError(false);
+  // Baked-in circle/rounded backgrounds fight the launcher mask — warn but
+  // still export; switching to square clears it (see syncShapeWarn).
+  if (nonSquareBg()) shapeWarnSticky = true;
+  syncShapeWarn();
   const wEl = document.getElementById('custom-w') as HTMLInputElement;
   const hEl = document.getElementById('custom-h') as HTMLInputElement;
   const w = clampExportSize(Number(wEl.value));
@@ -1362,6 +1393,10 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
       ? `  Font:              ${S.fontFamily} ${S.fontWeight}${S.fontItalic ? ' italic' : ''}${S.fontUnderline ? ' + underline' : ''}${S.textSpacing ? `, spacing ${S.textSpacing}` : ''}\n`
       : '';
 
+  const shapeNote = nonSquareBg()
+    ? `\n  NOTE:              Background shape is '${S.bgShape}' — switch to square so launchers can mask freely.`
+    : '';
+
   return `╔══════════════════════════════════════════════════════════════╗
 ║           ANDROID ICON PACKAGE — s17 Labs Icon Maker         ║
 ║           https://s17labs.github.io/tools/icon-maker/        ║
@@ -1372,7 +1407,7 @@ ICON DETAILS
   Name / Text / Emoji: ${S.iconName}
   Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
-  Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}
+  Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}${shapeNote}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
   Material You:      ${monoSection}
   Generated:         ${new Date().toUTCString()}
