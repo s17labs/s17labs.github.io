@@ -356,6 +356,78 @@ input.text-input {
   color: var(--primary-text);
 }
 
+/* Non-square background dialog (Android export / Material You gate) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.modal-overlay.visible {
+  display: flex;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.modal-title {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--primary-text);
+  margin-bottom: 0.6rem;
+}
+
+.modal-text {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--secondary-text);
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+.modal-btn {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-family: Verdana, sans-serif;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--secondary-text);
+  transition: all var(--t);
+}
+
+.modal-btn:hover {
+  border-color: var(--accent-soft);
+  color: var(--primary-text);
+}
+
+.modal-btn.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--primary-text);
+  font-weight: 700;
+}
+
 #icon-scale {
   margin-bottom: 6px;
 }

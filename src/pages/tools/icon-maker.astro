@@ -266,7 +266,6 @@ const tagline =
             <span class="checkbox-sub" id="material-sub">Adds &lt;monochrome&gt; layer for Android 13+</span>
           </div>
         </label>
-
         <button type="button" class="android-btn" id="android-btn">
           <span style="font-size:1.05rem;display:inline-flex;"><Icon name="android" /></span>
           <span>
@@ -279,6 +278,18 @@ const tagline =
           <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
           <div class="progress-label" id="progress-label">Preparing…</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Non-square background dialog (Android export / Material You gate) -->
+  <div class="modal-overlay" id="shape-dialog">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="shape-dialog-title">
+      <div class="modal-title" id="shape-dialog-title">Square background recommended</div>
+      <p class="modal-text">Android applies its own mask (circle, squircle, …) to adaptive icons. A baked-in circle or rounded background will clash with it — switch to Square so the launcher can mask freely.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn primary" id="shape-dialog-primary">Switch to Square</button>
+        <button type="button" class="modal-btn" id="shape-dialog-secondary">Keep Current Shape</button>
       </div>
     </div>
   </div>

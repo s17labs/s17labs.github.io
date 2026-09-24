@@ -792,6 +792,70 @@ function setShape(s: string): void {
   render();
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Non-square background dialog.
+//
+// Adaptive-icon launchers apply their own mask (circle, squircle, …) to both
+// layers, so a baked-in circle/rounded background clashes with it. The export
+// button and the Material You checkbox open this gate instead of proceeding
+// silently — switching to square continues, dismissing cancels the export or
+// leaves the checkbox as-is.
+// ─────────────────────────────────────────────────────────────────────────────
+let shapeDialogMode: 'export' | 'material' | null = null;
+
+function nonSquareBg(): boolean {
+  return S.bgShape === 'circle' || S.bgShape === 'rounded';
+}
+
+function openShapeDialog(mode: 'export' | 'material'): void {
+  shapeDialogMode = mode;
+  const primary = document.getElementById('shape-dialog-primary')!;
+  const secondary = document.getElementById('shape-dialog-secondary')!;
+  primary.textContent = mode === 'export' ? 'Switch to Square & Export' : 'Switch to Square';
+  secondary.textContent = mode === 'export' ? 'Export Anyway' : 'Keep Current Shape';
+  document.getElementById('shape-dialog')!.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  primary.focus();
+}
+
+function closeShapeDialog(): void {
+  document.getElementById('shape-dialog')!.classList.remove('visible');
+  document.body.style.overflow = '';
+  shapeDialogMode = null;
+}
+
+// Run the Android export the dialog interrupted.
+// Takes mode as an arg because closeShapeDialog clears the global.
+function continuePendingExport(mode: 'export' | 'material' | null): void {
+  if (mode !== 'export') return;
+  void exportAndroid();
+}
+
+document.getElementById('shape-dialog-primary')!.addEventListener('click', () => {
+  const mode = shapeDialogMode;
+  setShape('square');
+  closeShapeDialog();
+  continuePendingExport(mode);
+});
+
+document.getElementById('shape-dialog-secondary')!.addEventListener('click', () => {
+  const mode = shapeDialogMode;
+  closeShapeDialog();
+  continuePendingExport(mode);
+});
+
+document.getElementById('shape-dialog')!.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('shape-dialog')) closeShapeDialog();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && shapeDialogMode) closeShapeDialog();
+});
+
+document.getElementById('material-toggle')!.addEventListener('change', (e) => {
+  if ((e.target as HTMLInputElement).checked && nonSquareBg()) openShapeDialog('material');
+});
+
 for (const b of document.querySelectorAll<HTMLElement>('.shape-btn')) {
   b.addEventListener('click', () => setShape(b.dataset.shape!));
 }
@@ -858,6 +922,7 @@ for (const b of document.querySelectorAll<HTMLElement>('.angle-btn')) {
   b.addEventListener('click', () => setBgAngle(Number(b.dataset.angle)));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolution presets
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1362,6 +1427,10 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
       ? `  Font:              ${S.fontFamily} ${S.fontWeight}${S.fontItalic ? ' italic' : ''}${S.fontUnderline ? ' + underline' : ''}${S.textSpacing ? `, spacing ${S.textSpacing}` : ''}\n`
       : '';
 
+  const shapeNote = nonSquareBg()
+    ? `\n  NOTE:              Background shape is '${S.bgShape}' — switch to square so launchers can mask freely.`
+    : '';
+
   return `╔══════════════════════════════════════════════════════════════╗
 ║           ANDROID ICON PACKAGE — s17 Labs Icon Maker         ║
 ║           https://s17labs.github.io/tools/icon-maker/        ║
@@ -1372,7 +1441,7 @@ ICON DETAILS
   Name / Text / Emoji: ${S.iconName}
   Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
-  Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}
+  Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}${shapeNote}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
   Material You:      ${monoSection}
   Generated:         ${new Date().toUTCString()}
@@ -1463,6 +1532,12 @@ async function exportAndroid(): Promise<void> {
     return;
   }
   exportError(false);
+  // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
+  // ask before building the package.
+  if (nonSquareBg()) {
+    openShapeDialog('export');
+    return;
+  }
 
   const isVector = S.source === 'fa' || S.source === 'bi';
   const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;
