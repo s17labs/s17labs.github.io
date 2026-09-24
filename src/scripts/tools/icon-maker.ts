@@ -784,15 +784,70 @@ elTextSpacing.addEventListener('input', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 function setShape(s: string): void {
   S.bgShape = s;
-  shapeWarnSticky = false;
   document.querySelectorAll<HTMLElement>('.shape-btn').forEach((b) => {
     const on = b.dataset.shape === s;
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', String(on));
   });
-  syncShapeWarn();
   render();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Non-square background dialog.
+//
+// Adaptive-icon launchers apply their own mask (circle, squircle, …) to both
+// layers, so a baked-in circle/rounded background clashes with it. The export
+// button and the Material You checkbox open this gate instead of proceeding
+// silently — switching to square continues, dismissing cancels the export or
+// leaves the checkbox as-is.
+// ─────────────────────────────────────────────────────────────────────────────
+let shapeDialogMode: 'export' | 'material' | null = null;
+
+function nonSquareBg(): boolean {
+  return S.bgShape === 'circle' || S.bgShape === 'rounded';
+}
+
+function openShapeDialog(mode: 'export' | 'material'): void {
+  shapeDialogMode = mode;
+  const primary = document.getElementById('shape-dialog-primary')!;
+  const secondary = document.getElementById('shape-dialog-secondary')!;
+  primary.textContent = mode === 'export' ? 'Switch to Square & Export' : 'Switch to Square';
+  secondary.textContent = mode === 'export' ? 'Export Anyway' : 'Keep Current Shape';
+  document.getElementById('shape-dialog')!.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  primary.focus();
+}
+
+function closeShapeDialog(): void {
+  document.getElementById('shape-dialog')!.classList.remove('visible');
+  document.body.style.overflow = '';
+  shapeDialogMode = null;
+}
+
+document.getElementById('shape-dialog-primary')!.addEventListener('click', () => {
+  const mode = shapeDialogMode;
+  setShape('square');
+  closeShapeDialog();
+  if (mode === 'export') void exportAndroid();
+});
+
+document.getElementById('shape-dialog-secondary')!.addEventListener('click', () => {
+  const mode = shapeDialogMode;
+  closeShapeDialog();
+  if (mode === 'export') void exportAndroid();
+});
+
+document.getElementById('shape-dialog')!.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('shape-dialog')) closeShapeDialog();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && shapeDialogMode) closeShapeDialog();
+});
+
+document.getElementById('material-toggle')!.addEventListener('change', (e) => {
+  if ((e.target as HTMLInputElement).checked && nonSquareBg()) openShapeDialog('material');
+});
 
 for (const b of document.querySelectorAll<HTMLElement>('.shape-btn')) {
   b.addEventListener('click', () => setShape(b.dataset.shape!));
@@ -861,30 +916,6 @@ for (const b of document.querySelectorAll<HTMLElement>('.angle-btn')) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Non-square background warning.
-//
-// Adaptive-icon launchers apply their own mask (circle, squircle, …) to both
-// layers. A baked-in circle/rounded background fights that mask, so warn
-// whenever one is active: when Material You is checked, or when an Android
-// package export is attempted. Switch to square and the warning clears.
-// ─────────────────────────────────────────────────────────────────────────────
-let shapeWarnSticky = false; // export attempted with a non-square background
-
-function nonSquareBg(): boolean {
-  return S.bgShape === 'circle' || S.bgShape === 'rounded';
-}
-
-function syncShapeWarn(): void {
-  const materialOn = (document.getElementById('material-toggle') as HTMLInputElement).checked;
-  document
-    .getElementById('shape-warn')!
-    .classList.toggle('visible', nonSquareBg() && (materialOn || shapeWarnSticky));
-}
-
-document.getElementById('material-toggle')!.addEventListener('change', syncShapeWarn);
-
-document.getElementById('shape-warn-square')!.addEventListener('click', () => setShape('square'));
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Resolution presets
 // ─────────────────────────────────────────────────────────────────────────────
@@ -956,10 +987,12 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   exportError(false);
-  // Baked-in circle/rounded backgrounds fight the launcher mask — warn but
-  // still export; switching to square clears it (see syncShapeWarn).
-  if (nonSquareBg()) shapeWarnSticky = true;
-  syncShapeWarn();
+  // Baked-in circle/rounded backgrounds fight the launcher mask — stop and
+  // ask before building the package.
+  if (nonSquareBg()) {
+    openShapeDialog('export');
+    return;
+  }
   const wEl = document.getElementById('custom-w') as HTMLInputElement;
   const hEl = document.getElementById('custom-h') as HTMLInputElement;
   const w = clampExportSize(Number(wEl.value));
