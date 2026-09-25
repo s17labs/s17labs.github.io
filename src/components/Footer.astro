@@ -14,10 +14,17 @@ interface LinkItem {
 
 const sections: { title: string; items: LinkItem[] }[] = [
   {
-    title: 'Projects',
+    title: 'Pages',
     items: [
       { label: 'Tools', href: SITE.toolsUrl },
+      { label: 'Design', href: SITE.designUrl },
+    ],
+  },
+  {
+    title: 'Projects',
+    items: [
       { label: 'Koda', href: SITE.projects.koda, external: true },
+      { label: 'PebbleDo', href: SITE.projects.pebbleDo, external: true },
       { label: 'WebShell', href: SITE.projects.webshell, external: true },
       { label: 'More on GitHub', href: SITE.orgUrl, external: true },
     ],

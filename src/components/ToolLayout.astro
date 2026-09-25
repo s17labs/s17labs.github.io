@@ -25,8 +25,8 @@ const {
   <div class="tool-top">
     <slot name="pre" />
     <div class="tool-header">
-      <a href={SITE.toolsUrl} class="back-link">
-        <Icon name="arrow-left" /> Tools
+      <a href={SITE.toolsUrl} class="back-link" aria-label="Back to Tools">
+        <Icon name="arrow-left" /><span class="back-label">Tools</span>
       </a>
       <h1>
         <span class="cube"></span>
@@ -50,3 +50,7 @@ const {
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  import '../scripts/back-link';
+</script>

@@ -91,6 +91,10 @@ a {
 .back-link {
   position: absolute;
   left: 0;
+  top: 50%;
+  /* Box-centered, then nudged up: Aldrich caps sit high in the title's
+     line box next to the smaller Verdana label (optical, like .cube). */
+  transform: translateY(calc(-50% - 0.19em));
   background: none;
   border: none;
   color: var(--secondary-text);
@@ -822,14 +826,155 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 /* ═══════════════════════════════════════════════════
+   TOOL LIST (tools index + design system specimens)
+   Cards lift with an accent wash on hover — no position shift.
+   ═══════════════════════════════════════════════════ */
+.tool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tool-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.4rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--t);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.tool-item:hover {
+  background: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
+  border-color: rgba(255, 65, 54, 0.2);
+}
+
+.tool-item-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.tool-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(255, 65, 54, 0.2);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  transition: all var(--t);
+}
+
+.tool-item:hover .tool-item-icon {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.tool-item-info {
+  min-width: 0;
+}
+
+.tool-item-info h3 {
+  font-family: Verdana, sans-serif;
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin: 0 0 0.2rem;
+  color: var(--primary-text);
+}
+
+.tool-item-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  line-height: 1.45;
+  padding-right: 1rem;
+}
+
+.tool-item-arrow {
+  display: inline-flex;
+  font-size: 1rem;
+  color: var(--secondary-text);
+  flex-shrink: 0;
+  transition: all var(--t);
+}
+
+.tool-item:hover .tool-item-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+/* Lowercase monospace tag pill */
+.tool-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  padding: 0.1rem 0.45rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--secondary-text);
+  margin-top: 0.3rem;
+  margin-right: 0.25rem;
+  font-family: 'Courier New', monospace;
+  text-transform: lowercase;
+}
+
+.tool-tag:last-child {
+  margin-right: 0;
+}
+
+/* ═══════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
+/* Arrow-only back link when the label would collide with the centered
+   title — toggled by src/scripts/back-link.ts, which measures both boxes
+   (a fixed breakpoint can't know the title length). Applies at any width.
+   Defaults avoid paint flashes: visible on desktop (usually fits), hidden
+   on phones (usually collides); the fade softens any JS reveal. */
+.back-link .back-label {
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+@media (max-width: 700px) {
+  .back-link .back-label {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+.back-link.fitted .back-label {
+  visibility: visible;
+  opacity: 1;
+}
+
+.back-link.compact .back-label {
+  display: none;
+}
+
 @media (max-width: 580px) {
   .tool-header h1 {
     font-size: 1.5rem;
   }
   .btn-row {
     grid-template-columns: 1fr;
+  }
+  .tool-item {
+    padding: 1rem;
+  }
+  .tool-item-info p {
+    font-size: 0.75rem;
   }
   /* 4-column preview grid → 2 rows of 4 = 8 tiles max */
   .dz-preview-grid {

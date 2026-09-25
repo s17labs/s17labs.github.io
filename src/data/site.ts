@@ -5,8 +5,10 @@ export const SITE = {
   description: 'Building efficient, lightweight software for the modern web.',
   orgUrl: 'https://github.com/s17labs',
   toolsUrl: '/tools/',
+  designUrl: '/design/',
   projects: {
     koda: 'https://s17labs.github.io/koda/',
+    pebbleDo: 'https://s17labs.github.io/pebbledo/',
     webshell: 'https://github.com/s17labs/webshell',
   },
   parent: {

@@ -52,7 +52,7 @@ Key patterns:
 
 - Dark-first s17 Labs aesthetic; accent red `#ff4136`, "Aldrich" display font.
 - New tool pages must use `ToolLayout` + `tool.css` tokens instead of bespoke styling.
-
+- The full token/component reference is the live page at `/design/` (`src/pages/design.astro`) — check it before adding UI.
 ## Commit Messages
 
 Format: `type(scope): short imperative summary` — lowercase after type, no trailing period.

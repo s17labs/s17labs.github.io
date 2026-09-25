@@ -9,8 +9,8 @@ import '../../styles/tool.css';
 <BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
   <div class="tool-top">
     <div class="tool-header">
-      <a href="/" class="back-link">
-        <Icon name="arrow-left" /> Home
+      <a href="/" class="back-link" aria-label="Back to Home">
+        <Icon name="arrow-left" /><span class="back-label">Home</span>
       </a>
       <h1><span class="cube"></span> Tools</h1>
     </div>
@@ -68,119 +68,8 @@ import '../../styles/tool.css';
     flex: 1;
   }
 
-  /* Tool list */
-  .tool-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .tool-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 1.4rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition: all var(--t);
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .tool-item:hover {
-    background: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
-    transform: translateX(6px);
-    border-color: rgba(255, 65, 54, 0.2);
-  }
-
-  .tool-item-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-width: 0;
-  }
-
-  .tool-item-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(255, 65, 54, 0.2);
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-    font-size: 0.95rem;
-    flex-shrink: 0;
-    transition: all var(--t);
-  }
-
-  .tool-item:hover .tool-item-icon {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  .tool-item-info {
-    min-width: 0;
-  }
-
-  .tool-item-info h3 {
-    font-family: Verdana, sans-serif;
-    font-size: 0.95rem;
-    font-weight: bold;
-    margin: 0 0 0.2rem;
-    color: var(--primary-text);
-  }
-
-  .tool-item-info p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--secondary-text);
-    line-height: 1.45;
-    padding-right: 1rem;
-  }
-
-  .tool-item-arrow {
-    display: inline-flex;
-    font-size: 1rem;
-    color: var(--secondary-text);
-    flex-shrink: 0;
-    transition: all var(--t);
-  }
-
-  .tool-item:hover .tool-item-arrow {
-    color: var(--accent);
-    transform: translateX(3px);
-  }
-
-  /* Tool tag */
-  .tool-tag {
-    display: inline-block;
-    font-size: 0.62rem;
-    padding: 0.1rem 0.45rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    color: var(--secondary-text);
-    margin-top: 0.3rem;
-    margin-right: 0.25rem;
-    font-family: 'Courier New', monospace;
-    text-transform: lowercase;
-  }
-
-  .tool-tag:last-child {
-    margin-right: 0;
-  }
-
-  @media (max-width: 580px) {
-    .tool-item {
-      padding: 1rem;
-    }
-    .tool-item-info p {
-      font-size: 0.75rem;
-    }
-  }
 </style>
+
+<script>
+  import '../../scripts/back-link';
+</script>

@@ -1,0 +1,433 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { icons, type IconName } from '../icons';
+import { TOOLS } from '../data/tools';
+import { SITE } from '../data/site';
+import '../styles/tool.css';
+import '../styles/tools/icon-maker.css';
+import '../styles/design.css';
+
+const title = 'Design System | s17 Labs';
+const description =
+  'The s17 Labs design system and brand kit — colors, typography, iconography, components, and usage docs for the homepage and tools.';
+
+const nav = [
+  ['brand', 'Brand'],
+  ['colors', 'Colors'],
+  ['typography', 'Typography'],
+  ['icons', 'Icons'],
+  ['spacing', 'Spacing'],
+  ['navigation', 'Navigation'],
+  ['buttons', 'Buttons'],
+  ['forms', 'Forms'],
+  ['feedback', 'Feedback'],
+  ['contributing', 'Contributing'],
+] as const;
+
+interface Swatch {
+  name: string;
+  value: string;
+  use: string;
+}
+
+const coreColors: Swatch[] = [
+  { name: '--primary', value: '#0e0e10', use: 'Page background (global.css)' },
+  { name: '--accent', value: '#ff4136', use: 'Brand red — actions, active states, logo cube' },
+  { name: '--accent-hover', value: '#e8382e', use: 'Accent hover (Download All, ready buttons)' },
+  { name: '--primary-text', value: '#f1f1f1', use: 'Headings, body copy, values' },
+  { name: '--secondary-text', value: '#868686', use: 'Labels, hints, placeholders, meta' },
+  { name: '--btn-bg', value: '#1a1a1c', use: 'Default button fill' },
+];
+
+const toolColors: Swatch[] = [
+  { name: '--surface-2', value: '#1a1a1c', use: 'Inputs, wells, option buttons' },
+  { name: '--surface-3', value: '#222226', use: 'Slider tracks, thumbnails' },
+  { name: '--border', value: 'rgba(255, 255, 255, 0.07)', use: 'Hairline borders everywhere' },
+  { name: '--accent-dim', value: 'rgba(255, 65, 54, 0.12)', use: 'Active option tint, hover wash' },
+  { name: '--accent-soft', value: 'rgba(255, 65, 54, 0.4)', use: 'Hover borders' },
+  { name: '--accent-focus', value: 'rgba(255, 65, 54, 0.5)', use: 'Focus borders' },
+  { name: '--android', value: '#3ddc84', use: 'Android export accents, success' },
+  { name: '--android-dim', value: 'rgba(61, 220, 132, 0.12)', use: 'Android button fill' },
+  { name: '--tile-bg', value: 'rgba(255, 255, 255, 0.05)', use: 'Overflow tiles' },
+  { name: '--overlay-dim', value: 'rgba(14, 14, 16, 0.72)', use: 'Image overflow dim, dialogs' },
+];
+
+const iconNames = Object.keys(icons) as IconName[];
+
+const textFonts = [
+  'System Sans',
+  'System Serif',
+  'System Mono',
+  'Alien Block',
+  'Anton',
+  'Archivo Black',
+  'Bebas Neue',
+  'Lobster',
+  'Montserrat',
+  'Oswald',
+  'Playfair Display',
+  'Roboto',
+  'JetBrains Mono',
+];
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="ds-page">
+    <header class="ds-hero">
+      <a href="/" class="back-link" aria-label="Back to Home">
+        <Icon name="arrow-left" /><span class="back-label">Home</span>
+      </a>
+      <h1><span class="cube"></span> Design System</h1>
+    </header>
+    <p class="ds-lead">
+      The visual language behind s17 Labs — one dark-first system shared by the
+      homepage, the footer, and every tool. Tokens live in
+      <code>src/styles/tool.css</code> (<code>:root</code>) and
+      <code>src/styles/global.css</code>; components below are live specimens
+      using the real classes, so this page can never drift from production.
+    </p>
+
+    <nav class="ds-nav" aria-label="Design system sections">
+      {nav.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+    </nav>
+
+    <!-- Brand -->
+    <section class="ds-section" id="brand">
+      <p class="ds-kicker">Brand</p>
+      <h2>Brand</h2>
+      <p>
+        The mark is a solid accent square — the <code>.cube</code> — set in
+        Aldrich next to the <code>s17 Labs.</code> wordmark (period included).
+        It appears in the homepage hero, every tool header, and the footer,
+        always at <code>0.82em</code> of the surrounding type size.
+      </p>
+      <div class="ds-lockup"><span class="cube"></span> s17 Labs.</div>
+      <div class="ds-demo">
+        <small>brand assets — public/</small>
+        <div class="ds-badges">
+          <div class="preview-badge">favicon — <span>favicon.ico</span></div>
+          <div class="preview-badge">social card — <span>link_preview.png · 1280×640</span></div>
+          <div class="preview-badge">display font — <span>/fonts/aldrich-latin.woff2</span></div>
+        </div>
+      </div>
+      <p>
+        Voice: dark-first, minimal, no gradients on chrome. Everything ships
+        self-hosted — fonts, icon data, styles — except Icon Maker emoji SVGs,
+        which load from a CDN at runtime.
+      </p>
+    </section>
+
+    <!-- Colors -->
+    <section class="ds-section" id="colors">
+      <p class="ds-kicker">Foundations</p>
+      <h2>Colors</h2>
+      <p>Core tokens from <code>global.css</code>, then the tool palette from <code>tool.css</code>.</p>
+      <div class="ds-swatches">
+        {coreColors.map((c) => (
+          <div class="ds-swatch">
+            <i style={`background:${c.value}`}></i>
+            <div><b>{c.name}</b><span>{c.value}</span><em>{c.use}</em></div>
+          </div>
+        ))}
+      </div>
+      <div class="ds-swatches">
+        {toolColors.map((c) => (
+          <div class="ds-swatch">
+            <i style={`background:${c.value}`}></i>
+            <div><b>{c.name}</b><span>{c.value}</span><em>{c.use}</em></div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section class="ds-section" id="typography">
+      <p class="ds-kicker">Foundations</p>
+      <h2>Typography</h2>
+      <p>
+        Three families, each with one job. <code>Aldrich</code> is the brand
+        voice (self-hosted woff2, latin subset, preloaded); body copy is
+        <code>Verdana</code>; anything machine-read — inputs, hex codes,
+        badges, labels-as-data — is <code>Courier New</code> monospace.
+      </p>
+      <div class="ds-type"><small>Aldrich — display · headings, panel titles, badges</small><p class="ds-display">Build lightly. Ship fast. Aa 0123456789</p></div>
+      <div class="ds-type"><small>Verdana — text · body, buttons, descriptions</small><p class="ds-body-sample">Your data never leaves your browser. Tools run entirely on-device — fast, private, and free.</p></div>
+      <div class="ds-type"><small>Courier New — data · inputs, hex, meta, code</small><p class="ds-mono-sample">#ff4136 → #ffffff @ 90° · 512×512 · ic_launcher.xml</p></div>
+      <table class="ds-table">
+        <thead><tr><th>Usage</th><th>Spec</th></tr></thead>
+        <tbody>
+          <tr><td>Tool title</td><td>Aldrich 1.8rem (1.5rem under 580px), cube + 0.25em gap</td></tr>
+          <tr><td>Panel title</td><td>Aldrich 0.7rem, uppercase, 0.14em tracking, secondary text</td></tr>
+          <tr><td>Form label</td><td>Verdana 0.74rem, uppercase, 0.09em tracking, secondary text</td></tr>
+          <tr><td>Body / tagline</td><td>Verdana 0.95–1rem, 1.6 line-height, 520px measure</td></tr>
+          <tr><td>Inputs / meta</td><td>Courier New 0.88rem values · 0.65–0.75rem badges and hints</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Icon Maker ships 13 typefaces for icon text (first three are system
+        stacks, the rest bundled woff2 under SIL OFL): {textFonts.join(' · ')}.
+      </p>
+    </section>
+
+    <!-- Iconography -->
+    <section class="ds-section" id="icons">
+      <p class="ds-kicker">Foundations</p>
+      <h2>Iconography</h2>
+      <p>
+        Product glyphs come from Font Awesome (-solid/regular/brands via npm)
+        through a single registry — <code>src/icons.ts</code>. UI code renders
+        them with the <code>&lt;Icon name&gt;</code> component (Astro) or
+        <code>iconSvg(name)</code> (vanilla TS). Every bundled glyph:
+      </p>
+      <div class="ds-icons">
+        {iconNames.map((n) => (
+          <div class="ds-icon"><Icon name={n} /><span>{n}</span></div>
+        ))}
+      </div>
+      <div class="ds-demo" style="margin-top:0.6rem;">
+        <small>motion — .spin · s17-spin 2s linear infinite</small>
+        <div><Icon name="circle-notch" class="spin" /></div>
+      </div>
+    </section>
+
+    <!-- Spacing -->
+    <section class="ds-section" id="spacing">
+      <p class="ds-kicker">Foundations</p>
+      <h2>Spacing · Radius · Borders</h2>
+      <p>
+        One radius token (<code>--radius: 4px</code>) with three functional
+        exceptions. Borders are hairlines — <code>1px solid var(--border)</code> —
+        or the 2px dashed drop-zone. Motion is a single easing
+        (<code>--t: 0.25s ease</code>).
+      </p>
+      <div class="ds-radii">
+        <div class="ds-radius"><i style="border-radius:4px;"></i><span>--radius · 4px</span></div>
+        <div class="ds-radius"><i style="border-radius:3px;"></i><span>thumbs · 3px</span></div>
+        <div class="ds-radius"><i style="border-radius:99px;"></i><span>pills/tracks · 99px</span></div>
+        <div class="ds-radius"><i style="border-radius:50%;width:44px;height:44px;"></i><span>dots · 50%</span></div>
+      </div>
+      <table class="ds-table">
+        <thead><tr><th>Token</th><th>Spec</th></tr></thead>
+        <tbody>
+          <tr><td>.page / .tool-top</td><td>680px max, 20px side padding (all standard tools)</td></tr>
+          <tr><td>Icon Maker page</td><td>900px max (ToolLayout maxWidth)</td></tr>
+          <tr><td>.tool-desc</td><td>520px centered measure</td></tr>
+          <tr><td>.panel</td><td>1.4rem padding, 1rem bottom margin</td></tr>
+          <tr><td>breakpoints</td><td>580px (tools) · 680px (icon-maker, footer)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Navigation -->
+    <section class="ds-section" id="navigation">
+      <p class="ds-kicker">Components</p>
+      <h2>Navigation</h2>
+      <p>
+        Tool cards and lowercase Courier tags carry browsing. Cards lift with
+        an accent wash on hover — position never shifts. The
+        <code>.back-link</code> (arrow + section name, top-left of each header)
+        is how every page gets home.
+      </p>
+      <div class="ds-demo">
+        <small>.tool-tag ×{TOOLS[0].tags.length}</small>
+        <div>
+          {TOOLS[0].tags.map((tag) => (
+            <span class="tool-tag">{tag}</span>
+          ))}
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.tool-item — links /tools/&lt;slug&gt;/</small>
+        <a href={`${SITE.toolsUrl}${TOOLS[0].slug}/`} class="tool-item">
+          <div class="tool-item-left">
+            <div class="tool-item-icon">
+              <Icon name={TOOLS[0].icon} />
+            </div>
+            <div class="tool-item-info">
+              <h3>{TOOLS[0].name}</h3>
+              <p>{TOOLS[0].description}</p>
+              {TOOLS[0].tags.map((tag) => (
+                <span class="tool-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+          <span class="tool-item-arrow">
+            <Icon name="arrow-right" />
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Buttons -->
+    <section class="ds-section" id="buttons">
+      <p class="ds-kicker">Components</p>
+      <h2>Buttons</h2>
+      <p>
+        One primary button that fills its container and turns accent when it
+        has something to do (<code>.ready</code>), plus a family of small
+        controls. All transitions run on <code>var(--t)</code>.
+      </p>
+      <div class="ds-demo">
+        <small>.btn · .btn.ready · .btn:disabled</small>
+        <button type="button" class="btn">Export</button>
+        <button type="button" class="btn ready">Export Ready</button>
+        <button type="button" class="btn" disabled>Disabled</button>
+      </div>
+      <div class="ds-demo">
+        <small>.btn-sm · .choice-btn ×3 · .btn-row · .dz-change · .result-dl</small>
+        <div class="btn-row">
+          <button type="button" class="btn-sm">Small</button>
+          <button type="button" class="btn-sm">Action</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <button type="button" class="choice-btn">Choice</button>
+          <button type="button" class="choice-btn active">Active</button>
+          <button type="button" class="choice-btn">Choice</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="dz-change">Change</button>
+          <button type="button" class="result-dl">Download</button>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.dl-all-btn · .more-tools-btn · .android-btn (icon-maker)</small>
+        <button type="button" class="dl-all-btn"><Icon name="download" /> Download All</button>
+        <div><a href="/tools/" class="more-tools-btn"><Icon name="arrow-left" /> View More Tools</a></div>
+        <button type="button" class="android-btn">
+          <span style="font-size:1.05rem;display:inline-flex;"><Icon name="android" /></span>
+          <span><span class="android-label">Export Android Package</span><span class="android-sub"> · .zip</span></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Forms -->
+    <section class="ds-section" id="forms">
+      <p class="ds-kicker">Components</p>
+      <h2>Forms</h2>
+      <p>
+        Fields stack label → control → hint with a 0.45rem rhythm. Text inputs
+        speak Courier; selects speak Verdana with a CSS chevron. Focus is never
+        color-shift alone — every control also draws the accent
+        <code>:focus-visible</code> ring.
+      </p>
+      <div class="ds-demo">
+        <small>input · number · textarea · select · range</small>
+        <div class="field">
+          <label>Text input</label>
+          <input type="text" value="star" readonly />
+        </div>
+        <div class="field">
+          <label>Number</label>
+          <input type="number" value="128" readonly />
+        </div>
+        <div class="field">
+          <label>Textarea</label>
+          <textarea readonly>Your data never leaves your browser.</textarea>
+        </div>
+        <div class="field">
+          <label>Select</label>
+          <select><option>System Sans</option><option>Montserrat</option></select>
+        </div>
+        <div class="field">
+          <label>Range — 70%</label>
+          <input type="range" min="0" max="100" value="70" />
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.checkbox-row · .drop-zone · .color-row</small>
+        <label class="checkbox-row">
+          <div class="custom-checkbox">
+            <input type="checkbox" checked />
+            <div class="checkbox-box"><Icon name="check" /></div>
+          </div>
+          <div class="checkbox-text">
+            <span class="checkbox-label">Include Material You / Themed Icons</span>
+            <span class="checkbox-sub">Adds &lt;monochrome&gt; layer for Android 13+</span>
+          </div>
+        </label>
+        <div class="drop-zone">
+          <div class="dz-empty">
+            <Icon name="image" size={28} />
+            <p>Drop images here or click to browse</p>
+            <span>PNG, JPG, SVG, WebP — processed on-device</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section class="ds-section" id="feedback">
+      <p class="ds-kicker">Components</p>
+      <h2>Feedback</h2>
+      <p>
+        Messages reserve their line (<code>min-height: 1.1em</code>) so showing
+        one never shifts layout. Errors speak accent red, success speaks
+        Android green. Long operations use the 3px progress track; blocking
+        choices use the modal.
+      </p>
+      <div class="ds-demo">
+        <small>.status-msg.error / .success · .zip-progress-* · .spin</small>
+        <div class="status-msg error visible">Icon not found — check the spelling.</div>
+        <div class="status-msg success visible">Done — 11 images + XMLs.</div>
+        <div class="zip-progress-wrap visible">
+          <div class="zip-progress-track"><div class="zip-progress-fill" style="width:64%;"></div></div>
+          <div class="zip-progress-label">mipmap-xxhdpi/ic_launcher.png 144px…</div>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.modal-* — blocking choices (live demo)</small>
+        <div><button type="button" class="choice-btn" id="ds-modal-open">Open dialog demo</button></div>
+      </div>
+    </section>
+
+    <!-- Contributing -->
+    <section class="ds-section" id="contributing">
+      <p class="ds-kicker">Guidelines</p>
+      <h2>Contributing</h2>
+      <p>
+        New tool pages must use <code>ToolLayout</code> plus the
+        <code>tool.css</code> tokens above — no bespoke styling. Anything used
+        twice gets promoted from the tool stylesheet into
+        <code>tool.css</code>. A new tool touches exactly three places:
+        <code>src/pages/tools/&lt;slug&gt;.astro</code>,
+        <code>src/scripts/tools/&lt;slug&gt;.ts</code>, and the registry in
+        <code>src/data/tools.ts</code>. Conventions, commits, and PR rules live
+        in <code>AGENTS.md</code>.
+      </p>
+      <table class="ds-table">
+        <thead><tr><th>Rule</th><th>Spec</th></tr></thead>
+        <tbody>
+          <tr><td>Client-side only</td><td>No server endpoints, no analytics — data never leaves the browser</td></tr>
+          <tr><td>Typecheck</td><td>Client TS is checked by astro check — no Node-only APIs in tools</td></tr>
+          <tr><td>Commit</td><td>type(scope): short imperative summary, atomic, no AI trailers</td></tr>
+          <tr><td>CSS order</td><td>Page stylesheets load before tool.css in prod — beat shared rules with specificity, never order</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- Modal demo (real .modal-* classes) -->
+  <div class="modal-overlay" id="ds-modal-demo">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ds-modal-title">
+      <div class="modal-title" id="ds-modal-title">Square background recommended</div>
+      <p class="modal-text">Android applies its own mask (circle, squircle, …) to adaptive icons. A baked-in circle or rounded background will clash with it.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn primary" id="ds-modal-ok">Got it</button>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../scripts/back-link';
+</script>
+
+<script>
+  const demo = document.getElementById('ds-modal-demo');
+  document.getElementById('ds-modal-open')?.addEventListener('click', () => demo?.classList.add('visible'));
+  document.getElementById('ds-modal-ok')?.addEventListener('click', () => demo?.classList.remove('visible'));
+  demo?.addEventListener('click', (e) => {
+    if (e.target === demo) demo.classList.remove('visible');
+  });
+</script>
