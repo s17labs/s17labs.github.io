@@ -32,6 +32,7 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 | `/design/` | `src/pages/design.astro` | Design system + brand kit with live specimens |
 | `/projects/` | `src/pages/projects.astro` | Project showcase, rendered from `src/data/projects.ts` |
 | `/privacy/` | `src/pages/privacy.astro` | Privacy policy statement |
+| `/terms/` | `src/pages/terms.astro` | Terms of use |
 | `/404` | `src/pages/404.astro` | Not-found page |
 
 ## Architecture

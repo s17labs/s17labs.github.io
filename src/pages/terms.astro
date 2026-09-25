@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import BackLinkFit from '../components/BackLinkFit.astro';
+import { SITE } from '../data/site';
+import '../styles/tool.css';
+import '../styles/design.css';
+
+const title = 'Terms | s17 Labs';
+const description = 'Terms of use for the s17 Labs website and browser tools.';
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="ds-page">
+    <header class="ds-hero">
+      <a href="/" class="back-link" aria-label="Back to Home">
+        <Icon name="arrow-left" /><span class="back-label">Home</span>
+      </a>
+      <h1><span class="cube"></span> Terms</h1>
+    </header>
+    <BackLinkFit />
+    <p class="ds-lead">
+      Plain terms for a plain website. Everything here is free to use,
+      provided as-is.
+    </p>
+
+    <section class="ds-section">
+      <p class="ds-kicker">Terms</p>
+      <h2>Use</h2>
+      <p>
+        s17 Labs Tools run entirely in your browser and are free for personal
+        and commercial use. Don't abuse them, don't try to break them, and
+        don't resell access to them as-is.
+      </p>
+    </section>
+
+    <section class="ds-section">
+      <p class="ds-kicker">Terms</p>
+      <h2>Ownership</h2>
+      <p>
+        The site, the tools, and the s17 Labs name and artwork belong to s17
+        Labs. Open-source projects under the
+        <a href={SITE.orgUrl} target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">s17labs org</a>
+        carry their own licenses — check each repo.
+      </p>
+    </section>
+
+    <section class="ds-section">
+      <p class="ds-kicker">Terms</p>
+      <h2>No warranties</h2>
+      <p>
+        Everything is provided as-is, without warranty of any kind. s17 Labs
+        isn't liable for anything that results from using (or not being able
+        to use) this site. External links leave our control the moment you
+        click them.
+      </p>
+    </section>
+
+    <section class="ds-section">
+      <p class="ds-kicker">Terms</p>
+      <h2>Changes</h2>
+      <p>
+        These terms may change as the site grows; continued use means you
+        accept the current version. Questions? Reach out on
+        <a href={SITE.orgUrl} target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">GitHub</a>
+        or <a href={SITE.socials.x.url} target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">X</a>.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import '../scripts/back-link';
+</script>

@@ -29,7 +29,7 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages
   components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro
-  pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro
+  pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro, terms.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
   data/projects.ts            # same pattern for the /projects/ showcase
