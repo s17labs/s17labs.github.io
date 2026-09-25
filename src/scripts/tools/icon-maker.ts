@@ -74,7 +74,7 @@ const INPUT_CONFIG = {
       'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener">icons.getbootstrap.com</a>',
   },
   text: {
-    label: 'Icon Text (letters, numbers, symbols)',
+    label: 'Icon Text',
     placeholder: 'Type characters  e.g. A, 42, @, →',
     cls: 'text-input',
     error: 'Type 1–8 characters',
