@@ -55,7 +55,7 @@ src/
   styles/tools/               # per-tool overrides (icon-maker.css)
   icons.ts                    # Font Awesome icon definitions (Icon component + iconSvg)
 public/                       # served as-is (see Assets below)
-docs/                         # this file — repo documentation
+docs/                         # repo docs: README.md (this map), PRIVACY.md + TERMS.md (canonical policy texts, mirrored on /privacy/ and /terms/)
 ```
 
 Key patterns:
