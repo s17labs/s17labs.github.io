@@ -891,6 +891,12 @@ input[type='range']::-webkit-slider-thumb {
   display: block;
 }
 
+/* Emoji marks (match the repos' own readme emoji) */
+.tool-item-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
 .tool-item-info {
   min-width: 0;
 }
@@ -947,10 +953,9 @@ input[type='range']::-webkit-slider-thumb {
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 /* Arrow-only back link when the label would collide with the centered
-   title — toggled by src/scripts/back-link.ts, which measures both boxes
-   (a fixed breakpoint can't know the title length). Applies at any width.
-   The label stays hidden until the measured verdict lands, then fades in —
-   never a wrong-state flash, only a soft reveal. */
+   title. BackLinkFit.astro sets the verdict synchronously before first
+   paint; src/scripts/back-link.ts re-checks on resize/fonts/load.
+   No transitions here by design — any fade reads as a flash. */
 .back-link .back-label {
   visibility: hidden;
   opacity: 0;
@@ -959,7 +964,6 @@ input[type='range']::-webkit-slider-thumb {
 .back-link.fitted .back-label {
   visibility: visible;
   opacity: 1;
-  transition: opacity 0.18s ease;
 }
 
 .back-link.compact .back-label {

@@ -7,6 +7,7 @@ export interface Project {
   external: boolean;
   icon: IconName;
   iconImg?: string; // real app artwork — shown instead of the glyph when set
+  emoji?: string; // e.g. 🐚 — shown instead of the glyph when set
   tags: string[];
 }
 
@@ -42,6 +43,7 @@ export const PROJECTS: Project[] = [
     url: 'https://github.com/s17labs/webshell',
     external: true,
     icon: 'globe',
+    emoji: '🐚',
     tags: ['android', 'webview'],
   },
   {
@@ -50,6 +52,7 @@ export const PROJECTS: Project[] = [
     url: 'https://github.com/s17labs/webshell-forge',
     external: true,
     icon: 'wand-magic-sparkles',
+    emoji: '🔨',
     tags: ['android', 'build'],
   },
 ];

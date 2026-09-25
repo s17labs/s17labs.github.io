@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from './Icon.astro';
+import BackLinkFit from './BackLinkFit.astro';
 import { SITE } from '../data/site';
 import '../styles/tool.css';
 
@@ -33,6 +34,7 @@ const {
         {heading}
       </h1>
     </div>
+    <BackLinkFit />
     {tagline && <p class="tool-desc">{tagline}</p>}
   </div>
 
