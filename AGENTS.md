@@ -29,13 +29,15 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages
   components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro
-  pages/                      # routes: index.astro, 404.astro, tools/index.astro
+  pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
-  data/site.ts                # site metadata
+  data/site.ts                # site metadata (urls, socials, footer sections)
+  scripts/back-link.ts        # shared header back-link fit logic (all headers)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   styles/global.css           # homepage styles (Tailwind v4)
   styles/tool.css             # shared design system for the standard tools
+  styles/design.css           # /design/ page styles (ds- namespaced, never competes)
   styles/tools/               # per-tool overrides (icon-maker.css)
   icons.ts                    # Font Awesome icon definitions
 public/                       # served as-is: fonts/ (Aldrich + icon-maker bundles), robots.txt, link_preview.png
@@ -45,6 +47,7 @@ Key patterns:
 
 - Adding a new tool touches exactly three places: create `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The `/tools` listing renders from that registry — never hardcode tool entries elsewhere.
 - Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
+- Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
 - Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
 - User-facing strings for tools live in their page/component code.
 
@@ -126,4 +129,5 @@ PR rules:
 - `compressHTML: false` and `trailingSlash: 'ignore'` in `astro.config.mjs` are intentional — do not change them to "optimize".
 - Merging to `main` deploys to production immediately (Pages workflow); since PRs get no CI, local `npm run build` is the only pre-merge verification.
 - Client logic in `src/scripts/tools/*.ts` runs in the browser and is typechecked by `astro check` — keep it free of Node-only APIs.
+- Page stylesheets load BEFORE `tool.css` in the production bundle (dev order differs) — page overrides must beat shared rules with specificity (e.g. `.workspace .panel`), never rely on source order.
 - All tools must stay fully client-side ("your data never leaves your browser") — never add server endpoints or analytics.
