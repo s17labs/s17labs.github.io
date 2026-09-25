@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import { icons, type IconName } from '../icons';
+import { TOOLS } from '../data/tools';
+import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/tools/icon-maker.css';
 import '../styles/design.css';
@@ -16,6 +18,7 @@ const nav = [
   ['typography', 'Typography'],
   ['icons', 'Icons'],
   ['spacing', 'Spacing'],
+  ['navigation', 'Navigation'],
   ['buttons', 'Buttons'],
   ['forms', 'Forms'],
   ['feedback', 'Feedback'],
@@ -72,6 +75,9 @@ const textFonts = [
 <BaseLayout title={title} description={description}>
   <div class="ds-page">
     <header class="ds-hero">
+      <a href="/" class="back-link">
+        <Icon name="arrow-left" /> Home
+      </a>
       <h1><span class="cube"></span> Design System</h1>
     </header>
     <p class="ds-lead">
@@ -88,6 +94,7 @@ const textFonts = [
 
     <!-- Brand -->
     <section class="ds-section" id="brand">
+      <p class="ds-kicker">Brand</p>
       <h2>Brand</h2>
       <p>
         The mark is a solid accent square — the <code>.cube</code> — set in
@@ -113,6 +120,7 @@ const textFonts = [
 
     <!-- Colors -->
     <section class="ds-section" id="colors">
+      <p class="ds-kicker">Foundations</p>
       <h2>Colors</h2>
       <p>Core tokens from <code>global.css</code>, then the tool palette from <code>tool.css</code>.</p>
       <div class="ds-swatches">
@@ -135,6 +143,7 @@ const textFonts = [
 
     <!-- Typography -->
     <section class="ds-section" id="typography">
+      <p class="ds-kicker">Foundations</p>
       <h2>Typography</h2>
       <p>
         Three families, each with one job. <code>Aldrich</code> is the brand
@@ -163,6 +172,7 @@ const textFonts = [
 
     <!-- Iconography -->
     <section class="ds-section" id="icons">
+      <p class="ds-kicker">Foundations</p>
       <h2>Iconography</h2>
       <p>
         Product glyphs come from Font Awesome (-solid/regular/brands via npm)
@@ -183,6 +193,7 @@ const textFonts = [
 
     <!-- Spacing -->
     <section class="ds-section" id="spacing">
+      <p class="ds-kicker">Foundations</p>
       <h2>Spacing · Radius · Borders</h2>
       <p>
         One radius token (<code>--radius: 4px</code>) with three functional
@@ -208,8 +219,49 @@ const textFonts = [
       </table>
     </section>
 
+    <!-- Navigation -->
+    <section class="ds-section" id="navigation">
+      <p class="ds-kicker">Components</p>
+      <h2>Navigation</h2>
+      <p>
+        Tool cards and lowercase Courier tags carry browsing. Cards lift with
+        an accent wash on hover — position never shifts. The
+        <code>.back-link</code> (arrow + section name, top-left of each header)
+        is how every page gets home.
+      </p>
+      <div class="ds-demo">
+        <small>.tool-tag ×{TOOLS[0].tags.length}</small>
+        <div>
+          {TOOLS[0].tags.map((tag) => (
+            <span class="tool-tag">{tag}</span>
+          ))}
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.tool-item — links /tools/&lt;slug&gt;/</small>
+        <a href={`${SITE.toolsUrl}${TOOLS[0].slug}/`} class="tool-item">
+          <div class="tool-item-left">
+            <div class="tool-item-icon">
+              <Icon name={TOOLS[0].icon} />
+            </div>
+            <div class="tool-item-info">
+              <h3>{TOOLS[0].name}</h3>
+              <p>{TOOLS[0].description}</p>
+              {TOOLS[0].tags.map((tag) => (
+                <span class="tool-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+          <span class="tool-item-arrow">
+            <Icon name="arrow-right" />
+          </span>
+        </a>
+      </div>
+    </section>
+
     <!-- Buttons -->
     <section class="ds-section" id="buttons">
+      <p class="ds-kicker">Components</p>
       <h2>Buttons</h2>
       <p>
         One primary button that fills its container and turns accent when it
@@ -251,6 +303,7 @@ const textFonts = [
 
     <!-- Forms -->
     <section class="ds-section" id="forms">
+      <p class="ds-kicker">Components</p>
       <h2>Forms</h2>
       <p>
         Fields stack label → control → hint with a 0.45rem rhythm. Text inputs
@@ -305,6 +358,7 @@ const textFonts = [
 
     <!-- Feedback -->
     <section class="ds-section" id="feedback">
+      <p class="ds-kicker">Components</p>
       <h2>Feedback</h2>
       <p>
         Messages reserve their line (<code>min-height: 1.1em</code>) so showing
@@ -329,6 +383,7 @@ const textFonts = [
 
     <!-- Contributing -->
     <section class="ds-section" id="contributing">
+      <p class="ds-kicker">Guidelines</p>
       <h2>Contributing</h2>
       <p>
         New tool pages must use <code>ToolLayout</code> plus the
