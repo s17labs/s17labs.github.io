@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import BackLinkFit from '../components/BackLinkFit.astro';
 import { icons, type IconName } from '../icons';
 import { TOOLS } from '../data/tools';
 import { SITE } from '../data/site';
@@ -80,6 +81,7 @@ const textFonts = [
       </a>
       <h1><span class="cube"></span> Design System</h1>
     </header>
+    <BackLinkFit />
     <p class="ds-lead">
       The visual language behind s17 Labs — one dark-first system shared by the
       homepage, the footer, and every tool. Tokens live in
@@ -109,6 +111,10 @@ const textFonts = [
           <div class="preview-badge">favicon — <span>favicon.ico</span></div>
           <div class="preview-badge">social card — <span>link_preview.png · 1280×640</span></div>
           <div class="preview-badge">display font — <span>/fonts/aldrich-latin.woff2</span></div>
+          <div class="preview-badge">icon — <span>s17labs-icon-large.png</span></div>
+          <div class="preview-badge">icon — <span>s17labs-icon-large-transparent.png</span></div>
+          <div class="preview-badge">lockup — <span>s17labs-logo-dark.png</span></div>
+          <div class="preview-badge">lockup — <span>s17labs-logo-dark-transparent.png</span></div>
         </div>
       </div>
       <p>
@@ -238,6 +244,14 @@ const textFonts = [
         </div>
       </div>
       <div class="ds-demo">
+        <small>.tool-item icon variants — glyph · artwork · emoji</small>
+        <div style="display:flex;gap:0.6rem;align-items:center;">
+          <div class="tool-item-icon"><Icon name="icons" /></div>
+          <div class="tool-item-icon has-img"><img src="/projects/koda-app-icon.png" alt="Koda icon" loading="lazy" /></div>
+          <div class="tool-item-icon has-emoji"><span class="tool-item-emoji" aria-hidden="true">🐚</span></div>
+        </div>
+      </div>
+      <div class="ds-demo">
         <small>.tool-item — links /tools/&lt;slug&gt;/</small>
         <a href={`${SITE.toolsUrl}${TOOLS[0].slug}/`} class="tool-item">
           <div class="tool-item-left">
@@ -255,6 +269,11 @@ const textFonts = [
           <span class="tool-item-arrow">
             <Icon name="arrow-right" />
           </span>
+        </a>
+      </div>
+      <div class="ds-center">
+        <a class="ds-more" href="https://github.com/orgs/s17labs/repositories" target="_blank" rel="noopener noreferrer">
+          View all repositories <Icon name="arrow-right" />
         </a>
       </div>
     </section>
@@ -402,6 +421,7 @@ const textFonts = [
           <tr><td>Typecheck</td><td>Client TS is checked by astro check — no Node-only APIs in tools</td></tr>
           <tr><td>Commit</td><td>type(scope): short imperative summary, atomic, no AI trailers</td></tr>
           <tr><td>CSS order</td><td>Page stylesheets load before tool.css in prod — beat shared rules with specificity, never order</td></tr>
+          <tr><td>Headers</td><td>Back-link label collapses by measurement (BackLinkFit + back-link.ts) — flash-free, no breakpoint guessing</td></tr>
         </tbody>
       </table>
     </section>

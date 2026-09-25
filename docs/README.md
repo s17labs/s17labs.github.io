@@ -30,6 +30,9 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 | `/tools/` | `src/pages/tools/index.astro` | Tool listing, rendered from the registry |
 | `/tools/<slug>/` | `src/pages/tools/<slug>.astro` | One page per tool (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator) |
 | `/design/` | `src/pages/design.astro` | Design system + brand kit with live specimens |
+| `/projects/` | `src/pages/projects.astro` | Project showcase, rendered from `src/data/projects.ts` |
+| `/privacy/` | `src/pages/privacy.astro` | Privacy policy statement |
+| `/terms/` | `src/pages/terms.astro` | Terms of use |
 | `/404` | `src/pages/404.astro` | Not-found page |
 
 ## Architecture
@@ -52,7 +55,7 @@ src/
   styles/tools/               # per-tool overrides (icon-maker.css)
   icons.ts                    # Font Awesome icon definitions (Icon component + iconSvg)
 public/                       # served as-is (see Assets below)
-docs/                         # this file — repo documentation
+docs/                         # repo docs: README.md (this map), PRIVACY.md + TERMS.md (canonical policy texts, mirrored on /privacy/ and /terms/)
 ```
 
 Key patterns:
@@ -66,6 +69,10 @@ Key patterns:
 - **Production CSS order differs from dev** — page stylesheets load BEFORE
   `tool.css`, so page overrides must win on specificity (e.g.
   `.workspace .panel`), never on source order.
+- **New shared UI needs a specimen** — adding a component, button, link
+  style, token, or page pattern? Showcase it on `/design/`
+  (`src/pages/design.astro`) using the real classes, or it will drift
+  undocumented.
 - Everything is **fully client-side** ("your data never leaves your browser")
   — no server endpoints, no analytics.
 

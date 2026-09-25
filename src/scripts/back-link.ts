@@ -24,6 +24,8 @@ if (document.readyState === 'loading') {
   fitBackLink();
 }
 window.addEventListener('resize', fitBackLink);
+// Late layout (fonts, images) can shift the title — refit when settled.
+window.addEventListener('load', fitBackLink);
 // Aldrich loads async and changes the title width — refit once it arrives.
 if (document.fonts) {
   document.fonts.ready.then(() => fitBackLink());

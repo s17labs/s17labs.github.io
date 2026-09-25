@@ -29,9 +29,10 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages
   components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro
-  pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro
+  pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro, terms.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
+  data/projects.ts            # same pattern for the /projects/ showcase
   data/site.ts                # site metadata (urls, socials, footer sections)
   scripts/back-link.ts        # shared header back-link fit logic (all headers)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
@@ -48,6 +49,7 @@ Key patterns:
 - Adding a new tool touches exactly three places: create `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The `/tools` listing renders from that registry — never hardcode tool entries elsewhere.
 - Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
+- When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
 - Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
 - User-facing strings for tools live in their page/component code.
 
