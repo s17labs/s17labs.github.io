@@ -91,6 +91,8 @@ a {
 .back-link {
   position: absolute;
   left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: var(--secondary-text);
