@@ -2,7 +2,6 @@
 import Icon from './Icon.astro';
 import type { IconName } from '../icons';
 import { SITE } from '../data/site';
-import { TOOLS } from '../data/tools';
 
 const year = new Date().getFullYear();
 
@@ -24,10 +23,13 @@ const sections: { title: string; items: LinkItem[] }[] = [
     ],
   },
   {
-    // Deep links per tool, straight from the registry — the index itself
-    // lives under Pages. External project links moved to /projects/.
-    title: 'Tools',
-    items: TOOLS.map((t) => ({ label: t.name, href: `${SITE.toolsUrl}${t.slug}/` })),
+    // Single links that live nowhere else in the footer.
+    title: 'Resources',
+    items: [
+      { label: 'View Source', href: 'https://github.com/s17labs/s17labs.github.io', external: true },
+      { label: 'Brand Assets', href: 'https://github.com/s17labs/assets', external: true },
+      { label: 'All Repositories', href: 'https://github.com/orgs/s17labs/repositories', external: true },
+    ],
   },
   {
     title: 'Links',
