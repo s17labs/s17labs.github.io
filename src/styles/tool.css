@@ -94,7 +94,7 @@ a {
   top: 50%;
   /* Box-centered, then nudged up: Aldrich caps sit high in the title's
      line box next to the smaller Verdana label (optical, like .cube). */
-  transform: translateY(calc(-50% - 0.2em));
+  transform: translateY(calc(-50% - 0.19em));
   background: none;
   border: none;
   color: var(--secondary-text);
