@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import BackLinkFit from '../components/BackLinkFit.astro';
 import { PROJECTS, PROJECTS_SECTION } from '../data/projects';
-import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/design.css';
 
@@ -31,7 +30,7 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
             rel={project.external ? 'noopener noreferrer' : undefined}
           >
             <div class="tool-item-left">
-              <div class:list={['tool-item-icon', { 'has-img': project.iconImg }]}>
+              <div class:list={['tool-item-icon', { 'has-img': project.iconImg, 'has-emoji': project.emoji }]}>
                 {project.iconImg ? (
                   <img src={project.iconImg} alt={`${project.name} icon`} loading="lazy" />
                 ) : project.emoji ? (
@@ -57,7 +56,7 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
     </div>
 
     <div class="ds-center">
-      <a class="ds-more" href={`${SITE.orgUrl}?tab=repositories`} target="_blank" rel="noopener noreferrer">
+      <a class="ds-more" href="https://github.com/orgs/s17labs/repositories" target="_blank" rel="noopener noreferrer">
         View all repositories <Icon name="arrow-right" />
       </a>
     </div>

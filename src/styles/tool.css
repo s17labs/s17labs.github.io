@@ -897,6 +897,13 @@ input[type='range']::-webkit-slider-thumb {
   line-height: 1;
 }
 
+/* Neutral box for emoji marks — only where .has-emoji is set, so glyph
+   boxes (tools + projects) keep the accent tint */
+.tool-item-icon.has-emoji {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
 .tool-item-info {
   min-width: 0;
 }
