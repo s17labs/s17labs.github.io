@@ -933,14 +933,16 @@ input[type='range']::-webkit-slider-thumb {
 /* ═══════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
+/* Arrow-only back link when the label would collide with the centered
+   title — toggled by src/scripts/back-link.ts, which measures both boxes
+   (a fixed breakpoint can't know the title length). Applies at any width. */
+.back-link.compact .back-label {
+  display: none;
+}
+
 @media (max-width: 580px) {
   .tool-header h1 {
     font-size: 1.5rem;
-  }
-  /* Arrow-only back link on narrow screens — the label would
-     collide with centered titles. Pure CSS, no JS needed. */
-  .back-link .back-label {
-    display: none;
   }
   .btn-row {
     grid-template-columns: 1fr;

@@ -9,8 +9,8 @@ import '../../styles/tool.css';
 <BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
   <div class="tool-top">
     <div class="tool-header">
-      <a href="/" class="back-link">
-        <Icon name="arrow-left" /> Home
+      <a href="/" class="back-link" aria-label="Back to Home">
+        <Icon name="arrow-left" /><span class="back-label">Home</span>
       </a>
       <h1><span class="cube"></span> Tools</h1>
     </div>
@@ -69,3 +69,7 @@ import '../../styles/tool.css';
   }
 
 </style>
+
+<script>
+  import '../../scripts/back-link';
+</script>

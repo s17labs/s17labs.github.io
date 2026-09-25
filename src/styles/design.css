@@ -315,6 +315,13 @@
   white-space: nowrap;
 }
 
+/* Badge grid — equal cells at every width, never one stretched row */
+.ds-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.4rem;
+}
+
 /* Logo lockup specimen */
 .ds-lockup {
   display: flex;
