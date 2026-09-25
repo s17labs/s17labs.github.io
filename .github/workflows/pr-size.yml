@@ -41,7 +41,8 @@ jobs:
             ];
             const label = sizes.find((s) => changed < s.max).label;
 
-            await github.rest.issues.setLabels({
+            // addLabels keeps existing labels (setLabels would wipe them).
+            await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
