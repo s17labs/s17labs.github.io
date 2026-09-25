@@ -670,7 +670,15 @@ function handleIconInput(): void {
     // FA: debounce lookup
     const name = val.toLowerCase().replace(/^fa[srbl]?-/, '');
     iconTimer = setTimeout(async () => {
-      await ensureFA();
+      try {
+        await ensureFA();
+      } catch {
+        // Pack chunk failed to load (e.g. stale deploy) — surface it.
+        S.valid = false;
+        err(true);
+        render();
+        return;
+      }
       if (S.source !== 'fa') return; // switched away while packs loaded
       const r = findFAIcon(name);
       if (r) {
