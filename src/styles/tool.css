@@ -935,7 +935,17 @@ input[type='range']::-webkit-slider-thumb {
    ═══════════════════════════════════════════════════ */
 /* Arrow-only back link when the label would collide with the centered
    title — toggled by src/scripts/back-link.ts, which measures both boxes
-   (a fixed breakpoint can't know the title length). Applies at any width. */
+   (a fixed breakpoint can't know the title length). Applies at any width.
+   The label starts invisible-but-laid-out so measuring never flashes text
+   on load; JS reveals it (.fitted) or collapses it (.compact). */
+.back-link .back-label {
+  visibility: hidden;
+}
+
+.back-link.fitted .back-label {
+  visibility: visible;
+}
+
 .back-link.compact .back-label {
   display: none;
 }

@@ -10,10 +10,12 @@ function fitBackLink(): void {
   const header = link?.closest('.tool-header, .ds-hero');
   const title = header?.querySelector('h1');
   if (!link || !header || !title) return;
-  link.classList.remove('compact');
+  // Measure with the label laid out but invisible (see .back-label CSS),
+  // then reveal it (.fitted) or collapse it (.compact) — no text flash.
+  link.classList.remove('fitted', 'compact');
   const linkBox = link.getBoundingClientRect();
   const titleBox = title.getBoundingClientRect();
-  if (linkBox.right + 8 > titleBox.left) link.classList.add('compact');
+  link.classList.add(linkBox.right + 8 > titleBox.left ? 'compact' : 'fitted');
 }
 
 if (document.readyState === 'loading') {
