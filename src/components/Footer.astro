@@ -2,6 +2,7 @@
 import Icon from './Icon.astro';
 import type { IconName } from '../icons';
 import { SITE } from '../data/site';
+import { TOOLS } from '../data/tools';
 
 const year = new Date().getFullYear();
 
@@ -23,16 +24,11 @@ const sections: { title: string; items: LinkItem[] }[] = [
     ],
   },
   {
-    title: 'Projects',
-    items: [
-      { label: 'Koda', href: SITE.projects.koda, external: true },
-      { label: 'PebbleDo', href: SITE.projects.pebbleDo, external: true },
-      { label: 'WebShell', href: SITE.projects.webshell, external: true },
-      { label: 'More on GitHub', href: SITE.orgUrl, external: true },
-    ],
+    // Deep links per tool, straight from the registry — the index itself
+    // lives under Pages. External project links moved to /projects/.
+    title: 'Tools',
+    items: TOOLS.map((t) => ({ label: t.name, href: `${SITE.toolsUrl}${t.slug}/` })),
   },
-  {
-    title: 'Links',
     items: [
       { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
       { label: SITE.socials.x.name, href: SITE.socials.x.url, icon: 'x', external: true },
