@@ -44,7 +44,7 @@ src/
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
-  data/site.ts                # site metadata (urls, socials, projects, footer sections)
+  data/site.ts                # site metadata (urls, socials, projects)
   scripts/back-link.ts        # shared header back-link fit logic (all headers)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize, …)
@@ -124,10 +124,11 @@ Link previews / SEO live in `src/components/BaseHead.astro`: canonical URL,
 
 ## Site Data & Footer
 
-- `src/data/site.ts` — `SITE` object: urls, socials, projects, byline, and
-  the footer sections (brand, Pages, Projects, Links).
-- `src/components/Footer.astro` — renders the four footer columns from `SITE`
-  plus copyright. To add a site page link, extend the Pages section.
+- `src/data/site.ts` — `SITE` object: urls, socials, projects, byline.
+  Footer sections (brand, Resources, Legal, Links) are defined in
+  `src/components/Footer.astro`.
+- `src/components/Footer.astro` — renders the four footer columns plus
+  copyright. To add a site page link, extend the Resources section.
 
 ## Deploy
 

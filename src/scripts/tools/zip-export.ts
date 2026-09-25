@@ -55,32 +55,55 @@ export async function downloadResultsAsZip(opts: ZipExportOptions): Promise<void
   ui.button.innerHTML = packingHtml;
   ui.progressWrap.classList.add('visible');
 
-  const zip = new JSZip();
-  for (const r of results) zip.file(r.name, r.blob);
+  // Duplicate names silently overwrite each other in the ZIP — suffix extras
+  // (`icon-128x128.png` → `icon-128x128-2.png`).
+  const seen = new Map<string, number>();
 
-  ui.progressFill.style.width = '50%';
-  ui.progressLabel.textContent = `Adding ${results.length} ${kindWord}…`;
+  function uniqueName(name: string): string {
+    const n = seen.get(name) ?? 0;
+    seen.set(name, n + 1);
+    if (!n) return name;
+    const dot = name.lastIndexOf('.');
+    const stem = dot > 0 ? name.slice(0, dot) : name;
+    const ext = dot > 0 ? name.slice(dot) : '';
+    return `${stem}-${n + 1}${ext}`;
+  }
 
-  const zipBlob = await zip.generateAsync(
-    { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
-    (meta) => {
-      ui.progressFill.style.width = `${50 + meta.percent * 0.5}%`;
-      ui.progressLabel.textContent = `Compressing… ${Math.round(meta.percent)}%`;
-    },
-  );
+  try {
+    const zip = new JSZip();
+    for (const r of results) zip.file(uniqueName(r.name), r.blob);
 
-  ui.progressFill.style.width = '100%';
-  ui.progressLabel.textContent = 'Done!';
+    ui.progressFill.style.width = '50%';
+    ui.progressLabel.textContent = `Adding ${results.length} ${kindWord}…`;
 
-  downloadBlob(zipBlob, typeof zipName === 'function' ? zipName() : zipName);
+    const zipBlob = await zip.generateAsync(
+      { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
+      (meta) => {
+        ui.progressFill.style.width = `${50 + meta.percent * 0.5}%`;
+        ui.progressLabel.textContent = `Compressing… ${Math.round(meta.percent)}%`;
+      },
+    );
 
-  setTimeout(() => {
+    ui.progressFill.style.width = '100%';
+    ui.progressLabel.textContent = 'Done!';
+
+    downloadBlob(zipBlob, typeof zipName === 'function' ? zipName() : zipName);
+
+    setTimeout(() => {
+      ui.button.disabled = false;
+      ui.button.innerHTML = restoreHtml;
+      renderButton(opts, results.length);
+      ui.progressWrap.classList.remove('visible');
+      ui.progressFill.style.width = '0%';
+    }, 1800);
+  } catch (e) {
+    console.error(e);
     ui.button.disabled = false;
     ui.button.innerHTML = restoreHtml;
     renderButton(opts, results.length);
-    ui.progressWrap.classList.remove('visible');
     ui.progressFill.style.width = '0%';
-  }, 1800);
+    ui.progressLabel.textContent = 'Export failed — try again.';
+  }
 }
 
 /** Refresh the Download All button for the finished result count. */
