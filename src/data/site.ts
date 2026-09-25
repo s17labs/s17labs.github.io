@@ -6,6 +6,8 @@ export const SITE = {
   orgUrl: 'https://github.com/s17labs',
   toolsUrl: '/tools/',
   designUrl: '/design/',
+  projectsUrl: '/projects/',
+  privacyUrl: '/privacy/',
   projects: {
     koda: 'https://s17labs.github.io/koda/',
     pebbleDo: 'https://s17labs.github.io/pebbledo/',

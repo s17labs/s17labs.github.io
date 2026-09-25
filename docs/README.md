@@ -30,6 +30,8 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 | `/tools/` | `src/pages/tools/index.astro` | Tool listing, rendered from the registry |
 | `/tools/<slug>/` | `src/pages/tools/<slug>.astro` | One page per tool (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator) |
 | `/design/` | `src/pages/design.astro` | Design system + brand kit with live specimens |
+| `/projects/` | `src/pages/projects.astro` | Project showcase, rendered from `src/data/projects.ts` |
+| `/privacy/` | `src/pages/privacy.astro` | Privacy policy statement |
 | `/404` | `src/pages/404.astro` | Not-found page |
 
 ## Architecture
