@@ -6,6 +6,7 @@ export interface Project {
   url: string;
   external: boolean;
   icon: IconName;
+  iconImg?: string; // real app artwork — shown instead of the glyph when set
   tags: string[];
 }
 
@@ -22,6 +23,7 @@ export const PROJECTS: Project[] = [
     url: 'https://s17labs.github.io/koda/',
     external: true,
     icon: 'font',
+    iconImg: '/projects/koda-app-icon.png',
     tags: ['android', 'editor'],
   },
   {
@@ -30,6 +32,7 @@ export const PROJECTS: Project[] = [
     url: 'https://s17labs.github.io/pebbledo/',
     external: true,
     icon: 'check',
+    iconImg: '/projects/pebbledo-icon.png',
     tags: ['android', 'productivity'],
   },
   {
@@ -48,21 +51,5 @@ export const PROJECTS: Project[] = [
     external: true,
     icon: 'wand-magic-sparkles',
     tags: ['android', 'build'],
-  },
-  {
-    name: 'Notes',
-    description: 'A simple, clean Android notes app with markdown support, pinning, and trash.',
-    url: 'https://github.com/s17labs/notes',
-    external: true,
-    icon: 'copy',
-    tags: ['android', 'notes'],
-  },
-  {
-    name: 'minimal-ui',
-    description: 'A minimalist CSS framework for rapid prototyping.',
-    url: 'https://github.com/s17labs/minimal-ui',
-    external: true,
-    icon: 'scissors',
-    tags: ['css', 'web'],
   },
 ];

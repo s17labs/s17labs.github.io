@@ -28,8 +28,12 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
             rel={project.external ? 'noopener noreferrer' : undefined}
           >
             <div class="tool-item-left">
-              <div class="tool-item-icon">
-                <Icon name={project.icon} />
+              <div class:list={['tool-item-icon', { 'has-img': project.iconImg }]}>
+                {project.iconImg ? (
+                  <img src={project.iconImg} alt={`${project.name} icon`} loading="lazy" />
+                ) : (
+                  <Icon name={project.icon} />
+                )}
               </div>
               <div class="tool-item-info">
                 <h3>{project.name}</h3>
