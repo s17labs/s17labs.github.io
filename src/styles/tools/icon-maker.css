@@ -179,17 +179,25 @@
 }
 
 /* ── Source selector ── */
+/* 3+2 layout at every width — the controls column is narrow (~320px)
+   on desktop too, so 5-across squeezes the buttons. */
 .source-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
   margin-bottom: 1rem;
+}
+
+.source-btn {
+  min-width: 0;
 }
 
 .source-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 60px;
   gap: 0.3rem;
   padding: 0.55rem 0.25rem;
   font-size: 0.68rem;
@@ -208,16 +216,16 @@
   letter-spacing: 0.05em;
 }
 
-/* emoji input (larger for pasting actual emoji) */
+/* Icon input keeps identical metrics for every source (same height) —
+   the text source only adds weight, mirroring the exported type. */
+input.text-input,
 input.emoji-input {
-  font-size: 1.3rem;
-  padding: 0.45rem 0.8rem;
-  line-height: 1.4;
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
 }
 
-/* text icon input (bold, larger, letter-spaced) */
+/* text icon input (bold, letter-spaced) */
 input.text-input {
-  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   font-family: Verdana, sans-serif;
@@ -955,8 +963,5 @@ input.cp-hue::-moz-range-thumb {
 @media (max-width: 680px) {
   .workspace {
     grid-template-columns: 1fr;
-  }
-  .source-row {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
