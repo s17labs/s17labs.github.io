@@ -35,7 +35,7 @@ Colors, typography, iconography, components, and brand kit — documented and sh
 
 ## Tools
 
-The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/tools](https://s17labs.github.io). Tools are native Astro pages sharing a common design system (`src/styles/tool.css`, `ToolLayout.astro`) with logic typechecked in `src/scripts/tools/` — see `src/data/tools.ts` for the registry.
+The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/tools](https://s17labs.github.io/tools/). Tools are native Astro pages sharing a common design system (`src/styles/tool.css`, `ToolLayout.astro`) with logic typechecked in `src/scripts/tools/` — see `src/data/tools.ts` for the registry.
 
 - **Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator** — Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
 
