@@ -936,14 +936,23 @@ input[type='range']::-webkit-slider-thumb {
 /* Arrow-only back link when the label would collide with the centered
    title — toggled by src/scripts/back-link.ts, which measures both boxes
    (a fixed breakpoint can't know the title length). Applies at any width.
-   The label starts invisible-but-laid-out so measuring never flashes text
-   on load; JS reveals it (.fitted) or collapses it (.compact). */
+   Defaults avoid paint flashes: visible on desktop (usually fits), hidden
+   on phones (usually collides); the fade softens any JS reveal. */
 .back-link .back-label {
-  visibility: hidden;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+@media (max-width: 700px) {
+  .back-link .back-label {
+    visibility: hidden;
+    opacity: 0;
+  }
 }
 
 .back-link.fitted .back-label {
   visibility: visible;
+  opacity: 1;
 }
 
 .back-link.compact .back-label {
