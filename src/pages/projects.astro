@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import BackLinkFit from '../components/BackLinkFit.astro';
 import { PROJECTS, PROJECTS_SECTION } from '../data/projects';
+import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/design.css';
 
@@ -53,6 +54,12 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
           </a>
         ))
       }
+    </div>
+
+    <div class="ds-center">
+      <a class="ds-more" href={`${SITE.orgUrl}?tab=repositories`} target="_blank" rel="noopener noreferrer">
+        View all repositories <Icon name="arrow-right" />
+      </a>
     </div>
   </div>
 </BaseLayout>

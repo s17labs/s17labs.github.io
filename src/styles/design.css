@@ -322,6 +322,24 @@
   gap: 0.4rem;
 }
 
+/* Centered follow link (e.g. under the projects list) */
+.ds-center {
+  text-align: center;
+  margin-top: 1.4rem;
+}
+
+.ds-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--secondary-text);
+}
+
+.ds-more:hover {
+  color: var(--accent);
+}
+
 /* Logo lockup specimen */
 .ds-lockup {
   display: flex;

@@ -2,8 +2,11 @@
 // Synchronous first-paint fit for the header back-link.
 //
 // Runs inline during parsing (before first paint), so the label verdict
-// (show/collapse) is already correct in the first frame. The deferred
-// src/scripts/back-link.ts module re-checks on resize/fonts/load.
+// (show/collapse) is already correct in the first frame. Uses a generous
+// safety margin: fallback-font metrics overestimate space, and the browser
+// may paint before the deferred module refines the verdict — starting
+// hidden in borderline cases avoids a visible show-then-hide. The deferred
+// src/scripts/back-link.ts module re-checks precisely on resize/fonts/load.
 // Plain JS, no imports — must stay parser-blocking.
 ---
 
@@ -15,6 +18,6 @@
     if (!link || !title) return;
     var linkBox = link.getBoundingClientRect();
     var titleBox = title.getBoundingClientRect();
-    link.classList.add(linkBox.right + 8 > titleBox.left ? 'compact' : 'fitted');
+    link.classList.add(linkBox.right + 32 > titleBox.left ? 'compact' : 'fitted');
   })();
 </script>
