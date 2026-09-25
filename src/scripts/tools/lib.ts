@@ -218,12 +218,19 @@ export function svgTextToPngBlob(svgText: string, w: number, h: number): Promise
     const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png');
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D unavailable');
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('PNG encoding failed'))), 'image/png');
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e instanceof Error ? e : new Error('Raster failed'));
+      }
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -245,7 +252,12 @@ export function rasterizeSvg(svgText: string, targetW: number): Promise<Rasteriz
     const url = URL.createObjectURL(new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' }));
     const probe = new Image();
     probe.onload = () => {
-      const ratio = (probe.naturalHeight || probe.naturalWidth) / probe.naturalWidth;
+      if (!probe.naturalWidth || !probe.naturalHeight) {
+        URL.revokeObjectURL(url);
+        reject(new Error('SVG has no dimensions'));
+        return;
+      }
+      const ratio = probe.naturalHeight / probe.naturalWidth;
       const outW = targetW;
       const outH = Math.max(1, Math.round(outW * ratio));
       URL.revokeObjectURL(url);
