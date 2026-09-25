@@ -192,8 +192,9 @@ function emojiUrl(emoji: string, src: string): string {
     return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${cp}.svg`;
   }
   // noto
+  // Upstream restructured: glyphs moved from svg/ to 2D/svg/.
   const cp = toNotoCP(emoji);
-  return `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji/svg/emoji_u${cp}.svg`;
+  return `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji/2D/svg/emoji_u${cp}.svg`;
 }
 
 // Fetch emoji SVG from CDN
