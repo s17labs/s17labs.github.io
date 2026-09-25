@@ -29,6 +29,8 @@ const sections: { title: string; items: LinkItem[] }[] = [
     title: 'Tools',
     items: TOOLS.map((t) => ({ label: t.name, href: `${SITE.toolsUrl}${t.slug}/` })),
   },
+  {
+    title: 'Links',
     items: [
       { label: 'GitHub', href: SITE.orgUrl, icon: 'github', external: true },
       { label: SITE.socials.x.name, href: SITE.socials.x.url, icon: 'x', external: true },
