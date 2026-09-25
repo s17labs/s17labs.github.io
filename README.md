@@ -12,10 +12,10 @@
 
 Built with [Astro](https://astro.build) + [Tailwind CSS](https://tailwindcss.com) v4. Static output, zero runtime JavaScript frameworks, deployed to GitHub Pages via GitHub Actions.
 
-- **src/pages/** — routes (`/`, `/tools`, `/404`)
+- **src/pages/** — routes (`/`, `/tools`, `/design`, `/projects`, `/privacy`, `/terms`, `/404`)
 - **src/components/** — shared UI (`BaseHead`, `Icon`, `Footer`, …)
 - **src/data/tools.ts** — single source of truth for the tools listing
-- **public/** — static assets, fonts, and tool apps served as-is at `/tools/<name>/`
+- **public/** — static assets served as-is (favicon, fonts, brand images, robots.txt)
 
 Full repo documentation lives in [docs/README.md](docs/README.md).
 

@@ -1,14 +1,25 @@
 import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { fas } from '@fortawesome/free-solid-svg-icons';
-import { far } from '@fortawesome/free-regular-svg-icons';
-import { fab } from '@fortawesome/free-brands-svg-icons';
 import { iconSvg } from '../../icons';
 import { downloadBlob, downloadUrl, normalizeHex, svgTextToPngBlob } from './lib';
 
-library.add(fas);
-library.add(far);
-library.add(fab);
+// Font Awesome packs are ~2MB — load them on first lookup instead of in the
+// initial bundle. The memoized promise also serializes concurrent lookups.
+let faPromise: Promise<void> | null = null;
+
+function ensureFA(): Promise<void> {
+  if (!faPromise) {
+    faPromise = (async () => {
+      const [{ fas }, { far }, { fab }] = await Promise.all([
+        import('@fortawesome/free-solid-svg-icons'),
+        import('@fortawesome/free-regular-svg-icons'),
+        import('@fortawesome/free-brands-svg-icons'),
+      ]);
+      library.add(fas, far, fab);
+    })();
+  }
+  return faPromise;
+}
 
 // Bootstrap Icons (MIT, 2000+ fill-based glyphs) ship with the page via npm
 // and load on demand — no CDN, fully offline. Each file is a 16x16 SVG with
@@ -64,14 +75,14 @@ const INPUT_CONFIG = {
     placeholder: 'e.g. star, circle-check, bolt',
     cls: '',
     error:
-      'Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener">fontawesome.com</a>',
+      'Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer">fontawesome.com</a>',
   },
   bi: {
     label: 'Bootstrap Icon Name',
     placeholder: 'e.g. star, alarm, rocket',
     cls: '',
     error:
-      'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener">icons.getbootstrap.com</a>',
+      'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener noreferrer">icons.getbootstrap.com</a>',
   },
   text: {
     label: 'Icon Text',
@@ -100,7 +111,9 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.emojiSvg = null;
   S.iconName = '';
   S.textValue = '';
+  clearTimeout(iconTimer); // drop any pending lookup for the old source
   biSeq++; // invalidate any in-flight Bootstrap lookup
+  emojiSeq++; // invalidate any in-flight emoji fetch
 
   // Update source buttons
   document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => {
@@ -608,6 +621,7 @@ function render(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 let iconTimer: ReturnType<typeof setTimeout>;
 let biSeq = 0; // guards against out-of-order Bootstrap async lookups
+let emojiSeq = 0; // guards against out-of-order emoji fetches
 
 const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
 
@@ -655,7 +669,17 @@ function handleIconInput(): void {
   if (S.source === 'fa') {
     // FA: debounce lookup
     const name = val.toLowerCase().replace(/^fa[srbl]?-/, '');
-    iconTimer = setTimeout(() => {
+    iconTimer = setTimeout(async () => {
+      try {
+        await ensureFA();
+      } catch {
+        // Pack chunk failed to load (e.g. stale deploy) — surface it.
+        S.valid = false;
+        err(true);
+        render();
+        return;
+      }
+      if (S.source !== 'fa') return; // switched away while packs loaded
       const r = findFAIcon(name);
       if (r) {
         Object.assign(S, { iconName: name, paths: r.paths, viewBox: r.viewBox, valid: true });
@@ -684,7 +708,9 @@ function handleIconInput(): void {
     }, 300);
   } else {
     // Emoji: debounce fetch
+    const seq = ++emojiSeq;
     iconTimer = setTimeout(async () => {
+      if (seq !== emojiSeq) return; // stale — user kept typing or switched source
       // Show loading state
       const container = document.getElementById('preview-container')!;
       const placeholder = document.getElementById('placeholder')!;
@@ -697,11 +723,13 @@ function handleIconInput(): void {
 
       try {
         const svgText = await fetchEmojiSvg(val);
+        if (seq !== emojiSeq) return; // lost the race while fetching
         S.iconName = val;
         S.emojiSvg = svgText;
         S.valid = true;
         err(false);
       } catch {
+        if (seq !== emojiSeq) return;
         S.valid = false;
         S.emojiSvg = null;
         err(true);
@@ -1007,7 +1035,9 @@ async function exportAs(fmt: string): Promise<void> {
     return;
   }
   await fontsReady();
-  svgTextToPngBlob(await buildExportSVG(), w, h).then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`));
+  svgTextToPngBlob(await buildExportSVG(), w, h)
+    .then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`))
+    .catch(() => exportError(true));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
@@ -1652,6 +1682,11 @@ async function showAndroidPreview(densities: [string, number][]): Promise<void> 
     const url = URL.createObjectURL(new Blob([await buildExportSVG('circle')], { type: 'image/svg+xml;charset=utf-8' }));
     await new Promise<void>((resolve) => {
       const img = new Image();
+      // A broken thumbnail must never stall the whole preview row.
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve();
+      };
       img.onload = () => {
         const dispSize = Math.min(size, 52);
         const c = document.createElement('canvas');

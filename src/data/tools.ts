@@ -45,7 +45,7 @@ export const TOOLS: Tool[] = [
     icon: 'font',
   },
   {
-    name: 'QR Code Generator',
+    name: 'QR Generator',
     slug: 'qr-generator',
     description: 'Generate QR codes from any text or URL with custom colors and sizes. Export as PNG or SVG.',
     tags: ['generator', 'dev'],
