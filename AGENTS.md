@@ -49,6 +49,7 @@ Key patterns:
 - Adding a new tool touches exactly three places: create `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The `/tools` listing renders from that registry — never hardcode tool entries elsewhere.
 - Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
+- When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
 - Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
 - User-facing strings for tools live in their page/component code.
 

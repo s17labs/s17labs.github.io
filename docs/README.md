@@ -69,6 +69,10 @@ Key patterns:
 - **Production CSS order differs from dev** — page stylesheets load BEFORE
   `tool.css`, so page overrides must win on specificity (e.g.
   `.workspace .panel`), never on source order.
+- **New shared UI needs a specimen** — adding a component, button, link
+  style, token, or page pattern? Showcase it on `/design/`
+  (`src/pages/design.astro`) using the real classes, or it will drift
+  undocumented.
 - Everything is **fully client-side** ("your data never leaves your browser")
   — no server endpoints, no analytics.
 
