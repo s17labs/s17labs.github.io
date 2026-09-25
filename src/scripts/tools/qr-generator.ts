@@ -67,8 +67,10 @@ function clearPreview(): void {
 }
 
 const scheduleUpdate = debounce(() => void generateQR(), 300);
+let qrSeq = 0; // guards against interleaved generations wiping each other
 
 async function generateQR(): Promise<void> {
+  const seq = ++qrSeq;
   const text = S.text.trim();
 
   if (!text) {
@@ -98,12 +100,14 @@ async function generateQR(): Promise<void> {
       errorCorrectionLevel: S.ec,
       margin: 4,
     });
+    if (seq !== qrSeq) return; // superseded while rendering
 
     canvas.style.borderRadius = '2px';
     S.ready = true;
     elBtnPNG.disabled = false;
     elBtnSVG.disabled = false;
   } catch (err) {
+    if (seq !== qrSeq) return; // a newer run owns the preview now
     console.error('QR generation error:', err);
     clearPreview();
     elErrorMsg.textContent = 'Could not generate QR code for this input.';
@@ -128,6 +132,8 @@ async function exportPNG(): Promise<void> {
     flashExport();
   } catch (err) {
     console.error('PNG export error:', err);
+    elErrorMsg.textContent = 'PNG export failed — try again.';
+    showMsg(elErrorMsg, true);
   }
 }
 
@@ -150,6 +156,8 @@ async function exportSVG(): Promise<void> {
     flashExport();
   } catch (err) {
     console.error('SVG export error:', err);
+    elErrorMsg.textContent = 'SVG export failed — try again.';
+    showMsg(elErrorMsg, true);
   }
 }
 
@@ -195,7 +203,9 @@ elInput.addEventListener('input', () => {
 });
 
 elSize.addEventListener('input', () => {
-  S.size = parseInt(elSize.value);
+  // Slider bounds don't stop typed/programmatic values — clamp (matches min/max).
+  S.size = Math.min(512, Math.max(128, parseInt(elSize.value) || 256));
+  elSize.value = String(S.size);
   elSizeVal.textContent = S.size + ' px';
   scheduleUpdate();
 });
