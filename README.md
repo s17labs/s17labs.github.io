@@ -17,6 +17,8 @@ Built with [Astro](https://astro.build) + [Tailwind CSS](https://tailwindcss.com
 - **src/data/tools.ts** — single source of truth for the tools listing
 - **public/** — static assets, fonts, and tool apps served as-is at `/tools/<name>/`
 
+Full repo documentation lives in [docs/README.md](docs/README.md).
+
 ## Development
 
 Requires Node 22+.
