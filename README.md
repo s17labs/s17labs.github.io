@@ -20,13 +20,16 @@ Built with [Astro](https://astro.build) + [Tailwind CSS](https://tailwindcss.com
 ## Development
 
 Requires Node 22+.
-
 ```sh
 npm install
 npm run dev      # local dev server
 npm run build    # production build to dist/
 npm run preview  # preview the production build
 ```
+
+## Design System
+
+Colors, typography, iconography, components, and brand kit — documented and showcased with live specimens at [s17labs.github.io/design](https://s17labs.github.io/design/). New pages must use `ToolLayout` + the `tool.css` tokens; anything used twice gets promoted from the tool stylesheet into `tool.css`.
 
 ## Tools
 

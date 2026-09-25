@@ -5,6 +5,7 @@ export const SITE = {
   description: 'Building efficient, lightweight software for the modern web.',
   orgUrl: 'https://github.com/s17labs',
   toolsUrl: '/tools/',
+  designUrl: '/design/',
   projects: {
     koda: 'https://s17labs.github.io/koda/',
     webshell: 'https://github.com/s17labs/webshell',
