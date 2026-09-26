@@ -292,6 +292,9 @@ function rectToPath(x: number, y: number, w: number, h: number, rx: number, tran
 
 function parseBiSvg(raw: string): { paths: VectorPath[]; viewBox: string } | null {
   const inner = raw.slice(raw.indexOf('>') + 1, raw.lastIndexOf('<'));
+  // Only 1 of 2078 icons uses transforms/groups (align-top) — refuse those
+  // rather than exporting silently wrong geometry.
+  if (/transform=|<g[\s>]/.test(inner)) return null;
   const paths: VectorPath[] = [];
   const elRe = /<(path|circle|rect)\b([^>]*)\/?>/g;
   let m: RegExpExecArray | null;
@@ -738,10 +741,15 @@ function handleIconInput(): void {
         S.emojiSvg = svgText;
         S.valid = true;
         err(false);
-      } catch {
+      } catch (e) {
         if (seq !== emojiSeq) return;
         S.valid = false;
         S.emojiSvg = null;
+        // Network failure looks different from a missing glyph.
+        if (e instanceof TypeError) {
+          document.getElementById('error-msg')!.textContent =
+            'Network error — check your connection and try again';
+        }
         err(true);
       }
       render();
@@ -1674,7 +1682,9 @@ async function exportAndroid(): Promise<void> {
     btn.disabled = false;
     btn.innerHTML = ANDROID_BTN_HTML;
     progressWrap.classList.remove('visible');
-    alert('Export failed: ' + (e as Error).message);
+    const msg = document.getElementById('export-error')!;
+    msg.textContent = 'Export failed: ' + (e as Error).message;
+    msg.classList.add('visible');
   }
 }
 

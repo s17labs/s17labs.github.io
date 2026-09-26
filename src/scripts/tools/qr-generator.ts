@@ -219,9 +219,12 @@ elEC.addEventListener('change', () => {
 syncColor(elFgPicker, elFgHex, 'fg');
 syncColor(elBgPicker, elBgHex, 'bg');
 
+const byteLen = new TextEncoder();
+
 function updateCharCount(): void {
   const max = EC_CAPACITY[S.ec];
-  const len = elInput.value.length;
+  // Capacity is bytes, not UTF-16 units — CJK/emoji cost 3–4 bytes each.
+  const len = byteLen.encode(elInput.value).length;
   elCharCount.textContent = `${len} / ${max}`;
   elCharCount.classList.toggle('warn', len > max * 0.7);
 }
@@ -230,8 +233,8 @@ function updateCharCount(): void {
 function updateCapacity(): void {
   const max = EC_CAPACITY[S.ec];
   elInput.maxLength = max;
-  if (elInput.value.length > max) {
-    elInput.value = elInput.value.slice(0, max);
+  while (byteLen.encode(elInput.value).length > max) {
+    elInput.value = elInput.value.slice(0, -1);
     S.text = elInput.value;
   }
   updateCharCount();
