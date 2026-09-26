@@ -276,8 +276,12 @@ a {
 }
 
 @media (max-width: 900px) {
+  /* Brand takes its own row; link columns share the next one */
   .footer-cols {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .footer-col:first-child {
+    grid-column: 1 / -1;
   }
 }
 
