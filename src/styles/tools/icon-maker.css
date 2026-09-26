@@ -247,6 +247,14 @@ input.text-input {
   opacity: 0.6;
 }
 
+/* Non-input caption for button groups (same voice as labels) */
+.group-label {
+  font-size: 0.74rem;
+  color: var(--secondary-text);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
 .style-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
