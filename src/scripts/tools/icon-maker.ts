@@ -292,6 +292,9 @@ function rectToPath(x: number, y: number, w: number, h: number, rx: number, tran
 
 function parseBiSvg(raw: string): { paths: VectorPath[]; viewBox: string } | null {
   const inner = raw.slice(raw.indexOf('>') + 1, raw.lastIndexOf('<'));
+  // Only 1 of 2078 icons uses transforms/groups (align-top) — refuse those
+  // rather than exporting silently wrong geometry.
+  if (/transform=|<g[\s>]/.test(inner)) return null;
   const paths: VectorPath[] = [];
   const elRe = /<(path|circle|rect)\b([^>]*)\/?>/g;
   let m: RegExpExecArray | null;
@@ -738,10 +741,15 @@ function handleIconInput(): void {
         S.emojiSvg = svgText;
         S.valid = true;
         err(false);
-      } catch {
+      } catch (e) {
         if (seq !== emojiSeq) return;
         S.valid = false;
         S.emojiSvg = null;
+        // Network failure looks different from a missing glyph.
+        if (e instanceof TypeError) {
+          document.getElementById('error-msg')!.textContent =
+            'Network error — check your connection and try again';
+        }
         err(true);
       }
       render();
@@ -1005,8 +1013,13 @@ async function fontsReady(): Promise<void> {
   }
 }
 
-function exportError(show: boolean): void {
-  document.getElementById('export-error')?.classList.toggle('visible', show);
+const EXPORT_ERROR_DEFAULT = 'Enter a valid icon, text, or emoji first.';
+
+function exportError(show: boolean, message: string = EXPORT_ERROR_DEFAULT): void {
+  const el = document.getElementById('export-error');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('visible', show);
 }
 
 function clampExportSize(v: number): number {
@@ -1028,7 +1041,7 @@ function exportBaseName(): string {
 
 async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
-    exportError(true);
+    exportError(true, EXPORT_ERROR_DEFAULT);
     return;
   }
   exportError(false);
@@ -1047,7 +1060,7 @@ async function exportAs(fmt: string): Promise<void> {
   await fontsReady();
   svgTextToPngBlob(await buildExportSVG(), w, h)
     .then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`))
-    .catch(() => exportError(true));
+    .catch(() => exportError(true, 'PNG export failed — try again.'));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
@@ -1568,7 +1581,7 @@ const ANDROID_BTN_HTML = `<span style="font-size:1.05rem;display:inline-flex;">$
 
 async function exportAndroid(): Promise<void> {
   if (!S.valid) {
-    exportError(true);
+    exportError(true, EXPORT_ERROR_DEFAULT);
     return;
   }
   exportError(false);
@@ -1674,7 +1687,7 @@ async function exportAndroid(): Promise<void> {
     btn.disabled = false;
     btn.innerHTML = ANDROID_BTN_HTML;
     progressWrap.classList.remove('visible');
-    alert('Export failed: ' + (e as Error).message);
+    exportError(true, 'Export failed: ' + (e as Error).message);
   }
 }
 
