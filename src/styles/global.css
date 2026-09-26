@@ -275,6 +275,12 @@ a {
   opacity: 0.8;
 }
 
+@media (max-width: 900px) {
+  .footer-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 580px) {
   .footer-cols {
     grid-template-columns: 1fr;

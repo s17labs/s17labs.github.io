@@ -11,7 +11,7 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
 <ToolLayout title={title} description={description} heading="SVG to PNG" tagline={tagline} maxWidth={640}>
   <!-- Upload -->
   <div class="panel">
-    <div class="panel-title">Upload</div>
+    <h2 class="panel-title">Upload</h2>
     <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload SVG files — activate to open the file picker">
       <!-- Empty state -->
       <div class="dz-empty" id="dz-empty">
@@ -35,7 +35,7 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
 
   <!-- Settings -->
   <div class="panel">
-    <div class="panel-title">Output Size</div>
+    <h2 class="panel-title">Output Size</h2>
     <div class="field">
       <label for="input-w">Width (px) — height scales automatically</label>
       <input type="number" id="input-w" value="512" min="1" max="8000" />
@@ -57,7 +57,7 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
   <!-- Results -->
   <div class="panel" id="results-panel" style="display:none;">
     <div class="panel-header-row">
-      <div class="panel-title">Output</div>
+      <h2 class="panel-title">Output</h2>
     </div>
     <!-- ZIP / single download progress -->
     <div class="zip-progress-wrap" id="zip-progress-wrap">

@@ -454,6 +454,13 @@ input.text-input {
   margin-bottom: 6px;
 }
 
+/* SVG/PNG buttons stack on phones like the shared .btn-row */
+@media (max-width: 580px) {
+  .export-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Custom color picker (.color-row/.color-field come from shared tool.css) */
 .cp-row {
   display: flex;

@@ -5,13 +5,13 @@ import Icon from '../../components/Icon.astro';
 const title = 'Image Resizer | s17 Labs Tools';
 const description =
   'Batch resize images with aspect ratio locking and high-quality output.';
-const tagline = 'Batch resize images directly in your browser — nothing is uploaded to any server.';
+const tagline = 'Batch resize images directly in your browser — your data never leaves your browser.';
 ---
 
 <ToolLayout title={title} description={description} heading="Image Resizer" tagline={tagline} maxWidth={640}>
   <!-- Upload -->
   <div class="panel">
-    <div class="panel-title">Upload</div>
+    <h2 class="panel-title">Upload</h2>
     <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload images — activate to open the file picker">
       <div class="dz-empty" id="dz-empty">
         <Icon name="cloud-arrow-up" size={29} />
@@ -33,7 +33,7 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
 
   <!-- Settings -->
   <div class="panel">
-    <div class="panel-title">Resize Settings</div>
+    <h2 class="panel-title">Resize Settings</h2>
     <div class="field">
       <label for="input-w">Dimensions (px)</label>
       <div class="input-row">
@@ -58,7 +58,7 @@ const tagline = 'Batch resize images directly in your browser — nothing is upl
   <!-- Results -->
   <div class="panel" id="results-panel" style="display:none;">
     <div class="panel-header-row">
-      <div class="panel-title">Output</div>
+      <h2 class="panel-title">Output</h2>
     </div>
     <!-- ZIP progress -->
     <div class="zip-progress-wrap" id="zip-progress-wrap">

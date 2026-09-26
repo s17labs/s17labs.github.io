@@ -42,6 +42,7 @@ const coreColors: Swatch[] = [
 ];
 
 const toolColors: Swatch[] = [
+  { name: '--accent-hover', value: '#e8382e', use: 'Accent hover (Download All, ready buttons)' },
   { name: '--surface-2', value: '#1a1a1c', use: 'Inputs, wells, option buttons' },
   { name: '--surface-3', value: '#222226', use: 'Slider tracks, thumbnails' },
   { name: '--border', value: 'rgba(255, 255, 255, 0.07)', use: 'Hairline borders everywhere' },
@@ -272,7 +273,7 @@ const textFonts = [
         </a>
       </div>
       <div class="ds-center">
-        <a class="ds-more" href="https://github.com/orgs/s17labs/repositories" target="_blank" rel="noopener noreferrer">
+        <a class="ds-more" href={SITE.orgUrl} target="_blank" rel="noopener noreferrer">
           View all repositories <Icon name="arrow-right" />
         </a>
       </div>

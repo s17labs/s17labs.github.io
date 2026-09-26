@@ -12,13 +12,13 @@ const tagline = 'Convert text between 15 programming conventions and writing for
 <ToolLayout title={title} description={description} heading="Case Converter" tagline={tagline}>
   <!-- Input -->
   <div class="panel">
-    <div class="panel-title"><label for="input">Input</label></div>
+    <h2 class="panel-title"><label for="input">Input</label></h2>
     <textarea id="input" placeholder="Type or paste text here…" spellcheck="false" autocomplete="off" aria-label="Text to convert"></textarea>
   </div>
 
   <!-- Format selector -->
   <div class="panel">
-    <div class="panel-title">Format</div>
+    <h2 class="panel-title">Format</h2>
     <div class="case-grid" id="case-grid">
       {
         FORMATS.map((fmt) => (
@@ -38,7 +38,7 @@ const tagline = 'Convert text between 15 programming conventions and writing for
 
   <!-- Output -->
   <div class="panel">
-    <div class="panel-title"><label for="output">Output</label></div>
+    <h2 class="panel-title"><label for="output">Output</label></h2>
     <div class="output-wrap">
       <textarea id="output" readonly spellcheck="false" aria-label="Converted text" aria-live="polite"></textarea>
       <button type="button" class="copy-btn" id="copy-btn" aria-label="Copy output to clipboard">

@@ -15,7 +15,7 @@ const tagline =
   <div class="workspace">
     <!-- Preview -->
     <div class="panel preview-panel">
-      <div class="panel-title">Preview</div>
+      <h2 class="panel-title">Preview</h2>
       <div class="canvas-wrapper">
         <div id="preview-container">
           <div class="icon-placeholder" id="placeholder">
@@ -43,7 +43,7 @@ const tagline =
     <div class="controls-col">
       <!-- Icon panel -->
       <div class="panel">
-        <div class="panel-title">Icon</div>
+        <h2 class="panel-title">Icon</h2>
 
         <!-- Source selector -->
         <div class="source-row">
@@ -78,7 +78,7 @@ const tagline =
 
       <!-- Text style panel (text source only) -->
       <div class="panel" id="text-style-panel">
-        <div class="panel-title">Text Style</div>
+        <h2 class="panel-title">Text Style</h2>
         <div class="field">
           <label for="font-select">Font</label>
           <select id="font-select" class="font-select">
@@ -125,10 +125,10 @@ const tagline =
 
       <!-- Colors panel -->
       <div class="panel">
-        <div class="panel-title">Colors</div>
+        <h2 class="panel-title">Colors</h2>
         <div class="color-row">
           <div class="color-field" id="icon-color-field">
-            <label>Icon Color</label>
+            <label for="cp-hex-icon">Icon Color</label>
             <div class="cp-row" id="cp-row-icon">
               <button type="button" class="cp-swatch" id="cp-swatch-icon" data-target="icon" aria-label="Pick icon color">
                 <div class="cp-swatch-fill" id="cp-fill-icon" style="background:#ffffff"></div>
@@ -138,7 +138,7 @@ const tagline =
             <span class="cp-fa-only" id="cp-fa-only-note">Emoji use their own colors</span>
           </div>
           <div class="color-field">
-            <label>Background</label>
+            <label for="cp-hex-bg">Background</label>
             <div class="bgtype-row">
               <button type="button" class="choice-btn bgtype-btn active" data-bgtype="solid" aria-pressed="true">Solid</button>
               <button type="button" class="choice-btn bgtype-btn" data-bgtype="gradient" aria-pressed="false">Gradient</button>
@@ -193,7 +193,7 @@ const tagline =
 
       <!-- Shape + scale -->
       <div class="panel">
-        <div class="panel-title">Background Shape</div>
+        <h2 class="panel-title">Background Shape</h2>
         <div class="shape-row">
           <button type="button" class="shape-btn" data-shape="none" aria-pressed="false">
             <div class="shape-icon none"></div>
@@ -226,7 +226,7 @@ const tagline =
 
       <!-- Export -->
       <div class="panel">
-        <div class="panel-title">Export</div>
+        <h2 class="panel-title">Export</h2>
 
         <label style="display:block;margin-bottom:0.45rem;">Resolution Presets</label>
         <div class="preset-grid">
