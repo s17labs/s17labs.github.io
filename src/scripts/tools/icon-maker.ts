@@ -17,18 +17,42 @@ function ensureFA(): Promise<void> {
       ]);
       library.add(fas, far, fab);
     })();
+    // A failed load must not poison future lookups — forget it and retry.
+    faPromise.catch(() => {
+      faPromise = null;
+    });
   }
   return faPromise;
 }
 
-// Bootstrap Icons (MIT, 2000+ fill-based glyphs) ship with the page via npm
-// and load on demand — no CDN, fully offline. Each file is a 16x16 SVG with
-// one or more <path> elements, which maps 1:1 onto the FA pipeline
-// (fill color + Android VectorDrawable export).
-const biModules = import.meta.glob(
-  '../../../node_modules/bootstrap-icons/icons/*.svg',
-  { query: '?raw', import: 'default', eager: false }
-) as Record<string, () => Promise<string>>;
+// ─────────────────────────────────────────────────────────────────────────────
+// Bootstrap Icons lookup: one sprite, fetched once on first use.
+//
+// The package ships bootstrap-icons.svg (all 2078 glyphs as <symbol>s).
+// Importing it with ?url emits a single hashed asset instead of 2000+
+// per-icon chunks, and lookups after the first are instant (in-memory).
+// Fully offline — same origin, no CDN.
+// ─────────────────────────────────────────────────────────────────────────────
+import biSpriteUrl from '../../../node_modules/bootstrap-icons/bootstrap-icons.svg?url';
+
+let biDocPromise: Promise<Document | null> | null = null;
+
+function ensureBiDoc(): Promise<Document | null> {
+  if (!biDocPromise) {
+    biDocPromise = (async () => {
+      try {
+        const res = await fetch(biSpriteUrl);
+        if (!res.ok) return null;
+        const doc = new DOMParser().parseFromString(await res.text(), 'image/svg+xml');
+        if (doc.getElementsByTagName('parsererror').length) return null;
+        return doc;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return biDocPromise;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
@@ -290,8 +314,7 @@ function rectToPath(x: number, y: number, w: number, h: number, rx: number, tran
   return transform ? applySvgMatrix(d, transform) : d;
 }
 
-function parseBiSvg(raw: string): { paths: VectorPath[]; viewBox: string } | null {
-  const inner = raw.slice(raw.indexOf('>') + 1, raw.lastIndexOf('<'));
+function parseBiInner(inner: string, viewBox: string): { paths: VectorPath[]; viewBox: string } | null {
   // Only 1 of 2078 icons uses transforms/groups (align-top) — refuse those
   // rather than exporting silently wrong geometry.
   if (/transform=|<g[\s>]/.test(inner)) return null;
@@ -331,15 +354,15 @@ function parseBiSvg(raw: string): { paths: VectorPath[]; viewBox: string } | nul
     }
   }
   if (!paths.length) return null;
-  const viewBox = raw.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 16 16';
   return { paths, viewBox };
 }
 
 async function findBootstrapIcon(name: string): Promise<{ paths: VectorPath[]; viewBox: string } | null> {
-  const loader = biModules[`../../../node_modules/bootstrap-icons/icons/${name}.svg`];
-  if (!loader) return null;
   try {
-    return parseBiSvg(await loader());
+    const doc = await ensureBiDoc();
+    const symbol = doc?.getElementById(name);
+    if (!symbol) return null;
+    return parseBiInner(symbol.innerHTML, symbol.getAttribute('viewBox') ?? '0 0 16 16');
   } catch {
     return null;
   }
