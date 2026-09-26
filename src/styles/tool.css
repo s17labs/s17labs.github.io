@@ -104,11 +104,16 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  /* Generous hit area: padding expands it, negative margin holds alignment */
-  padding: 0.6rem;
-  margin: -0.6rem;
+  padding: 0;
   transition: var(--t);
   text-decoration: none;
+}
+
+/* Generous tap target that doesn't disturb centering math */
+.back-link::before {
+  content: '';
+  position: absolute;
+  inset: -0.6rem;
 }
 
 .back-link:hover {
