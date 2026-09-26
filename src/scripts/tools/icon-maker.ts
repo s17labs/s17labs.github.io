@@ -883,17 +883,34 @@ function openShapeDialog(mode: 'export' | 'material'): void {
   primary.textContent = mode === 'export' ? 'Switch to Square & Export' : 'Switch to Square';
   secondary.textContent = mode === 'export' ? 'Export Anyway' : 'Keep Current Shape';
   document.getElementById('shape-dialog')!.classList.add('visible');
-  // Lock background scroll — body alone doesn't hold on mobile browsers.
-  document.body.style.overflow = 'hidden';
-  document.documentElement.style.overflow = 'hidden';
+  lockScroll();
   primary.focus();
 }
 
 function closeShapeDialog(): void {
   document.getElementById('shape-dialog')!.classList.remove('visible');
-  document.body.style.overflow = '';
-  document.documentElement.style.overflow = '';
+  unlockScroll();
   shapeDialogMode = null;
+}
+
+// Bulletproof scroll lock: overflow:hidden is advisory on mobile browsers —
+// fixing the body in place removes the page from the scroll flow entirely.
+let lockY = 0;
+
+function lockScroll(): void {
+  lockY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${lockY}px`;
+  document.body.style.width = '100%';
+  document.documentElement.style.overflow = 'hidden';
+}
+
+function unlockScroll(): void {
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  document.documentElement.style.overflow = '';
+  window.scrollTo(0, lockY);
 }
 
 // Run the Android export the dialog interrupted.
