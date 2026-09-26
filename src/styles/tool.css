@@ -653,10 +653,6 @@ input[type='range']::-webkit-slider-thumb {
   background: var(--surface-3);
 }
 
-.result-thumb.placeholder {
-  background-image: none;
-}
-
 .result-info {
   flex: 1;
   min-width: 0;

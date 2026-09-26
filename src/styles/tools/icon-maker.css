@@ -459,7 +459,7 @@ input.text-input {
 }
 
 #icon-scale {
-  margin-bottom: 6px;
+  margin-bottom: 0.375rem;
 }
 
 /* SVG/PNG buttons stack on phones like the shared .btn-row */

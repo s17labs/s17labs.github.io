@@ -289,9 +289,10 @@ const textFonts = [
         controls. All transitions run on <code>var(--t)</code>.
       </p>
       <div class="ds-demo">
-        <small>.btn · .btn.ready · .btn:disabled</small>
+        <small>.btn · .btn.ready · .btn:disabled · .btn-fmt</small>
         <button type="button" class="btn">Export</button>
         <button type="button" class="btn ready">Export Ready</button>
+        <button type="button" class="btn"><span class="btn-fmt">SVG</span> Export</button>
         <button type="button" class="btn" disabled>Disabled</button>
       </div>
       <div class="ds-demo">
@@ -353,9 +354,32 @@ const textFonts = [
           <label>Range — 70%</label>
           <input type="range" min="0" max="100" value="70" />
         </div>
+        <div class="field">
+          <label>Hint</label>
+          <input type="text" value="128" readonly />
+          <div class="field-note">Small hint under a field.</div>
+        </div>
       </div>
       <div class="ds-demo">
-        <small>.checkbox-row · .drop-zone · .color-row</small>
+        <small>.color-row · .color-field · .divider</small>
+        <div class="color-row">
+          <div class="color-field">
+            <label>Foreground</label>
+            <input type="text" value="#F1F1F1" readonly />
+          </div>
+          <div class="color-field">
+            <label>Background</label>
+            <input type="text" value="#0E0E10" readonly />
+          </div>
+        </div>
+        <hr class="divider" />
+        <div class="panel-header-row">
+          <div class="panel-title">Output</div>
+          <button type="button" class="choice-btn">Clear</button>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.checkbox-row · .drop-zone (icon-maker patterns)</small>
         <label class="checkbox-row">
           <div class="custom-checkbox">
             <input type="checkbox" checked />
@@ -393,6 +417,19 @@ const textFonts = [
         <div class="zip-progress-wrap visible">
           <div class="zip-progress-track"><div class="zip-progress-fill" style="width:64%;"></div></div>
           <div class="zip-progress-label">mipmap-xxhdpi/ic_launcher.png 144px…</div>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.results-list · .result-item</small>
+        <div class="results-list">
+          <div class="result-item">
+            <div class="result-thumb"></div>
+            <div class="result-info">
+              <div class="result-name">icon-512x512.png</div>
+              <div class="result-meta"><span>512 × 512</span><span>84 KB</span></div>
+            </div>
+            <button type="button" class="result-dl">Save</button>
+          </div>
         </div>
       </div>
       <div class="ds-demo">
