@@ -412,6 +412,12 @@ input.text-input {
   font-weight: 700;
 }
 
+.modal-btn.primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
 #icon-scale {
   margin-bottom: 0.375rem;
 }

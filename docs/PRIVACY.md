@@ -1,4 +1,4 @@
-# Privacy Policy — s17 Labs
+# Privacy policy — s17 Labs
 
 No accounts. No tracking. No analytics. This site is a static bundle of
 files — there is nothing here that can follow you.

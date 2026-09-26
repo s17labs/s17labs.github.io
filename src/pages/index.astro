@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
 import { SITE } from '../data/site';
+import '../styles/tool.css';
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
@@ -14,7 +15,7 @@ import { SITE } from '../data/site';
             <p>{SITE.description}</p>
           </header>
           <div class="card">
-            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our projects focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
+            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our <a href={SITE.projectsUrl} class="link-ghost">projects</a> focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
             <div class="card-link">
               <a href={SITE.orgUrl} class="github-link" target="_blank" rel="noopener noreferrer">
                 <Icon name="github" /> GitHub

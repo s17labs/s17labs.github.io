@@ -245,6 +245,27 @@ const textFonts = [
         </div>
       </div>
       <div class="ds-demo">
+        <small>.link · .link-primary · .link-secondary · .link-ghost</small>
+        <p class="ds-body-sample">
+          <a href="/tools/" class="link">Normal link</a>
+          ·
+          <a href="/tools/" class="link-primary">Primary link</a>
+          ·
+          <a href="/tools/" class="link-secondary">Secondary link</a>
+          ·
+          <a href="/tools/" class="link-ghost">Ghost link</a>
+        </p>
+      </div>
+      <div class="ds-demo">
+        <small>.link-icon — composes with any flavor</small>
+        <p class="ds-body-sample" style="display:flex;gap:1.1rem;flex-wrap:wrap;">
+          <a href="/tools/" class="link link-icon"><Icon name="github" /> Normal + icon</a>
+          <a href="/tools/" class="link-primary link-icon">Primary + arrow <Icon name="arrow-right" /></a>
+          <a href="/tools/" class="link-secondary link-icon"><Icon name="globe" /> Secondary + icon</a>
+          <a href="/tools/" class="link-ghost link-icon"><Icon name="toolbox" /> Ghost + icon</a>
+        </p>
+      </div>
+      <div class="ds-demo">
         <small>.tool-item icon variants — glyph · artwork · emoji</small>
         <div style="display:flex;gap:0.6rem;align-items:center;">
           <div class="tool-item-icon"><Icon name="icons" /></div>
@@ -335,27 +356,27 @@ const textFonts = [
       <div class="ds-demo">
         <small>input · number · textarea · select · range</small>
         <div class="field">
-          <label>Text input</label>
+          <span class="group-label">Text input</span>
           <input type="text" value="star" readonly />
         </div>
         <div class="field">
-          <label>Number</label>
+          <span class="group-label">Number</span>
           <input type="number" value="128" readonly />
         </div>
         <div class="field">
-          <label>Textarea</label>
+          <span class="group-label">Textarea</span>
           <textarea readonly>Your data never leaves your browser.</textarea>
         </div>
         <div class="field">
-          <label>Select</label>
+          <span class="group-label">Select</span>
           <select><option>System Sans</option><option>Montserrat</option></select>
         </div>
         <div class="field">
-          <label>Range — 70%</label>
+          <span class="group-label">Range — 70%</span>
           <input type="range" min="0" max="100" value="70" />
         </div>
         <div class="field">
-          <label>Hint</label>
+          <span class="group-label">Hint</span>
           <input type="text" value="128" readonly />
           <div class="field-note">Small hint under a field.</div>
         </div>
@@ -364,11 +385,11 @@ const textFonts = [
         <small>.color-row · .color-field · .divider</small>
         <div class="color-row">
           <div class="color-field">
-            <label>Foreground</label>
+            <span class="group-label">Foreground</span>
             <input type="text" value="#F1F1F1" readonly />
           </div>
           <div class="color-field">
-            <label>Background</label>
+            <span class="group-label">Background</span>
             <input type="text" value="#0E0E10" readonly />
           </div>
         </div>
@@ -483,9 +504,32 @@ const textFonts = [
 
 <script>
   const demo = document.getElementById('ds-modal-demo');
-  document.getElementById('ds-modal-open')?.addEventListener('click', () => demo?.classList.add('visible'));
-  document.getElementById('ds-modal-ok')?.addEventListener('click', () => demo?.classList.remove('visible'));
+  let demoLockY = 0;
+  function demoLock() {
+    demoLockY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${demoLockY}px`;
+    document.body.style.width = '100%';
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function demoUnlock() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.documentElement.style.overflow = '';
+    window.scrollTo(0, demoLockY);
+  }
+  function demoOpen() {
+    demo?.classList.add('visible');
+    demoLock();
+  }
+  function demoClose() {
+    demo?.classList.remove('visible');
+    demoUnlock();
+  }
+  document.getElementById('ds-modal-open')?.addEventListener('click', demoOpen);
+  document.getElementById('ds-modal-ok')?.addEventListener('click', demoClose);
   demo?.addEventListener('click', (e) => {
-    if (e.target === demo) demo.classList.remove('visible');
+    if (e.target === demo) demoClose();
   });
 </script>

@@ -32,7 +32,7 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
             <div class="tool-item-left">
               <div class:list={['tool-item-icon', { 'has-img': project.iconImg, 'has-emoji': project.emoji }]}>
                 {project.iconImg ? (
-                  <img src={project.iconImg} alt={`${project.name} icon`} loading="lazy" />
+                  <img src={project.iconImg} alt={`${project.name} icon`} />
                 ) : project.emoji ? (
                   <span class="tool-item-emoji" aria-hidden="true">{project.emoji}</span>
                 ) : (
