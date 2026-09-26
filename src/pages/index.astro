@@ -14,7 +14,7 @@ import { SITE } from '../data/site';
             <p>{SITE.description}</p>
           </header>
           <div class="card">
-            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our <a href={SITE.projectsUrl}>projects</a> focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
+            <p>At <b>s17 Labs</b>, we prioritize efficiency and performance in every line of code. Our <a href={SITE.projectsUrl} class="link-ghost">projects</a> focus on full-stack development, browser-level optimization, and creating superior ways to interact with digital content.</p>
             <div class="card-link">
               <a href={SITE.orgUrl} class="github-link" target="_blank" rel="noopener noreferrer">
                 <Icon name="github" /> GitHub
@@ -38,16 +38,5 @@ import { SITE } from '../data/site';
 
   .header-col p {
     max-width: 34ch;
-  }
-
-  .card p a {
-    color: inherit;
-    font-weight: bold;
-    text-decoration: none;
-  }
-
-  .card p a:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
   }
 </style>

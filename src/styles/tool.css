@@ -44,6 +44,51 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════
+   TEXT LINKS (inline, in-flow)
+   ═══════════════════════════════════════════════════ */
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--accent);
+}
+
+.link-primary {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.link-primary:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-secondary {
+  color: var(--secondary-text);
+  text-decoration: none;
+}
+
+.link-secondary:hover {
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-ghost {
+  color: inherit;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.link-ghost:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ═══════════════════════════════════════════════════
    PAGE WRAPPER
    Content width varies per tool (640–900px); the header
    lives in .tool-top with a fixed 680px width so the
