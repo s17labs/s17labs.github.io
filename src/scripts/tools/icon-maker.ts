@@ -99,14 +99,14 @@ const INPUT_CONFIG = {
     placeholder: 'e.g. star, circle-check, bolt',
     cls: '',
     error:
-      'Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer">fontawesome.com</a>',
+      'Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a>',
   },
   bi: {
     label: 'Bootstrap Icon Name',
     placeholder: 'e.g. star, alarm, rocket',
     cls: '',
     error:
-      'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener noreferrer">icons.getbootstrap.com</a>',
+      'Icon not found — check spelling at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on icons.getbootstrap.com">icons.getbootstrap.com</a>',
   },
   text: {
     label: 'Icon Text',
