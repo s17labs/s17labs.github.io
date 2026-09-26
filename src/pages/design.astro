@@ -483,9 +483,32 @@ const textFonts = [
 
 <script>
   const demo = document.getElementById('ds-modal-demo');
-  document.getElementById('ds-modal-open')?.addEventListener('click', () => demo?.classList.add('visible'));
-  document.getElementById('ds-modal-ok')?.addEventListener('click', () => demo?.classList.remove('visible'));
+  let demoLockY = 0;
+  function demoLock() {
+    demoLockY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${demoLockY}px`;
+    document.body.style.width = '100%';
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function demoUnlock() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.documentElement.style.overflow = '';
+    window.scrollTo(0, demoLockY);
+  }
+  function demoOpen() {
+    demo?.classList.add('visible');
+    demoLock();
+  }
+  function demoClose() {
+    demo?.classList.remove('visible');
+    demoUnlock();
+  }
+  document.getElementById('ds-modal-open')?.addEventListener('click', demoOpen);
+  document.getElementById('ds-modal-ok')?.addEventListener('click', demoClose);
   demo?.addEventListener('click', (e) => {
-    if (e.target === demo) demo.classList.remove('visible');
+    if (e.target === demo) demoClose();
   });
 </script>
