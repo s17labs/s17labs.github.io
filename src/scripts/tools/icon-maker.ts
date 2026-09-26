@@ -191,10 +191,10 @@ function emojiUrl(emoji: string, src: string): string {
     const cp = toTwemojiCP(emoji);
     return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${cp}.svg`;
   }
-  // noto
+  // noto — pinned to a commit so upstream moves can't break lookups again.
   // Upstream restructured: glyphs moved from svg/ to 2D/svg/.
   const cp = toNotoCP(emoji);
-  return `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji/2D/svg/emoji_u${cp}.svg`;
+  return `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e/2D/svg/emoji_u${cp}.svg`;
 }
 
 // Fetch emoji SVG from CDN
@@ -204,7 +204,16 @@ async function fetchEmojiSvg(emoji: string): Promise<string> {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   if (!text.includes('<svg')) throw new Error('Invalid SVG');
-  return text;
+  return sanitizeEmojiSvg(text);
+}
+
+// Strip active content from fetched SVGs: the bytes ship inside our
+// exported .svg files, which users open in browsers. Static art only.
+function sanitizeEmojiSvg(svg: string): string {
+  return svg
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject\s*>/gi, '')
+    .replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
 }
 
 // Encode SVG string as a data URI (handles Unicode safely)

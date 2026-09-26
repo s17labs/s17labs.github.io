@@ -156,7 +156,9 @@ convertBtn.addEventListener('click', () => {
 });
 
 function convertFile(file: File, onDone?: () => void): void {
-  const targetW = Number(inputW.value) || 512;
+  // Unclamped widths allocate giant canvases (tab OOM) — same bounds as resizer.
+  const targetW = Math.min(8000, Math.max(16, Math.round(Number(inputW.value) || 512)));
+  inputW.value = String(targetW);
   const baseName = file.name.replace(/\.svg$/i, '');
 
   const item = makePlaceholderItem({

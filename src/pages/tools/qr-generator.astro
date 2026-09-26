@@ -11,7 +11,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
 <ToolLayout title={title} description={description} heading="QR Generator" tagline={tagline} maxWidth={640}>
   <!-- Input Panel -->
   <div class="panel">
-    <div class="panel-title">Input</div>
+    <h2 class="panel-title">Input</h2>
     <div class="field">
       <label for="qr-input">Text / URL</label>
       <textarea id="qr-input" placeholder="https://example.com or any text…" maxlength="2331"></textarea>
@@ -22,7 +22,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
 
   <!-- Settings Panel -->
   <div class="panel">
-    <div class="panel-title">Settings</div>
+    <h2 class="panel-title">Settings</h2>
 
     <div class="field">
       <div class="label-row">
@@ -67,7 +67,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
 
   <!-- Preview Panel -->
   <div class="panel">
-    <div class="panel-title">Preview</div>
+    <h2 class="panel-title">Preview</h2>
     <div class="preview-wrap">
       <div id="qr-container">
         <div class="qr-placeholder" id="qr-placeholder">
@@ -80,7 +80,7 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
 
   <!-- Export Panel -->
   <div class="panel">
-    <div class="panel-title">Export</div>
+    <h2 class="panel-title">Export</h2>
     <div class="btn-row">
       <button type="button" class="btn" id="btn-png" disabled>
         <span class="btn-fmt">PNG</span> Download
