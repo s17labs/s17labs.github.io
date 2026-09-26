@@ -713,6 +713,8 @@ input.cp-hue::-moz-range-thumb {
 /* Export buttons reuse the shared .btn (see markup) — only padding differs. */
 .export-btn {
   padding: 0.7rem 1.2rem;
+  /* Format label (Aldrich) and action text (Verdana) share a baseline */
+  align-items: baseline;
 }
 
 /* Android */
