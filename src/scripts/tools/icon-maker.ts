@@ -1013,8 +1013,13 @@ async function fontsReady(): Promise<void> {
   }
 }
 
-function exportError(show: boolean): void {
-  document.getElementById('export-error')?.classList.toggle('visible', show);
+const EXPORT_ERROR_DEFAULT = 'Enter a valid icon, text, or emoji first.';
+
+function exportError(show: boolean, message: string = EXPORT_ERROR_DEFAULT): void {
+  const el = document.getElementById('export-error');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('visible', show);
 }
 
 function clampExportSize(v: number): number {
@@ -1036,7 +1041,7 @@ function exportBaseName(): string {
 
 async function exportAs(fmt: string): Promise<void> {
   if (!S.valid) {
-    exportError(true);
+    exportError(true, EXPORT_ERROR_DEFAULT);
     return;
   }
   exportError(false);
@@ -1055,7 +1060,7 @@ async function exportAs(fmt: string): Promise<void> {
   await fontsReady();
   svgTextToPngBlob(await buildExportSVG(), w, h)
     .then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`))
-    .catch(() => exportError(true));
+    .catch(() => exportError(true, 'PNG export failed — try again.'));
 }
 
 for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
@@ -1576,7 +1581,7 @@ const ANDROID_BTN_HTML = `<span style="font-size:1.05rem;display:inline-flex;">$
 
 async function exportAndroid(): Promise<void> {
   if (!S.valid) {
-    exportError(true);
+    exportError(true, EXPORT_ERROR_DEFAULT);
     return;
   }
   exportError(false);
@@ -1682,9 +1687,7 @@ async function exportAndroid(): Promise<void> {
     btn.disabled = false;
     btn.innerHTML = ANDROID_BTN_HTML;
     progressWrap.classList.remove('visible');
-    const msg = document.getElementById('export-error')!;
-    msg.textContent = 'Export failed: ' + (e as Error).message;
-    msg.classList.add('visible');
+    exportError(true, 'Export failed: ' + (e as Error).message);
   }
 }
 
