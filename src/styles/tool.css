@@ -545,25 +545,45 @@ input[type='range']::-webkit-slider-thumb {
   color: #fff;
 }
 
-/* Small selectable option (size presets, format pickers, …) */
-.choice-btn {
-  padding: 0.55rem 0.9rem;
+/* Small selectable option (size presets, format pickers, …).
+   Shared recipe — icon-maker families (.source/.style/.shape/.preset/
+   .angle-btn) reuse it and add only their own layout/typography. */
+.choice-btn,
+.source-btn,
+.style-btn,
+.shape-btn,
+.preset-btn,
+.angle-btn {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--secondary-text);
-  font-family: 'Courier New', monospace;
   cursor: pointer;
   transition: all var(--t);
+}
+
+.choice-btn {
+  padding: 0.55rem 0.9rem;
+  font-family: 'Courier New', monospace;
   white-space: nowrap;
 }
 
-.choice-btn:hover {
+.choice-btn:hover,
+.source-btn:hover,
+.style-btn:hover,
+.shape-btn:hover,
+.preset-btn:hover,
+.angle-btn:hover {
   border-color: var(--accent-soft);
   color: var(--primary-text);
 }
 
-.choice-btn.active {
+.choice-btn.active,
+.source-btn.active,
+.style-btn.active,
+.shape-btn.active,
+.preset-btn.active,
+.angle-btn.active {
   border-color: var(--accent);
   background: var(--accent-dim);
   color: var(--primary-text);

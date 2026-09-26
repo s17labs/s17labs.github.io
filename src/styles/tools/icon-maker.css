@@ -148,37 +148,8 @@
 }
 
 /* Text inputs use the shared tool.css base; only icon-maker extras live here. */
-/* ── Option buttons — one shared base, per-group layout below ── */
-.source-btn,
-.style-btn,
-.shape-btn,
-.preset-btn {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--secondary-text);
-  cursor: pointer;
-  transition: all var(--t);
-}
-
-.source-btn:hover,
-.style-btn:hover,
-.shape-btn:hover,
-.preset-btn:hover {
-  border-color: var(--accent-soft);
-  color: var(--primary-text);
-}
-
-.source-btn.active,
-.style-btn.active,
-.shape-btn.active,
-.preset-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
-}
-
-/* ── Source selector ── */
+/* ── Option buttons — base recipe lives on .choice-btn in tool.css;
+   per-group rules below add only layout/typography ── */
 /* 3+2 layout at every width — the controls column is narrow (~320px)
    on desktop too, so 5-across squeezes the buttons. */
 .source-row {
@@ -367,23 +338,6 @@ input.text-input {
   justify-content: center;
   font-size: 0.95rem;
   line-height: 1;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--secondary-text);
-  cursor: pointer;
-  transition: all var(--t);
-}
-
-.angle-btn:hover {
-  border-color: var(--accent-soft);
-  color: var(--primary-text);
-}
-
-.angle-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-  color: var(--primary-text);
 }
 
 /* Non-square background dialog (Android export / Material You gate) */
