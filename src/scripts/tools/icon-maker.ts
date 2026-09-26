@@ -883,13 +883,16 @@ function openShapeDialog(mode: 'export' | 'material'): void {
   primary.textContent = mode === 'export' ? 'Switch to Square & Export' : 'Switch to Square';
   secondary.textContent = mode === 'export' ? 'Export Anyway' : 'Keep Current Shape';
   document.getElementById('shape-dialog')!.classList.add('visible');
+  // Lock background scroll — body alone doesn't hold on mobile browsers.
   document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
   primary.focus();
 }
 
 function closeShapeDialog(): void {
   document.getElementById('shape-dialog')!.classList.remove('visible');
   document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
   shapeDialogMode = null;
 }
 
