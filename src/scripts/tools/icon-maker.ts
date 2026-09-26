@@ -17,6 +17,10 @@ function ensureFA(): Promise<void> {
       ]);
       library.add(fas, far, fab);
     })();
+    // A failed load must not poison future lookups — forget it and retry.
+    faPromise.catch(() => {
+      faPromise = null;
+    });
   }
   return faPromise;
 }
