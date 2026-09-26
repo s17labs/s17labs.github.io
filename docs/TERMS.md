@@ -1,4 +1,4 @@
-# Terms of Use — s17 Labs
+# Terms of use — s17 Labs
 
 Plain terms for a plain website. Everything here is free to use,
 provided as-is.
