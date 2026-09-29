@@ -89,13 +89,16 @@ Key patterns:
 
 - Pages pass `barTitle` (plus optional `backHref` / `backLabel` / `barWidth`)
   to `BaseLayout`. Omit `barTitle` and you get the bare FAB — that is the home
-  page's configuration. **`barWidth` must equal the page's content measure** so
-  the bar and the column share both edges: 900px for `/tools/`, `/projects/`,
-  `/design/`, `/privacy/` and `/terms/`; 680px for the individual tool pages,
-  which are narrower because their panels are built around a tight measure.
-  `.topbar-inner` uses the same 20px side padding as the page columns, so the
-  back link and the first card line up exactly. Anything else is a bug — check
-  the numbers, not the eyeball.
+  page's configuration.
+- **The bar and the content are separate measures.** `barWidth` sets the bar
+  alone: 900px on every page that has one. The page column below it is whatever
+  that page's shell uses — 680px on `/tools/` and `/projects/`, 900px on
+  `/design/`, `/privacy/` and `/terms/`, 680px on the tool pages (900px for
+  Icon Maker). So on most pages the bar is deliberately wider than the content;
+  don't "fix" that by matching them, and don't let them drift apart by accident
+  either. `.topbar-inner` uses the same 20px side padding as the page columns,
+  so where the two measures do match (the design/policy pages, Icon Maker) they
+  line up exactly.
 - **Search** (<kbd>/</kbd> or <kbd>⌘K</kbd>) indexes tools, projects, pages,
   and `/design/` sections straight from the existing registries — there is no
   separate index to keep in sync. Arrow keys move, <kbd>Enter</kbd> opens,

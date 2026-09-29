@@ -62,3 +62,12 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
   </div>
 </BaseLayout>
 
+<style>
+  /* The bar runs the wide 900px measure while the project cards stay on the
+     standard 680px column, so the two are deliberately different widths.
+     Astro scopes this to .ds-page[data-astro-cid-*] (0,2,0), which
+     out-specifies the shared .ds-page rule without relying on load order. */
+  .ds-page {
+    max-width: 680px;
+  }
+</style>

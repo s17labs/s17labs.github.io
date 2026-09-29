@@ -47,13 +47,14 @@ import '../../styles/tool.css';
 </BaseLayout>
 
 <style>
-  /* This listing runs the wide 900px measure, like /projects/ and /design/,
-     so the bar and the cards share both edges. Astro scopes these to
-     .tool-top[data-astro-cid-*] (0,2,0), which out-specifies the shared
-     680px rules in tool.css without relying on load order. */
+  /* The bar runs the wide 900px measure while the listing stays on the
+     standard 680px column, so the two are deliberately different widths.
+     Astro scopes these to .tool-top[data-astro-cid-*] / .page[data-astro-cid-*]
+     (0,2,0), which out-specifies the shared 680px rules in tool.css without
+     relying on load order. */
   .tool-top,
   .page {
-    max-width: 900px;
+    max-width: 680px;
   }
 
   .page {
