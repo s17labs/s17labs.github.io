@@ -8,37 +8,19 @@
 .ds-page {
   width: 100%;
   max-width: 900px;
-  padding: 0 20px 4rem;
+  padding: 0.7rem 20px 4rem;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
 }
 
-.ds-hero {
-  text-align: center;
-  margin: 2.5rem 0 0.4rem;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 2.8rem;
-}
-
-.ds-hero h1 {
-  font-family: Aldrich, sans-serif;
-  font-size: 1.8rem;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  margin: 0;
-}
-
+/* No top margin — .ds-page owns the gap under the top bar, so the lead
+   sits the same distance down as a tool tagline. */
 .ds-lead {
   text-align: center;
   color: var(--secondary-text);
   font-size: 0.95rem;
-  margin: 0.6rem auto 2rem;
+  margin: 0 auto 2rem;
   line-height: 1.6;
   max-width: 560px;
 }
@@ -67,7 +49,8 @@
 
 .ds-section {
   margin-bottom: 2.75rem;
-  scroll-margin-top: 1rem;
+  /* Clears the sticky top bar so anchor jumps never hide a heading. */
+  scroll-margin-top: 4.5rem;
 }
 
 .ds-section > h2 {
@@ -279,6 +262,37 @@
   color: var(--secondary-text);
 }
 
+/* Top bar specimens — the real .topbar-* classes, re-hosted inside a
+   .ds-demo box so they can be inspected without leaving the page. */
+.ds-topbar-sample {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ds-menu-sample {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ds-demo kbd {
+  font-family: 'Courier New', monospace;
+  font-size: 0.68em;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+
 /* Definition table (widths, breakpoints, do/don't) */
 .ds-table {
   width: 100%;
@@ -351,10 +365,4 @@
   margin-bottom: 0.6rem;
   font-family: Aldrich, sans-serif;
   font-size: 1.6rem;
-}
-
-@media (max-width: 580px) {
-  .ds-hero h1 {
-    font-size: 1.5rem;
-  }
 }

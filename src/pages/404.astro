@@ -3,7 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../data/site';
 ---
 
-<BaseLayout title={`404 | ${SITE.title}`} description="Page not found.">
+<BaseLayout
+  title={`404 | ${SITE.title}`}
+  description="Page not found."
+  barTitle="Page not found"
+  backHref="/"
+  backLabel="Home"
+  barWidth={700}
+>
   <div class="shell">
     <div class="main">
       <div class="wrapper">

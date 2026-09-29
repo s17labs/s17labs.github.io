@@ -1,22 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
-import BackLinkFit from '../../components/BackLinkFit.astro';
 import { TOOLS, TOOLS_SECTION } from '../../data/tools';
 import { SITE } from '../../data/site';
 import '../../styles/tool.css';
 ---
 
-<BaseLayout title={TOOLS_SECTION.title} description={TOOLS_SECTION.description}>
+<BaseLayout
+  title={TOOLS_SECTION.title}
+  description={TOOLS_SECTION.description}
+  barTitle="Tools"
+  backHref="/"
+  backLabel="Home"
+  barWidth={900}
+>
   <div class="tool-top">
-    <div class="tool-header">
-      <a href="/" class="back-link" aria-label="Back to Home">
-        <Icon name="arrow-left" /><span class="back-label">Home</span>
-      </a>
-      <h1><span class="cube"></span> Tools</h1>
-    </div>
-    <BackLinkFit />
-
     <p class="tool-desc">{TOOLS_SECTION.description}</p>
   </div>
 
@@ -49,21 +47,20 @@ import '../../styles/tool.css';
 </BaseLayout>
 
 <style>
-  ::selection {
-    background: rgba(255, 65, 54, 0.4);
+  /* This listing runs the wide 900px measure, like /projects/ and /design/,
+     so the bar and the cards share both edges. Astro scopes these to
+     .tool-top[data-astro-cid-*] (0,2,0), which out-specifies the shared
+     680px rules in tool.css without relying on load order. */
+  .tool-top,
+  .page {
+    max-width: 900px;
   }
 
   .page {
     width: 100%;
-    max-width: 680px;
     padding: 0 20px 7rem;
     display: flex;
     flex-direction: column;
     flex: 1;
   }
-
 </style>
-
-<script>
-  import '../../scripts/back-link';
-</script>

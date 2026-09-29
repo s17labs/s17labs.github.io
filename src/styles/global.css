@@ -17,12 +17,25 @@
   --color-btn-bg: #1a1a1c;
 }
 
+/* Chrome tokens — the top bar and footer are site chrome and must not
+   depend on tool.css being loaded, so the shared subset lives here and
+   tool.css only declares the tokens its own components need. */
 :root {
   --primary: #0e0e10;
   --accent: #ff4136;
   --primary-text: #f1f1f1;
   --secondary-text: #868686;
   --btn-bg: #1a1a1c;
+  /* Surface ladder: --primary is the page/dialog, --surface-1 a nested well
+     inside it, --surface-2 panels and inputs, --surface-3 raised tracks. */
+  --surface-1: #161618;
+  --surface-2: #1a1a1c;
+  --surface-3: #222226;
+  --border: rgba(255, 255, 255, 0.07);
+  --accent-dim: rgba(255, 65, 54, 0.12);
+  --overlay-dim: rgba(14, 14, 16, 0.72);
+  --radius: 4px;
+  --t: 0.25s ease;
 }
 
 @font-face {
@@ -52,6 +65,18 @@ body {
 
 body::-webkit-scrollbar {
   display: none;
+}
+
+/* Text selection speaks the brand accent everywhere — the default blue
+   is the one color on the site that is not ours. */
+::selection {
+  background: var(--accent-soft);
+  color: var(--primary-text);
+}
+
+::-moz-selection {
+  background: var(--accent-soft);
+  color: var(--primary-text);
 }
 
 a {
@@ -158,6 +183,553 @@ a {
 .github-link:hover {
   background: var(--accent);
   color: var(--primary-text);
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP BAR
+   Site chrome: back link, page header, search, menu.
+   Sticks to the top on every page. --topbar-w is set per page
+   so the bar tracks that page's content measure. At the top
+   of the page it is invisible (same color as the page, no
+   rule); .is-scrolled fades in the blur + hairline.
+   ═══════════════════════════════════════════════════ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--t);
+}
+
+/* Blur lives on a pseudo-element: backdrop-filter on .topbar itself
+   would make it the containing block for the fixed search dialog. */
+.topbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: transparent;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  transition: background-color var(--t);
+}
+
+.topbar.is-scrolled {
+  border-bottom-color: var(--border);
+}
+
+.topbar.is-scrolled::before {
+  background: rgba(14, 14, 16, 0.82);
+}
+
+/* Symmetric on all four sides, and the horizontal value is exactly the
+   20px the page columns use, so the bar's content and the column beneath it
+   share both edges at every width. Height is fixed so the page header can be
+   as large as it likes without the bar growing. */
+.topbar-inner {
+  width: 100%;
+  max-width: var(--topbar-w, 680px);
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 3.75rem;
+  display: grid;
+  /* 1fr auto 1fr keeps the header optically centered at any width */
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar-slot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.topbar-slot-start {
+  justify-content: flex-start;
+}
+
+/* Right slot — the two icon buttons. */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.topbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0;
+  color: var(--secondary-text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.topbar-back:hover {
+  color: var(--accent);
+}
+
+.topbar-back:hover .topbar-back-btn,
+.topbar-back:focus-visible .topbar-back-btn {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+  background: var(--accent-dim);
+}
+
+.topbar-back:active .topbar-back-btn {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* Page header — sized like a real title, not a caption. The bar's fixed
+   height absorbs the extra size.
+   Aldrich's baseline lands level with the icons' visual base; the 1px
+   nudge is a hand-tuned optical offset from there, not a measurement
+   (cap height is 0.71em, so the caps sit proud of the icon top by ~2px).
+   Kept in px so desktop and mobile take the same absolute correction. */
+.topbar-heading {
+  display: inline-flex;
+  align-items: center;
+  /* 0.25em gap, like the home hero — the cube keeps global.css's 0.82em so
+     the lockup is the same proportion as the page title, just smaller. */
+  gap: 0.25em;
+  min-width: 0;
+  font-family: Aldrich, sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translateY(1px);
+}
+
+/* The cube keeps global.css's 0.82em so the bar's lockup matches the home
+   hero's proportion — only the type size differs. */
+
+.topbar-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  background: none;
+  /* Borderless at rest — the accent box appears on hover/press only. */
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--t);
+}
+
+.topbar-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+  background: var(--accent-dim);
+}
+
+.topbar-btn:active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.topbar-btn[aria-expanded='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+/* Search FAB — home page, where there is no toolbar. No fill and no
+   outline: the backdrop blur alone lifts it off whatever scrolls under
+   it, so it never reads as a solid box sitting on the page. Hover and
+   press still speak in accent, like every other bar control. */
+.search-fab {
+  position: fixed;
+  top: 1.15rem;
+  right: 1.15rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: var(--t);
+}
+
+.search-fab:hover,
+.search-fab:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+  background: var(--accent-dim);
+}
+
+.search-fab:active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* Menu button swaps bars ↔ close while open. */
+.topbar-glyph {
+  display: none;
+}
+
+.topbar-btn[aria-expanded='false'] [data-glyph='open'] {
+  display: inline-flex;
+}
+
+.topbar-btn[aria-expanded='true'] [data-glyph='close'] {
+  display: inline-flex;
+}
+
+/* ── Menu dropdown ────────────────────────────────────────────────── */
+.topbar-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  max-height: min(72vh, 34rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.topbar-panel[hidden] {
+  display: none;
+}
+
+.topbar-panel-inner {
+  width: 100%;
+  max-width: var(--topbar-w, 680px);
+  margin: 0 auto;
+  padding: 0.9rem 20px 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.topbar-group-title {
+  font-family: Aldrich, sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--secondary-text);
+  margin-bottom: 0.5rem;
+}
+
+.topbar-links {
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  margin: 0 -0.6rem;
+  border-radius: var(--radius);
+}
+
+.topbar-link:hover {
+  background: var(--accent-dim);
+}
+
+.topbar-link-label {
+  font-size: 0.9rem;
+  color: var(--primary-text);
+}
+
+.topbar-link:hover .topbar-link-label {
+  color: var(--accent);
+}
+
+.topbar-link-desc {
+  font-size: 0.72rem;
+  color: var(--secondary-text);
+  line-height: 1.45;
+}
+
+.topbar-socials {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.topbar-social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+}
+
+.topbar-social:hover {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+/* ── Search dialog ────────────────────────────────────────────────── */
+.topbar-search {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 20px 20px;
+  background: var(--overlay-dim);
+  /* The page behind is locked with overflow:hidden, which iOS still lets
+     rubber-band; contain keeps the overscroll inside the card. */
+  overscroll-behavior: contain;
+}
+
+.topbar-search[hidden] {
+  display: none;
+}
+
+.topbar-search-card {
+  width: 100%;
+  max-width: 34rem;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+/* The search glyph and the clear button live *inside* the field, so the
+   control reads as one box rather than three floating pieces. The field
+   is --surface-1: a well nested just above the dialog's own surface, so
+   it separates without the jump --surface-2 gives. */
+.topbar-search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.85rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  font-size: 0.95rem;
+  transition: var(--t);
+}
+
+.topbar-search-field:focus-within {
+  border-color: var(--accent-soft);
+}
+
+/* The global :focus-visible ring would double up on the field border, so
+   the field itself carries the accent while the input stays quiet.
+   Scoped selectors: tool.css styles input[type="text"] with higher
+   specificity than a bare class, and it loads after global.css. */
+.topbar-search-field .topbar-search-input:focus-visible {
+  outline: none;
+}
+
+.topbar-search-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+/* border-radius: 0 matters even with no border — a rounded input clips
+   the caret at the start and rounds the selection highlight. Verdana, not
+   Courier: this is the one input on the site that takes a whole word of
+   body copy as its content, so it speaks in body copy. */
+.topbar-search-field .topbar-search-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  color: var(--primary-text);
+  font-family: Verdana, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5rem;
+  padding: 0;
+}
+
+.topbar-search-field .topbar-search-input::placeholder {
+  color: var(--secondary-text);
+  opacity: 0.7;
+}
+
+.topbar-search-clear {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--secondary-text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  /* Matches the input's line box so the field never changes height. */
+  line-height: 1.5rem;
+  height: 1.5rem;
+  width: 1.5rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--t);
+}
+
+/* Hidden with no query to clear — but kept in flow, so the field's box is
+   identical empty and filled. visibility (not display) keeps it out of the
+   tab order and the a11y tree while holding its space. */
+.topbar-search-clear[hidden] {
+  visibility: hidden;
+}
+
+.topbar-search-clear:hover {
+  color: var(--accent);
+}
+
+.topbar-results {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.topbar-result {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--secondary-text);
+}
+
+.topbar-result:last-child {
+  border-bottom: none;
+}
+
+.topbar-result.active {
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.topbar-result-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+.topbar-result-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.topbar-result-label {
+  font-size: 0.85rem;
+  color: var(--primary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-result-hint {
+  font-size: 0.68rem;
+  color: var(--secondary-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-result-kind {
+  flex-shrink: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--secondary-text);
+  opacity: 0.8;
+}
+
+.topbar-empty {
+  padding: 1.1rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+  text-align: center;
+}
+
+.topbar-search-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.65rem;
+  color: var(--secondary-text);
+}
+
+.topbar-search-shortcut {
+  margin-left: auto;
+}
+
+/* Fixed-size chips: the arrows are one glyph but "esc" and "⌘ K" are three,
+   so a min-width left the row ragged. One box for all, text centred on
+   both axes and never split across the wrap. */
+.topbar-search-foot kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.15rem;
+  margin-right: 0.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--btn-bg);
+  font-family: 'Courier New', monospace;
+  font-size: 0.62rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--primary-text);
+}
+
+/* Lock the page behind an open menu or dialog. */
+html.topbar-open {
+  overflow: hidden;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -286,6 +858,23 @@ a {
 }
 
 @media (max-width: 580px) {
+  /* Back button drops to the arrow alone so the header keeps its room.
+     Target the label only — `.topbar-back span` would also hide the
+     square that holds the arrow. */
+  .topbar-back-label {
+    display: none;
+  }
+  .topbar-heading {
+    font-size: 1.35rem;
+  }
+  .topbar-search {
+    padding-top: 8vh;
+  }
+  /* The shortcut legend wraps to a second row on a phone and there are no
+     arrow keys to hint at anyway — the results speak for themselves. */
+  .topbar-search-foot {
+    display: none;
+  }
   .footer-cols {
     grid-template-columns: 1fr;
     gap: 1.25rem;

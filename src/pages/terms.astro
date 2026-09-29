@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
-import BackLinkFit from '../components/BackLinkFit.astro';
 import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/design.css';
@@ -10,15 +8,15 @@ const title = 'Terms of use | s17 Labs';
 const description = 'Terms of use for the s17 Labs website and browser tools.';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  barTitle="Terms of use"
+  backHref="/"
+  backLabel="Home"
+  barWidth={900}
+>
   <div class="ds-page">
-    <header class="ds-hero">
-      <a href="/" class="back-link" aria-label="Back to Home">
-        <Icon name="arrow-left" /><span class="back-label">Home</span>
-      </a>
-      <h1><span class="cube"></span> Terms of use</h1>
-    </header>
-    <BackLinkFit />
     <p class="ds-lead">
       Plain terms for a plain website. Everything here is free to use,
       provided as-is.
@@ -72,7 +70,3 @@ const description = 'Terms of use for the s17 Labs website and browser tools.';
     </section>
   </div>
 </BaseLayout>
-
-<script>
-  import '../scripts/back-link';
-</script>

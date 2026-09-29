@@ -5,20 +5,16 @@
    tool page — promote anything used twice here instead.
    ═══════════════════════════════════════════════════ */
 
+/* Chrome tokens (surfaces, border, accent tint, radius, motion, overlay)
+   live in global.css so the top bar and footer work without this file.
+   Only tool-specific tokens are declared here. */
 :root {
-  --surface-2: #1a1a1c;
-  --surface-3: #222226;
-  --border: rgba(255, 255, 255, 0.07);
-  --accent-dim: rgba(255, 65, 54, 0.12);
   --accent-soft: rgba(255, 65, 54, 0.4);
   --accent-focus: rgba(255, 65, 54, 0.5);
   --accent-hover: #e8382e;
   --android: #3ddc84;
   --android-dim: rgba(61, 220, 132, 0.12);
   --tile-bg: rgba(255, 255, 255, 0.05);
-  --overlay-dim: rgba(14, 14, 16, 0.72);
-  --radius: 4px;
-  --t: 0.25s ease;
 }
 
 body {
@@ -115,8 +111,9 @@ a {
   flex: 1;
 }
 
-/* Fixed-width shell for header + footer CTA — matches
-   /tools index (.page 680px + 20px padding). */
+/* Fixed-width shell for the tagline + footer CTA — matches
+   /tools index (.page 680px + 20px padding). The page header and
+   back link now live in the top bar (global.css). */
 .tool-top,
 .tool-bottom {
   width: 100%;
@@ -127,73 +124,22 @@ a {
   flex-direction: column;
 }
 
+.tool-top {
+  padding-top: 0.7rem;
+}
+
 .tool-bottom {
   padding-bottom: 4.5rem;
 }
 
-/* ═══════════════════════════════════════════════════
-   HEADER (back link + centered title)
-   ═══════════════════════════════════════════════════ */
-.tool-header {
-  width: 100%;
-  text-align: center;
-  margin: 2.5rem 0 0.4rem;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 2.8rem;
-}
-
-.back-link {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  /* Box-centered, then nudged up: Aldrich caps sit high in the title's
-     line box next to the smaller Verdana label (optical, like .cube). */
-  transform: translateY(calc(-50% - 0.19em));
-  background: none;
-  border: none;
-  color: var(--secondary-text);
-  cursor: pointer;
-  font-size: 1rem;
-  font-family: Verdana, sans-serif;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0;
-  transition: var(--t);
-  text-decoration: none;
-}
-
-/* Generous tap target that doesn't disturb centering math */
-.back-link::before {
-  content: '';
-  position: absolute;
-  inset: -0.6rem;
-}
-
-.back-link:hover {
-  color: var(--accent);
-}
-
-.tool-header h1 {
-  font-family: Aldrich, sans-serif;
-  font-size: 1.8rem;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-}
-
 /* Red cube logo mark — defined once in global.css (.cube) */
 
-/* Subtitle below header — same 520px centered measure as /tools index */
+/* Subtitle under the top bar — same 520px centered measure as /tools index */
 .tool-desc {
   text-align: center;
   color: var(--secondary-text);
   font-size: 0.95rem;
-  margin: 0.6rem auto 2.5rem;
+  margin: 0 auto 2.5rem;
   line-height: 1.6;
   max-width: 520px;
 }
@@ -1043,28 +989,7 @@ input[type='range']::-webkit-slider-thumb {
 /* ═══════════════════════════════════════════════════
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
-/* Arrow-only back link when the label would collide with the centered
-   title. BackLinkFit.astro sets the verdict synchronously before first
-   paint; src/scripts/back-link.ts re-checks on resize/fonts/load.
-   No transitions here by design — any fade reads as a flash. */
-.back-link .back-label {
-  visibility: hidden;
-  opacity: 0;
-}
-
-.back-link.fitted .back-label {
-  visibility: visible;
-  opacity: 1;
-}
-
-.back-link.compact .back-label {
-  display: none;
-}
-
 @media (max-width: 580px) {
-  .tool-header h1 {
-    font-size: 1.5rem;
-  }
   .btn-row {
     grid-template-columns: 1fr;
   }
