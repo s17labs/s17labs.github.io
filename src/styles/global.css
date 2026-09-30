@@ -37,10 +37,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* NOTE: no `overscroll-behavior` here on purpose. Setting it on <html> to
+   kill Android's overscroll stretch also disables pull-to-refresh, and
+   there is no value that keeps one without the other (per spec, `contain`
+   disables the refresh gesture too). Slide-to-refresh wins. */
+
 body {
   margin: 0;
   padding: 0;
+  /* svh = smallest viewport height, so the page never overshoots the
+      visible area on mobile and can't be pulled past its own end.
+      vh stays as the fallback for older engines. */
   min-height: 100vh;
+  min-height: 100svh;
   background: var(--primary);
   color: var(--primary-text);
   font-family: Verdana, sans-serif;

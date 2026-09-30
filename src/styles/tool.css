@@ -932,9 +932,13 @@ input[type='range']::-webkit-slider-thumb {
   color: inherit;
 }
 
-.tool-item:hover {
-  background: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
-  border-color: rgba(255, 65, 54, 0.2);
+/* hover only where a real pointer exists — on touch a tap leaves the card
+   hovered, so the wash and the 3px arrow nudge would stick after scrolling */
+@media (hover: hover) {
+  .tool-item:hover {
+    background: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
+    border-color: rgba(255, 65, 54, 0.2);
+  }
 }
 
 .tool-item-left {
@@ -1015,10 +1019,16 @@ input[type='range']::-webkit-slider-thumb {
   transition: all var(--t);
 }
 
-.tool-item:hover .tool-item-arrow,
 .tool-item:focus-visible .tool-item-arrow {
   color: var(--accent);
   transform: translateX(3px);
+}
+
+@media (hover: hover) {
+  .tool-item:hover .tool-item-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
 }
 
 /* Lowercase monospace tag pill */
@@ -1045,7 +1055,7 @@ input[type='range']::-webkit-slider-thumb {
    ═══════════════════════════════════════════════════ */
 /* Arrow-only back link when the label would collide with the centered
    title. BackLinkFit.astro sets the verdict synchronously before first
-   paint; src/scripts/back-link.ts re-checks on resize/fonts/load.
+   paint; src/scripts/back-link.ts re-checks on width change/fonts/load.
    No transitions here by design — any fade reads as a flash. */
 .back-link .back-label {
   visibility: hidden;

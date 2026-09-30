@@ -23,7 +23,25 @@ if (document.readyState === 'loading') {
 } else {
   fitBackLink();
 }
-window.addEventListener('resize', fitBackLink);
+// Only the width can change the verdict. Android fires resize continuously
+// while the URL bar collapses (a height-only change), and every refit costs
+// two getBoundingClientRect() calls — a forced synchronous reflow per event.
+// On a tall page that reflow storm is what makes scrolling stutter, so skip
+// height-only resizes and coalesce the rest into one refit per frame.
+let lastWidth = window.innerWidth;
+let pendingFrame = 0;
+
+function refitOnWidthChange(): void {
+  if (window.innerWidth === lastWidth) return;
+  lastWidth = window.innerWidth;
+  if (pendingFrame) return;
+  pendingFrame = requestAnimationFrame(() => {
+    pendingFrame = 0;
+    fitBackLink();
+  });
+}
+
+window.addEventListener('resize', refitOnWidthChange);
 // Late layout (fonts, images) can shift the title — refit when settled.
 window.addEventListener('load', fitBackLink);
 // Aldrich loads async and changes the title width — refit once it arrives.
