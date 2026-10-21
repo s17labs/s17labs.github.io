@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
+import ColorField from '../components/ColorField.astro';
 import { icons, type IconName } from '../icons';
 import { TOOLS } from '../data/tools';
 import { DESIGN_SECTIONS } from '../data/nav';
@@ -416,9 +417,10 @@ const textFonts = [
       <h2>Forms</h2>
       <p>
         Fields stack label → control → hint with a 0.45rem rhythm. Text inputs
-        speak Courier; selects speak Verdana with a CSS chevron. Focus is never
-        color-shift alone — every control also draws the accent
-        <code>:focus-visible</code> ring.
+        speak Courier; selects speak Verdana with a CSS chevron. Color fields
+        use <code>ColorField.astro</code> — a swatch that opens the shared
+        canvas picker next to its hex input. Focus is never color-shift alone
+        — every control also draws the accent <code>:focus-visible</code> ring.
       </p>
       <div class="ds-demo">
         <small>input · number · textarea · select · range</small>
@@ -439,7 +441,7 @@ const textFonts = [
           <select><option>System Sans</option><option>Montserrat</option></select>
         </div>
         <div class="field">
-          <span class="group-label">Range — 70%</span>
+          <span class="group-label">Range — filled trail (70%)</span>
           <input type="range" min="0" max="100" value="70" />
         </div>
         <div class="field">
@@ -449,16 +451,10 @@ const textFonts = [
         </div>
       </div>
       <div class="ds-demo">
-        <small>.color-row · .color-field · .divider</small>
+        <small>ColorField.astro · .color-row · .divider</small>
         <div class="color-row">
-          <div class="color-field">
-            <span class="group-label">Foreground</span>
-            <input type="text" value="#F1F1F1" readonly />
-          </div>
-          <div class="color-field">
-            <span class="group-label">Background</span>
-            <input type="text" value="#0E0E10" readonly />
-          </div>
+          <ColorField id="ds-fg" label="Foreground" value="#f1f1f1" />
+          <ColorField id="ds-bg" label="Background" value="#0e0e10" />
         </div>
         <hr class="divider" />
         <div class="panel-header-row">

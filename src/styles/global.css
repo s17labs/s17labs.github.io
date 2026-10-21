@@ -50,10 +50,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* NOTE: no `overscroll-behavior` here on purpose. Setting it on <html> to
+   kill Android's overscroll stretch also disables pull-to-refresh, and
+   there is no value that keeps one without the other (per spec, `contain`
+   disables the refresh gesture too). Slide-to-refresh wins. */
+
 body {
   margin: 0;
   padding: 0;
+  /* svh = smallest viewport height, so the page never overshoots the
+      visible area on mobile and can't be pulled past its own end.
+      vh stays as the fallback for older engines. */
   min-height: 100vh;
+  min-height: 100svh;
   background: var(--primary);
   color: var(--primary-text);
   font-family: Verdana, sans-serif;
@@ -83,6 +92,13 @@ a {
   color: inherit;
   text-decoration: none;
   transition: 0.2s;
+}
+
+/* Keyboard focus on links. tool.css rings the form controls and buttons;
+   anchors (footer links, back links, tool cards) need their own. */
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .main {
@@ -896,5 +912,26 @@ html.topbar-open {
   .github-link {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   REDUCED MOTION
+   Decorative motion is off for people who ask for it. The busy
+   spinner stays — it is a status signal, not decoration.
+   ═══════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  .spin {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
   }
 }

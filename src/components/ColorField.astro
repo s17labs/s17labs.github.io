@@ -1,0 +1,60 @@
+---
+// Shared color field: swatch button + hex input + picker popup.
+// The picker engine lives in src/scripts/tools/color-picker.ts and wires
+// every [data-cp-field] on the page. Color changes bubble as a
+// `colorchange` CustomEvent whose detail is the new `#rrggbb`.
+interface Props {
+  id: string;
+  /** Omit for a field that borrows an outer label. */
+  label?: string;
+  value: string;
+}
+
+const { id, label, value } = Astro.props;
+// "Icon Color" → "Pick icon color"; "Background" → "Pick background color".
+const pickLabel = label
+  ? /color$/i.test(label)
+    ? `Pick ${label.toLowerCase()}`
+    : `Pick ${label.toLowerCase()} color`
+  : 'Pick color';
+---
+
+<div class="color-field" id={id} data-cp-field>
+  {label && <label for={`${id}-hex`}>{label}</label>}
+  <div class="cp-row" data-cp-row>
+    <button type="button" class="cp-swatch" data-cp-swatch aria-label={pickLabel}>
+      <div class="cp-swatch-fill" data-cp-fill style={`background:${value}`}></div>
+    </button>
+    <input
+      class="cp-hex-input"
+      id={`${id}-hex`}
+      data-cp-hex
+      type="text"
+      value={value}
+      maxlength="7"
+      spellcheck="false"
+      autocomplete="off"
+    />
+  </div>
+  <slot />
+
+  <div class="cp-popup" data-cp-popup>
+    <div class="cp-canvas-wrap" data-cp-canvas-wrap>
+      <canvas class="cp-canvas" data-cp-canvas width="200" height="148"></canvas>
+      <div class="cp-cursor" data-cp-cursor></div>
+    </div>
+    <div class="cp-hue-track">
+      <input type="range" class="cp-hue" data-cp-hue min="0" max="360" step="1" value="0" />
+    </div>
+    <div class="cp-bottom">
+      <div class="cp-preview"><div class="cp-preview-fill" data-cp-preview></div></div>
+      <input class="cp-hex-popup" data-cp-hex-popup type="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label={label ? `${label} hex value` : 'Hex value'} />
+    </div>
+  </div>
+</div>
+
+<script>
+  import { initColorPickers } from '../scripts/tools/color-picker';
+
+  initColorPickers();
+</script>

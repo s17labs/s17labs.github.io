@@ -1,7 +1,8 @@
 import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { iconSvg } from '../../icons';
-import { downloadBlob, downloadUrl, normalizeHex, svgTextToPngBlob } from './lib';
+import { downloadBlob, downloadUrl, svgTextToPngBlob } from './lib';
+import { paintRangeFill } from '../range-fill';
 
 // Font Awesome packs are ~2MB — load them on first lookup instead of in the
 // initial bundle. The memoized promise also serializes concurrent lookups.
@@ -164,7 +165,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   // Icon color applies to vector sources (FA, Bootstrap) and text.
   // Emoji carry their own colors.
   const isEmoji = src === 'noto' || src === 'twemoji';
-  document.getElementById('icon-color-field')!.classList.toggle('cp-disabled', isEmoji);
+  document.getElementById('cp-icon')!.classList.toggle('cp-disabled', isEmoji);
   document.getElementById('cp-fa-only-note')!.classList.toggle('visible', isEmoji);
 
   // Material You checkbox + VectorDrawable XMLs need real vector paths
@@ -546,12 +547,6 @@ function bgGradientVector(): { x1: number; y1: number; x2: number; y2: number } 
   const dy = -Math.cos(rad) / 2;
   const c = (n: number): number => Math.round((0.5 + n) * 10000) / 10000;
   return { x1: c(-dx), y1: c(-dy), x2: c(dx), y2: c(dy) };
-}
-
-// Each background stop well shows its own solid stop color.
-function syncBgSwatches(): void {
-  (document.getElementById('cp-fill-bg') as HTMLElement).style.background = S.bgColor;
-  (document.getElementById('cp-fill-bg2') as HTMLElement).style.background = S.bgColor2;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -981,7 +976,6 @@ function setBgType(t: string): void {
     b.setAttribute('aria-pressed', String(on));
   });
   document.getElementById('bg-gradient-panel')!.classList.toggle('visible', t === 'gradient');
-  syncBgSwatches();
   render();
 }
 
@@ -995,13 +989,13 @@ function setBgAngle(a: number): void {
   // Normalize to 0–359 so 360° and 0° compare equal for preset highlighting.
   S.bgAngle = ((Math.round(a) % 360) + 360) % 360;
   elBgAngle.value = String(S.bgAngle);
+  paintRangeFill(elBgAngle);
   document.getElementById('angle-label')!.textContent = S.bgAngle + '°';
   document.querySelectorAll<HTMLElement>('.angle-btn').forEach((b) => {
     const on = Number(b.dataset.angle) === S.bgAngle;
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', String(on));
   });
-  syncBgSwatches();
   render();
 }
 
@@ -1111,267 +1105,25 @@ for (const b of document.querySelectorAll<HTMLElement>('.export-btn')) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Custom color picker
+// Colors — the shared ColorField picker (src/scripts/tools/color-picker.ts)
+// owns the swatch, the hex input and the popup. It reports every change as
+// a `colorchange` event on the field root.
 // ─────────────────────────────────────────────────────────────────────────────
-const CP = { target: null as 'icon' | 'bg' | 'bg2' | null, h: 0, s: 1, v: 1 };
-
-type Rgb = { r: number; g: number; b: number };
-
-function hsvToRgb(h: number, s: number, v: number): Rgb {
-  h = ((h % 360) + 360) % 360;
-  const i = Math.floor(h / 60),
-    f = h / 60 - i;
-  const p = v * (1 - s),
-    q = v * (1 - f * s),
-    t = v * (1 - (1 - f) * s);
-  const [r, g, b] = [
-    [v, t, p],
-    [q, v, p],
-    [p, v, t],
-    [p, q, v],
-    [t, p, v],
-    [v, p, q],
-  ][i];
-  return { r: r * 255, g: g * 255, b: b * 255 };
-}
-
-function rgbToHsv(rIn: number, gIn: number, bIn: number): { h: number; s: number; v: number } {
-  const r = rIn / 255,
-    g = gIn / 255,
-    b = bIn / 255;
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b),
-    d = max - min;
-  let h = 0;
-  const s = max === 0 ? 0 : d / max,
-    v = max;
-  if (d) {
-    if (max === r) h = ((g - b) / d + 6) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-  }
-  return { h, s, v };
-}
-
-function hexToRgb(hex: string): Rgb | null {
-  const n = hex.replace('#', '');
-  if (!/^[0-9a-fA-F]{6}$/.test(n)) return null;
-  const v = parseInt(n, 16);
-  return { r: (v >> 16) & 255, g: (v >> 8) & 255, b: v & 255 };
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-  return '#' +
-    [r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
-}
-
-function cpHex(): string {
-  const { r, g, b } = hsvToRgb(CP.h, CP.s, CP.v);
-  return rgbToHex(r, g, b);
-}
-
-function cpDraw(): void {
-  const canvas = document.getElementById('cp-canvas') as HTMLCanvasElement;
-  const ctx = canvas.getContext('2d')!;
-  const W = canvas.width,
-    H = canvas.height;
-  const { r, g, b } = hsvToRgb(CP.h, 1, 1);
-  const hueHex = rgbToHex(r, g, b);
-  const gH = ctx.createLinearGradient(0, 0, W, 0);
-  gH.addColorStop(0, '#fff');
-  gH.addColorStop(1, hueHex);
-  ctx.fillStyle = gH;
-  ctx.fillRect(0, 0, W, H);
-  const gV = ctx.createLinearGradient(0, 0, 0, H);
-  gV.addColorStop(0, 'transparent');
-  gV.addColorStop(1, '#000');
-  ctx.fillStyle = gV;
-  ctx.fillRect(0, 0, W, H);
-}
-
-function cpMoveCursor(): void {
-  const wrap = document.getElementById('cp-canvas-wrap')!;
-  const cur = document.getElementById('cp-cursor')!;
-  cur.style.left = CP.s * wrap.offsetWidth + 'px';
-  cur.style.top = (1 - CP.v) * wrap.offsetHeight + 'px';
-}
-
-function cpSync(): void {
-  const hex = cpHex();
-  // The popup preview shows the single color being edited; each background
-  // stop well keeps its own solid stop color via syncBgSwatches.
-  (document.getElementById('cp-preview-fill') as HTMLElement).style.background = hex;
-  (document.getElementById('cp-hex-popup') as HTMLInputElement).value = hex;
-  (document.getElementById('cp-hue') as HTMLInputElement).value = String(CP.h);
-  cpMoveCursor();
-  if (CP.target) {
-    (document.getElementById(`cp-fill-${CP.target}`) as HTMLElement).style.background = hex;
-    (document.getElementById(`cp-hex-${CP.target}`) as HTMLInputElement).value = hex;
-  }
-}
-
-function cpCommit(): void {
-  const hex = cpHex();
-  if (CP.target === 'icon') S.iconColor = hex;
-  if (CP.target === 'bg') S.bgColor = hex;
-  if (CP.target === 'bg2') S.bgColor2 = hex;
-  cpSync();
-  render();
-}
-
-function cpFromHex(hex: string, updateHue: boolean): boolean {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return false;
-  const hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
-  if (updateHue) CP.h = hsv.h;
-  CP.s = hsv.s;
-  CP.v = hsv.v;
-  return true;
-}
-
-function cpPosition(anchor: HTMLElement): void {
-  const popup = document.getElementById('cp-popup')!;
-  const r = anchor.getBoundingClientRect();
-  const pw = 220,
-    ph = 230;
-  const vw = window.innerWidth,
-    vh = window.innerHeight;
-  let top = r.bottom + 6,
-    left = r.left;
-  if (top + ph > vh - 8) top = r.top - ph - 6;
-  if (left + pw > vw - 8) left = vw - pw - 8;
-  if (left < 8) left = 8;
-  if (top < 8) top = 8;
-  popup.style.top = top + 'px';
-  popup.style.left = left + 'px';
-}
-
-function cpOpen(target: 'icon' | 'bg' | 'bg2'): void {
-  CP.target = target;
-  cpFromHex(target === 'icon' ? S.iconColor : target === 'bg' ? S.bgColor : S.bgColor2, true);
-  // Show first: cpSync measures the canvas box to place the cursor dot,
-  // which reads 0×0 while the popup is display:none.
-  document.getElementById('cp-popup')!.classList.add('visible');
-  document.getElementById(`cp-row-${target}`)!.classList.add('open');
-  cpDraw();
-  cpSync();
-  cpPosition(document.getElementById(`cp-row-${target}`)!);
-}
-
-function cpClose(): void {
-  document.getElementById('cp-popup')!.classList.remove('visible');
-  document.querySelectorAll<HTMLElement>('.cp-row').forEach((r) => r.classList.remove('open'));
-  CP.target = null;
-}
-
-document.querySelectorAll<HTMLElement>('.cp-swatch').forEach((btn) => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const t = btn.dataset.target as 'icon' | 'bg' | 'bg2';
-    // Don't open icon color picker when in emoji mode (emoji use own colors)
-    if (t === 'icon' && (S.source === 'noto' || S.source === 'twemoji')) return;
-    CP.target === t ? cpClose() : cpOpen(t);
+function watchColorField(id: string, apply: (hex: string) => void): void {
+  document.getElementById(id)?.addEventListener('colorchange', (event) => {
+    apply((event as CustomEvent<string>).detail);
+    render();
   });
-});
-
-const canvasWrap = document.getElementById('cp-canvas-wrap')!;
-
-function cpCanvasPick(e: MouseEvent | TouchEvent): void {
-  const r = canvasWrap.getBoundingClientRect();
-  const clientX = e instanceof MouseEvent ? e.clientX : e.touches[0]?.clientX;
-  const clientY = e instanceof MouseEvent ? e.clientY : e.touches[0]?.clientY;
-  const x = (clientX ?? 0) - r.left;
-  const y = (clientY ?? 0) - r.top;
-  CP.s = Math.max(0, Math.min(1, x / r.width));
-  CP.v = Math.max(0, Math.min(1, 1 - y / r.height));
-  cpCommit();
 }
 
-canvasWrap.addEventListener('mousedown', (e) => {
-  e.preventDefault();
-  cpCanvasPick(e);
-  const move = (ev: MouseEvent) => cpCanvasPick(ev);
-  const up = () => {
-    window.removeEventListener('mousemove', move);
-    window.removeEventListener('mouseup', up);
-  };
-  window.addEventListener('mousemove', move);
-  window.addEventListener('mouseup', up);
+watchColorField('cp-icon', (hex) => {
+  S.iconColor = hex;
 });
-
-canvasWrap.addEventListener(
-  'touchstart',
-  (e) => {
-    e.preventDefault();
-    cpCanvasPick(e);
-    const move = (ev: TouchEvent) => {
-      ev.preventDefault();
-      cpCanvasPick(ev);
-    };
-    const end = () => {
-      window.removeEventListener('touchmove', move);
-      window.removeEventListener('touchend', end);
-    };
-    window.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('touchend', end);
-  },
-  { passive: false }
-);
-
-const elCpHue = document.getElementById('cp-hue') as HTMLInputElement;
-
-elCpHue.addEventListener('input', () => {
-  CP.h = Number(elCpHue.value);
-  cpDraw();
-  cpCommit();
+watchColorField('cp-bg', (hex) => {
+  S.bgColor = hex;
 });
-
-const elCpHexPopup = document.getElementById('cp-hex-popup') as HTMLInputElement;
-
-elCpHexPopup.addEventListener('input', () => {
-  const hex = normalizeHex(elCpHexPopup.value);
-  if (hex) {
-    cpFromHex(hex, true);
-    cpDraw();
-    cpCommit();
-  }
-});
-
-(['icon', 'bg', 'bg2'] as const).forEach((target) => {
-  const hexEl = document.getElementById(`cp-hex-${target}`) as HTMLInputElement;
-
-  hexEl.addEventListener('input', function () {
-    const hex = normalizeHex(this.value);
-    if (hex) {
-      if (target === 'icon') S.iconColor = hex;
-      if (target === 'bg') S.bgColor = hex;
-      if (target === 'bg2') S.bgColor2 = hex;
-      if (target === 'bg' || target === 'bg2') syncBgSwatches();
-      else (document.getElementById(`cp-fill-${target}`) as HTMLElement).style.background = hex;
-      if (CP.target === target) {
-        cpFromHex(hex, true);
-        cpDraw();
-        cpSync();
-      }
-      render();
-    }
-  });
-  // NOTE: intentionally no focus/click-to-open here — the picker opens
-  // only from the color swatch (.cp-swatch) so typing a hex stays undisturbed.
-});
-
-document.addEventListener('click', (e) => {
-  if (!CP.target) return;
-  const popup = document.getElementById('cp-popup')!;
-  const inside =
-    popup.contains(e.target as Node) ||
-    (['icon', 'bg', 'bg2'] as const).some((t) => document.getElementById(`cp-row-${t}`)!.contains(e.target as Node));
-  if (!inside) cpClose();
-});
-
-window.addEventListener('resize', () => {
-  if (CP.target) cpPosition(document.getElementById(`cp-row-${CP.target}`)!);
+watchColorField('cp-bg2', (hex) => {
+  S.bgColor2 = hex;
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

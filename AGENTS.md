@@ -28,7 +28,7 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 ```
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages (renders the top bar)
-  components/                 # BaseHead.astro, Icon.astro, TopBar.astro, SearchDialog.astro, SearchFab.astro, Footer.astro, ToolLayout.astro
+  components/                 # BaseHead.astro, Icon.astro, TopBar.astro, SearchDialog.astro, SearchFab.astro, Footer.astro, ToolLayout.astro, ColorField.astro
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro, terms.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
@@ -38,6 +38,7 @@ src/
   scripts/topbar.ts           # top bar: menu disclosure, client-side search, scroll-aware bar (all pages)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize)
+  scripts/tools/color-picker.ts # shared swatch + canvas color picker engine
   scripts/tools/zip-export.ts # shared single-or-ZIP download-all flow
   styles/global.css           # top bar + homepage + footer styles (Tailwind v4), owns the shared chrome tokens
   styles/tool.css             # shared design system for the standard tools
@@ -55,6 +56,7 @@ Key patterns:
 - The bar's header size is hand-tuned, not measured: Aldrich's baseline lands level with the icons' base and a 1px `translateY` is the optical correction (see the comment in `global.css`). Don't "fix" it by centering the line box — that pushes the title visibly low. The cube keeps global.css's 0.82em so the bar's lockup matches the home hero's proportion. The bar's width and the page column's width are **independent** measures: the bar is 900px on every page that has one, while content is 680px on the tools/projects listings and the tool pages (900px on design/privacy/terms and Icon Maker). So the bar is deliberately wider than the content on most pages — don't "fix" that. `.topbar-inner` still uses the same 20px side padding as the page columns, so where the two measures match they line up exactly.
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
 - When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
+- Color inputs use `src/components/ColorField.astro` — it renders the swatch + hex input and wires the shared picker (`src/scripts/tools/color-picker.ts`). Listen for the `colorchange` event on the field root; never hand-roll a second picker.
 - Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
 - User-facing strings for tools live in their page/component code.
 
