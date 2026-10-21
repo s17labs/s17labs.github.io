@@ -33,11 +33,11 @@ export function downloadBlob(blob: Blob, name: string): void {
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
-/** Validate a hex color and normalize it to uppercase `#RRGGBB`, or null. */
+/** Validate a hex color and normalize it to lowercase `#rrggbb`, or null. */
 export function normalizeHex(value: string): string | null {
   const v = value.trim();
   const withHash = v.startsWith('#') ? v : `#${v}`;
-  return HEX_RE.test(withHash) ? withHash.toUpperCase() : null;
+  return HEX_RE.test(withHash) ? withHash.toLowerCase() : null;
 }
 
 /** Clipboard write with a textarea+execCommand fallback. Resolves true on success. */

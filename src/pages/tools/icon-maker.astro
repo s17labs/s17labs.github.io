@@ -1,6 +1,7 @@
 ---
 import ToolLayout from '../../components/ToolLayout.astro';
 import Icon from '../../components/Icon.astro';
+import ColorField from '../../components/ColorField.astro';
 import '../../styles/tools/icon-maker.css';
 import '../../styles/tools/icon-maker-fonts.css';
 
@@ -127,35 +128,18 @@ const tagline =
       <div class="panel">
         <h2 class="panel-title">Colors</h2>
         <div class="color-row">
-          <div class="color-field" id="icon-color-field">
-            <label for="cp-hex-icon">Icon Color</label>
-            <div class="cp-row" id="cp-row-icon">
-              <button type="button" class="cp-swatch" id="cp-swatch-icon" data-target="icon" aria-label="Pick icon color">
-                <div class="cp-swatch-fill" id="cp-fill-icon" style="background:#ffffff"></div>
-              </button>
-              <input class="cp-hex-input" id="cp-hex-icon" type="text" value="#ffffff" maxlength="7" spellcheck="false" autocomplete="off" />
-            </div>
+          <ColorField id="cp-icon" label="Icon Color" value="#ffffff">
             <span class="cp-fa-only" id="cp-fa-only-note">Emoji use their own colors</span>
-          </div>
+          </ColorField>
           <div class="color-field">
-            <label for="cp-hex-bg">Background</label>
+            <label for="cp-bg-hex">Background</label>
             <div class="bgtype-row">
               <button type="button" class="choice-btn bgtype-btn active" data-bgtype="solid" aria-pressed="true">Solid</button>
               <button type="button" class="choice-btn bgtype-btn" data-bgtype="gradient" aria-pressed="false">Gradient</button>
             </div>
-            <div class="cp-row" id="cp-row-bg">
-              <button type="button" class="cp-swatch" id="cp-swatch-bg" data-target="bg" aria-label="Pick background color">
-                <div class="cp-swatch-fill" id="cp-fill-bg" style="background:#ff4136"></div>
-              </button>
-              <input class="cp-hex-input" id="cp-hex-bg" type="text" value="#ff4136" maxlength="7" spellcheck="false" autocomplete="off" />
-            </div>
+            <ColorField id="cp-bg" value="#ff4136" />
             <div class="bg-gradient-panel" id="bg-gradient-panel">
-              <div class="cp-row" id="cp-row-bg2">
-                <button type="button" class="cp-swatch" id="cp-swatch-bg2" data-target="bg2" aria-label="Pick gradient end color">
-                  <div class="cp-swatch-fill" id="cp-fill-bg2" style="background:#ffffff"></div>
-                </button>
-                <input class="cp-hex-input" id="cp-hex-bg2" type="text" value="#ffffff" maxlength="7" spellcheck="false" autocomplete="off" />
-              </div>
+              <ColorField id="cp-bg2" value="#ffffff" />
               <div class="angle-row" role="group" aria-label="Gradient direction">
                 <button type="button" class="angle-btn" data-angle="0" aria-pressed="false" title="Up (0°)">↑</button>
                 <button type="button" class="angle-btn" data-angle="45" aria-pressed="false" title="Up-right (45°)">↗</button>
@@ -173,21 +157,6 @@ const tagline =
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Shared picker popup -->
-      <div class="cp-popup" id="cp-popup">
-        <div class="cp-canvas-wrap" id="cp-canvas-wrap">
-          <canvas class="cp-canvas" id="cp-canvas" width="200" height="148"></canvas>
-          <div class="cp-cursor" id="cp-cursor"></div>
-        </div>
-        <div class="cp-hue-track">
-          <input type="range" class="cp-hue" id="cp-hue" min="0" max="360" step="1" value="0" />
-        </div>
-        <div class="cp-bottom">
-          <div class="cp-preview"><div class="cp-preview-fill" id="cp-preview-fill"></div></div>
-          <input class="cp-hex-popup" id="cp-hex-popup" type="text" maxlength="7" spellcheck="false" autocomplete="off" />
         </div>
       </div>
 

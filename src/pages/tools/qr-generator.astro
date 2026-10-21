@@ -1,6 +1,7 @@
 ---
 import ToolLayout from '../../components/ToolLayout.astro';
 import Icon from '../../components/Icon.astro';
+import ColorField from '../../components/ColorField.astro';
 
 const title = 'QR Generator | s17 Labs Tools';
 const description =
@@ -48,20 +49,8 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
     <hr class="divider" />
 
     <div class="color-row">
-      <div class="color-field">
-        <label for="qr-fg-picker">Foreground</label>
-        <div class="color-input-wrap">
-          <input type="color" id="qr-fg-picker" value="#f1f1f1" />
-          <input type="text" id="qr-fg-hex" class="color-hex" value="F1F1F1" maxlength="6" />
-        </div>
-      </div>
-      <div class="color-field">
-        <label for="qr-bg-picker">Background</label>
-        <div class="color-input-wrap">
-          <input type="color" id="qr-bg-picker" value="#0e0e10" />
-          <input type="text" id="qr-bg-hex" class="color-hex" value="0E0E10" maxlength="6" />
-        </div>
-      </div>
+      <ColorField id="qr-fg" label="Foreground" value="#f1f1f1" />
+      <ColorField id="qr-bg" label="Background" value="#0e0e10" />
     </div>
   </div>
 
@@ -112,56 +101,6 @@ const tagline = 'Generate QR codes from any text or URL. Customize size and colo
 
   textarea {
     min-height: 80px;
-  }
-
-  /* Color picker row */
-  .color-input-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.5rem 0.7rem;
-    transition: border-color var(--t);
-  }
-
-  .color-input-wrap:focus-within {
-    border-color: rgba(255, 65, 54, 0.5);
-  }
-
-  input[type='color'] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    border: none;
-    border-radius: 3px;
-    padding: 0;
-    cursor: pointer;
-    background: none;
-    flex-shrink: 0;
-  }
-
-  input[type='color']::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-
-  input[type='color']::-webkit-color-swatch {
-    border: none;
-    border-radius: 3px;
-  }
-
-  .color-hex {
-    background: none;
-    border: none;
-    color: var(--primary-text);
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
-    width: 100%;
-    outline: none;
-    text-transform: uppercase;
-    padding: 0;
   }
 
   /* Preview */

@@ -40,14 +40,16 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 ```
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages (head, footer)
-  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro
+  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro, BackLinkFit.astro, ColorField.astro
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
   data/site.ts                # site metadata (urls, socials, projects)
   scripts/back-link.ts        # shared header back-link fit logic (all headers)
+  scripts/range-fill.ts       # shared slider fill-trail painting
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize, …)
+  scripts/tools/color-picker.ts # shared swatch + canvas color picker engine
   scripts/tools/zip-export.ts # shared single-or-ZIP "Download All" flow
   styles/global.css           # homepage + footer styles (Tailwind v4)
   styles/tool.css             # shared design system for the standard tools
