@@ -278,12 +278,7 @@ input.text-input {
   padding: 0.6rem 0.8rem;
 }
 
-/* Icon color disabled for emoji */
-.color-field.cp-disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
+/* Icon color disabled for emoji — .color-field.cp-disabled is shared (tool.css) */
 .cp-fa-only {
   font-size: 0.65rem;
   color: var(--secondary-text);

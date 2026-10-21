@@ -348,11 +348,16 @@ select:focus {
   gap: 0.45rem;
 }
 
+/* A muted color field — the picker refuses to open for it */
+.color-field.cp-disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 /* ═══════════════════════════════════════════════════
    COLOR PICKER (ColorField.astro — shared by every tool)
    Swatch button + hex input, with a canvas/hue popup.
    ═══════════════════════════════════════════════════ */
-/* Custom color picker (.color-row/.color-field come from shared tool.css) */
 .cp-row {
   display: flex;
   align-items: stretch;
@@ -1177,12 +1182,18 @@ input[type='range']::-moz-range-thumb {
   align-items: center;
   padding: 1.25rem 1.4rem;
   background-color: rgba(255, 255, 255, 0.02);
+  /* Same gradient shape in both states (only the alpha changes), so the
+     wash fades in instead of popping */
+  background-image: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0) 100%);
   /* Keep the wash inside the border so it can't bleed through the
      translucent edge or past the rounded corners */
   background-clip: padding-box;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: all var(--t);
+  transition:
+    background-image var(--t),
+    background-color var(--t),
+    border-color var(--t);
   cursor: pointer;
   text-decoration: none;
   color: inherit;
@@ -1212,7 +1223,10 @@ input[type='range']::-moz-range-thumb {
   color: var(--accent);
   font-size: 0.95rem;
   flex-shrink: 0;
-  transition: all var(--t);
+  transition:
+    color var(--t),
+    background-color var(--t),
+    border-color var(--t);
   overflow: hidden;
 }
 
@@ -1268,7 +1282,9 @@ input[type='range']::-moz-range-thumb {
   font-size: 1rem;
   color: var(--secondary-text);
   flex-shrink: 0;
-  transition: all var(--t);
+  transition:
+    color var(--t),
+    transform var(--t);
 }
 
 .tool-item:hover .tool-item-arrow,
