@@ -1145,13 +1145,9 @@ input[type='range']::-moz-range-thumb {
   color: inherit;
 }
 
-/* hover only where a real pointer exists — on touch a tap leaves the card
-   hovered, so the wash and the 3px arrow nudge would stick after scrolling */
-@media (hover: hover) {
-  .tool-item:hover {
-    background-image: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
-    border-color: rgba(255, 65, 54, 0.2);
-  }
+.tool-item:hover {
+  background-image: linear-gradient(90deg, rgba(255, 65, 54, 0) 0%, rgba(255, 65, 54, 0.18) 100%);
+  border-color: rgba(255, 65, 54, 0.2);
 }
 
 .tool-item-left {
@@ -1237,16 +1233,10 @@ input[type='range']::-moz-range-thumb {
     transform var(--t);
 }
 
+.tool-item:hover .tool-item-arrow,
 .tool-item:focus-visible .tool-item-arrow {
   color: var(--accent);
   transform: translateX(3px);
-}
-
-@media (hover: hover) {
-  .tool-item:hover .tool-item-arrow {
-    color: var(--accent);
-    transform: translateX(3px);
-  }
 }
 
 /* Lowercase monospace tag pill */
