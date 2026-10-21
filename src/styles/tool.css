@@ -348,6 +348,220 @@ select:focus {
   gap: 0.45rem;
 }
 
+/* ═══════════════════════════════════════════════════
+   COLOR PICKER (ColorField.astro — shared by every tool)
+   Swatch button + hex input, with a canvas/hue popup.
+   ═══════════════════════════════════════════════════ */
+/* Custom color picker (.color-row/.color-field come from shared tool.css) */
+.cp-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--t);
+}
+
+.cp-row:focus-within,
+.cp-row.open {
+  border-color: var(--accent-focus);
+}
+
+.cp-swatch {
+  width: 40px;
+  flex-shrink: 0;
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: filter var(--t);
+}
+
+.cp-swatch:hover {
+  filter: brightness(1.18);
+}
+
+/* Transparency checkerboard shared by the swatch + preview wells */
+.cp-swatch::before,
+.cp-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(45deg, #555 25%, transparent 25%),
+    linear-gradient(-45deg, #555 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #555 75%),
+    linear-gradient(-45deg, transparent 75%, #555 75%);
+  background-color: #2a2a2a;
+}
+
+.cp-swatch::before {
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+}
+
+.cp-swatch-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.cp-hex-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  padding: 0 0.65rem;
+  caret-color: var(--accent);
+  height: 36px;
+}
+
+/* Picker popup */
+.cp-popup {
+  position: fixed;
+  z-index: 9000;
+  background: #1c1c1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75);
+  width: 220px;
+  display: none;
+  user-select: none;
+  touch-action: none;
+}
+
+.cp-popup.visible {
+  display: block;
+}
+
+.cp-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 148px;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.cp-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cp-cursor {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.cp-hue-track {
+  margin-top: 9px;
+  height: 11px;
+  border-radius: 99px;
+  position: relative;
+  background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+.cp-hue-track input.cp-hue {
+  position: absolute;
+  inset: -3px 0;
+  width: 100%;
+  height: calc(100% + 6px);
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  border: none;
+  outline: none;
+}
+
+.cp-hue-track input.cp-hue::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.cp-hue-track input.cp-hue::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  border: none;
+}
+
+.cp-bottom {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.cp-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.cp-preview::before {
+  background-size: 7px 7px;
+  background-position:
+    0 0,
+    0 3.5px,
+    3.5px -3.5px,
+    -3.5px 0;
+}
+
+.cp-preview-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.cp-hex-popup {
+  flex: 1;
+  min-width: 0;
+  background: #252527;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--primary-text);
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+  transition: border-color var(--t);
+  caret-color: var(--accent);
+}
+
+.cp-hex-popup:focus {
+  border-color: var(--accent-focus);
+}
+
 /* Divider */
 .divider {
   border: none;

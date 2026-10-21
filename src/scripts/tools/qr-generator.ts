@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { debounce, downloadUrl, normalizeHex } from './lib';
+import { debounce, downloadUrl } from './lib';
 
 interface QrState {
   text: string;
@@ -31,10 +31,6 @@ const elInput = document.getElementById('qr-input') as HTMLTextAreaElement;
 const elSize = document.getElementById('qr-size') as HTMLInputElement;
 const elSizeVal = document.getElementById('size-val')!;
 const elEC = document.getElementById('qr-ec') as HTMLSelectElement;
-const elFgPicker = document.getElementById('qr-fg-picker') as HTMLInputElement;
-const elFgHex = document.getElementById('qr-fg-hex') as HTMLInputElement;
-const elBgPicker = document.getElementById('qr-bg-picker') as HTMLInputElement;
-const elBgHex = document.getElementById('qr-bg-hex') as HTMLInputElement;
 const elContainer = document.getElementById('qr-container')!;
 const elPlaceholder = document.getElementById('qr-placeholder')!;
 const elCharCount = document.getElementById('char-count')!;
@@ -161,37 +157,11 @@ async function exportSVG(): Promise<void> {
   }
 }
 
-function syncColor(picker: HTMLInputElement, hexInput: HTMLInputElement, key: 'fg' | 'bg'): void {
-  picker.addEventListener('input', () => {
-    hexInput.value = picker.value.replace('#', '').toUpperCase();
-    S[key] = picker.value;
+/** ColorField.astro handles picker ↔ hex sync and emits the normalized color. */
+function watchColorField(id: string, key: 'fg' | 'bg'): void {
+  document.getElementById(id)?.addEventListener('colorchange', (event) => {
+    S[key] = (event as CustomEvent<string>).detail;
     scheduleUpdate();
-  });
-
-  hexInput.addEventListener('input', () => {
-    const hex = normalizeHex(hexInput.value);
-    if (hex) {
-      hexInput.removeAttribute('aria-invalid');
-      hexInput.value = hex.replace('#', '');
-      S[key] = hex;
-      // <input type=color> expects lowercase #rrggbb.
-      picker.value = hex.toLowerCase();
-      scheduleUpdate();
-    } else {
-      hexInput.setAttribute('aria-invalid', 'true');
-    }
-  });
-
-  hexInput.addEventListener('blur', () => {
-    const hex = normalizeHex(hexInput.value);
-    hexInput.removeAttribute('aria-invalid');
-    if (hex) {
-      hexInput.value = hex.replace('#', '');
-      S[key] = hex;
-      picker.value = hex.toLowerCase();
-    } else {
-      hexInput.value = S[key].replace('#', '').toUpperCase();
-    }
   });
 }
 
@@ -216,8 +186,8 @@ elEC.addEventListener('change', () => {
   scheduleUpdate();
 });
 
-syncColor(elFgPicker, elFgHex, 'fg');
-syncColor(elBgPicker, elBgHex, 'bg');
+watchColorField('qr-fg', 'fg');
+watchColorField('qr-bg', 'bg');
 
 const byteLen = new TextEncoder();
 

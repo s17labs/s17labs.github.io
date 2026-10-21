@@ -28,7 +28,7 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 ```
 src/
   layouts/BaseLayout.astro    # base HTML shell for all pages
-  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro, BackLinkFit.astro
+  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro, BackLinkFit.astro, ColorField.astro
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro, terms.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
@@ -37,6 +37,7 @@ src/
   scripts/back-link.ts        # shared header back-link fit logic (all headers)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize)
+  scripts/tools/color-picker.ts # shared swatch + canvas color picker engine
   scripts/tools/zip-export.ts # shared single-or-ZIP download-all flow
   styles/global.css           # homepage styles (Tailwind v4)
   styles/tool.css             # shared design system for the standard tools
@@ -52,6 +53,7 @@ Key patterns:
 - Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
 - When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
+- Color inputs use `src/components/ColorField.astro` — it renders the swatch + hex input and wires the shared picker (`src/scripts/tools/color-picker.ts`). Listen for the `colorchange` event on the field root; never hand-roll a second picker.
 - Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
 - User-facing strings for tools live in their page/component code.
 
