@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { iconSvg } from '../../icons';
 import { downloadBlob, downloadUrl, normalizeHex, svgTextToPngBlob } from './lib';
+import { paintRangeFill } from '../range-fill';
 
 // Font Awesome packs are ~2MB — load them on first lookup instead of in the
 // initial bundle. The memoized promise also serializes concurrent lookups.
@@ -995,6 +996,7 @@ function setBgAngle(a: number): void {
   // Normalize to 0–359 so 360° and 0° compare equal for preset highlighting.
   S.bgAngle = ((Math.round(a) % 360) + 360) % 360;
   elBgAngle.value = String(S.bgAngle);
+  paintRangeFill(elBgAngle);
   document.getElementById('angle-label')!.textContent = S.bgAngle + '°';
   document.querySelectorAll<HTMLElement>('.angle-btn').forEach((b) => {
     const on = Number(b.dataset.angle) === S.bgAngle;
@@ -1203,7 +1205,9 @@ function cpSync(): void {
   // stop well keeps its own solid stop color via syncBgSwatches.
   (document.getElementById('cp-preview-fill') as HTMLElement).style.background = hex;
   (document.getElementById('cp-hex-popup') as HTMLInputElement).value = hex;
-  (document.getElementById('cp-hue') as HTMLInputElement).value = String(CP.h);
+  const hue = document.getElementById('cp-hue') as HTMLInputElement;
+  hue.value = String(CP.h);
+  paintRangeFill(hue);
   cpMoveCursor();
   if (CP.target) {
     (document.getElementById(`cp-fill-${CP.target}`) as HTMLElement).style.background = hex;

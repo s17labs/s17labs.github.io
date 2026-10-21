@@ -355,22 +355,61 @@ select:focus {
   margin: 0.9rem 0;
 }
 
-/* Range slider */
+/* Range slider — filled trail up to the thumb (WebKit gets the percentage
+   from range-fill.ts; Firefox paints ::-moz-range-progress natively) */
 input[type='range'] {
+  --range-progress: 0%;
   width: 100%;
-  -webkit-appearance: none;
   height: 4px;
-  background: var(--surface-3);
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0%,
+    var(--accent) var(--range-progress),
+    var(--surface-3) var(--range-progress),
+    var(--surface-3) 100%
+  );
   border-radius: 99px;
   outline: none;
+  cursor: pointer;
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: var(--accent);
+  background: #fff;
+  border: none;
   border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: box-shadow var(--t);
+}
+
+input[type='range']:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.14);
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: 99px;
+}
+
+input[type='range']::-moz-range-progress {
+  height: 4px;
+  background: var(--accent);
+  border-radius: 99px;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
   cursor: pointer;
 }
 
