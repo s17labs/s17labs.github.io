@@ -1,0 +1,91 @@
+---
+import Icon from './Icon.astro';
+import { SITE_NAV, SITE_LINKS } from '../data/nav';
+
+interface Props {
+  /** Page header shown in the middle of the bar. */
+  title: string;
+  /** Where the back button points. Omit on top-level pages (home). */
+  backHref?: string;
+  backLabel?: string;
+  /** Content measure the bar tracks, in px. Matches the page column. */
+  width?: number;
+}
+
+const { title, backHref, backLabel = 'Back', width = 680 } = Astro.props;
+
+const external = (item: { external?: boolean }) =>
+  item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<header class="topbar" style={`--topbar-w:${width}px`}>
+  <div class="topbar-inner">
+    <div class="topbar-slot topbar-slot-start">
+      {
+        backHref && (
+          <a href={backHref} class="topbar-back">
+            <span class="topbar-btn topbar-back-btn">
+              <Icon name="arrow-left" />
+            </span>
+            <span class="topbar-back-label">{backLabel}</span>
+          </a>
+        )
+      }
+    </div>
+
+    <div class="topbar-heading">
+      <span class="cube" aria-hidden="true"></span>
+      <span class="topbar-title">{title}</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button type="button" class="topbar-btn" data-search-open aria-label="Search">
+        <Icon name="search" />
+      </button>
+      <button
+        type="button"
+        class="topbar-btn"
+        data-menu-toggle
+        aria-label="Menu"
+        aria-expanded="false"
+        aria-controls="topbar-menu"
+      >
+        <span class="topbar-glyph" data-glyph="open"><Icon name="bars" /></span>
+        <span class="topbar-glyph" data-glyph="close"><Icon name="xmark" /></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="topbar-panel" id="topbar-menu" data-menu hidden>
+    <div class="topbar-panel-inner">
+      <div class="topbar-group">
+        <div class="topbar-group-title">Site</div>
+        <div class="topbar-links">
+          {
+            SITE_NAV.map((item) => (
+              <a href={item.href} class="topbar-link" {...external(item)}>
+                <span class="topbar-link-label">{item.label}</span>
+                <span class="topbar-link-desc">{item.description}</span>
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="topbar-group">
+        <div class="topbar-group-title">Elsewhere</div>
+        <div class="topbar-socials">
+          {
+            SITE_LINKS.map((item) =>
+              item.icon ? (
+                <a href={item.href} class="topbar-social" aria-label={item.label} {...external(item)}>
+                  <Icon name={item.icon} />
+                </a>
+              ) : null,
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

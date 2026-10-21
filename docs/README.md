@@ -39,19 +39,20 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 
 ```
 src/
-  layouts/BaseLayout.astro    # base HTML shell for all pages (head, footer)
-  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro, BackLinkFit.astro, ColorField.astro
+  layouts/BaseLayout.astro    # base HTML shell for all pages (head, top bar, footer)
+  components/                 # BaseHead.astro, Icon.astro, TopBar.astro, SearchDialog.astro, SearchFab.astro, Footer.astro, ToolLayout.astro, ColorField.astro
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
+  data/nav.ts                 # site nav + design-system section registry (top bar menu, search, /design/ pills)
   data/site.ts                # site metadata (urls, socials, projects)
-  scripts/back-link.ts        # shared header back-link fit logic (all headers)
+  scripts/topbar.ts           # top bar: menu disclosure, client-side search, scroll-aware bar (all pages)
   scripts/range-fill.ts       # shared slider fill-trail painting
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize, …)
   scripts/tools/color-picker.ts # shared swatch + canvas color picker engine
   scripts/tools/zip-export.ts # shared single-or-ZIP "Download All" flow
-  styles/global.css           # homepage + footer styles (Tailwind v4)
+  styles/global.css           # top bar + homepage + footer styles (Tailwind v4), owns the shared chrome tokens
   styles/tool.css             # shared design system for the standard tools
   styles/design.css           # /design/ page styles (ds- namespaced, never competes)
   styles/tools/               # per-tool overrides (icon-maker.css)
@@ -77,6 +78,42 @@ Key patterns:
   undocumented.
 - Everything is **fully client-side** ("your data never leaves your browser")
   — no server endpoints, no analytics.
+
+## Navigation
+
+`BaseLayout.astro` renders the site chrome; pages never hand-roll a header.
+
+| Component | Role |
+|---|---|
+| `TopBar.astro` | Sticky bar — back link, page header, search, hamburger menu. Props: `title`, `backHref`, `backLabel`, `width` |
+| `SearchDialog.astro` | The search dialog. Rendered on **every** page so the bar button and the home FAB drive the same one |
+| `SearchFab.astro` | Floating search button, used on `/` where there is no bar |
+
+- Pages pass `barTitle` (plus optional `backHref` / `backLabel` / `barWidth`)
+  to `BaseLayout`. Omit `barTitle` and you get the bare FAB — that is the home
+  page's configuration.
+- **The bar and the content are separate measures.** `barWidth` sets the bar
+  alone: 900px on every page that has one. The page column below it is whatever
+  that page's shell uses — 680px on `/tools/` and `/projects/`, 900px on
+  `/design/`, `/privacy/` and `/terms/`, 680px on the tool pages (900px for
+  Icon Maker). So on most pages the bar is deliberately wider than the content;
+  don't "fix" that by matching them, and don't let them drift apart by accident
+  either. `.topbar-inner` uses the same 20px side padding as the page columns,
+  so where the two measures do match (the design/policy pages, Icon Maker) they
+  line up exactly.
+- **Search** (<kbd>/</kbd> or <kbd>⌘K</kbd>) indexes tools, projects, pages,
+  and `/design/` sections straight from the existing registries — there is no
+  separate index to keep in sync. Arrow keys move, <kbd>Enter</kbd> opens,
+  <kbd>Esc</kbd> closes. A result on the current page (a design section, a
+  project) closes the dialog as well as navigating, since a hash change never
+  unloads the page.
+- The field's ✕ **clears** the query and only appears when there is text;
+  <kbd>Esc</kbd> and the backdrop click close the dialog. The shortcut legend
+  in the dialog's footer is hidden under 580px, where there is no keyboard to
+  hint at and it would wrap.
+- Chrome tokens live in `global.css` (page, `--surface-1` well, `--surface-2`
+  panel, `--surface-3` raised, border, radius, motion) so the bar and footer
+  never depend on `tool.css` being loaded.
 
 ## Tools
 

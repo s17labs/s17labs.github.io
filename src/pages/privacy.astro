@@ -1,7 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
-import BackLinkFit from '../components/BackLinkFit.astro';
 import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/design.css';
@@ -11,15 +9,15 @@ const description =
   'Privacy at s17 Labs — no accounts, no tracking, no analytics. Tools run entirely on your device.';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  barTitle="Privacy policy"
+  backHref="/"
+  backLabel="Home"
+  barWidth={900}
+>
   <div class="ds-page">
-    <header class="ds-hero">
-      <a href="/" class="back-link" aria-label="Back to Home">
-        <Icon name="arrow-left" /><span class="back-label">Home</span>
-      </a>
-      <h1><span class="cube"></span> Privacy policy</h1>
-    </header>
-    <BackLinkFit />
     <p class="ds-lead">
       No accounts. No tracking. No analytics. This site is a static bundle of
       files — there is nothing here that can follow you.
@@ -73,7 +71,3 @@ const description =
     </section>
   </div>
 </BaseLayout>
-
-<script>
-  import '../scripts/back-link';
-</script>

@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
-import BackLinkFit from '../components/BackLinkFit.astro';
 import { PROJECTS, PROJECTS_SECTION } from '../data/projects';
 import '../styles/tool.css';
 import '../styles/design.css';
@@ -9,15 +8,15 @@ import '../styles/design.css';
 const title = `${PROJECTS_SECTION.title} | s17 Labs`;
 ---
 
-<BaseLayout title={title} description={PROJECTS_SECTION.description}>
+<BaseLayout
+  title={title}
+  description={PROJECTS_SECTION.description}
+  barTitle={PROJECTS_SECTION.title}
+  backHref="/"
+  backLabel="Home"
+  barWidth={900}
+>
   <div class="ds-page">
-    <header class="ds-hero">
-      <a href="/" class="back-link" aria-label="Back to Home">
-        <Icon name="arrow-left" /><span class="back-label">Home</span>
-      </a>
-      <h1><span class="cube"></span> {PROJECTS_SECTION.title}</h1>
-    </header>
-    <BackLinkFit />
     <p class="ds-lead">{PROJECTS_SECTION.description}</p>
 
     <div class="tool-list">
@@ -63,6 +62,12 @@ const title = `${PROJECTS_SECTION.title} | s17 Labs`;
   </div>
 </BaseLayout>
 
-<script>
-  import '../scripts/back-link';
-</script>
+<style>
+  /* The bar runs the wide 900px measure while the project cards stay on the
+     standard 680px column, so the two are deliberately different widths.
+     Astro scopes this to .ds-page[data-astro-cid-*] (0,2,0), which
+     out-specifies the shared .ds-page rule without relying on load order. */
+  .ds-page {
+    max-width: 680px;
+  }
+</style>

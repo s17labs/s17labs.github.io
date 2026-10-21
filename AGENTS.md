@@ -27,19 +27,20 @@ npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scr
 
 ```
 src/
-  layouts/BaseLayout.astro    # base HTML shell for all pages
-  components/                 # BaseHead.astro, Icon.astro, Footer.astro, ToolLayout.astro, BackLinkFit.astro, ColorField.astro
+  layouts/BaseLayout.astro    # base HTML shell for all pages (renders the top bar)
+  components/                 # BaseHead.astro, Icon.astro, TopBar.astro, SearchDialog.astro, SearchFab.astro, Footer.astro, ToolLayout.astro, ColorField.astro
   pages/                      # routes: index.astro, 404.astro, tools/index.astro, design.astro, projects.astro, privacy.astro, terms.astro
   pages/tools/                # one .astro page per tool (/tools/<slug>)
   data/tools.ts               # single source of truth: the tools registry (name, slug, tags, icon)
   data/projects.ts            # same pattern for the /projects/ showcase
+  data/nav.ts                 # site nav + design-system section registry (menu, search, /design/ pills)
   data/site.ts                # site metadata (urls, socials, projects)
-  scripts/back-link.ts        # shared header back-link fit logic (all headers)
+  scripts/topbar.ts           # top bar: menu disclosure, client-side search, scroll-aware bar (all pages)
   scripts/tools/<slug>.ts     # client-side logic per tool (typechecked TypeScript)
   scripts/tools/lib.ts        # shared tool helpers (downloads, clipboard, rasterize)
   scripts/tools/color-picker.ts # shared swatch + canvas color picker engine
   scripts/tools/zip-export.ts # shared single-or-ZIP download-all flow
-  styles/global.css           # homepage styles (Tailwind v4)
+  styles/global.css           # top bar + homepage + footer styles (Tailwind v4), owns the shared chrome tokens
   styles/tool.css             # shared design system for the standard tools
   styles/design.css           # /design/ page styles (ds- namespaced, never competes)
   styles/tools/               # per-tool overrides (icon-maker.css, icon-maker-fonts.css)
@@ -51,6 +52,8 @@ Key patterns:
 
 - Adding a new tool touches exactly three places: create `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The `/tools` listing renders from that registry — never hardcode tool entries elsewhere.
 - Standard tools share one design system (`src/styles/tool.css` + `ToolLayout.astro`).
+- Every page's header, back link, search, and menu come from `TopBar.astro`, rendered once by `BaseLayout`. Pass `barTitle` (plus optional `backHref`/`backLabel`/`barWidth`) — never hand-roll a page header. Omit `barTitle` (home) and `BaseLayout` renders just `SearchFab.astro`; `SearchDialog.astro` renders on every page either way. Site links and `/design/` sections live in `src/data/nav.ts`.
+- The bar's header size is hand-tuned, not measured: Aldrich's baseline lands level with the icons' base and a 1px `translateY` is the optical correction (see the comment in `global.css`). Don't "fix" it by centering the line box — that pushes the title visibly low. The cube keeps global.css's 0.82em so the bar's lockup matches the home hero's proportion. The bar's width and the page column's width are **independent** measures: the bar is 900px on every page that has one, while content is 680px on the tools/projects listings and the tool pages (900px on design/privacy/terms and Icon Maker). So the bar is deliberately wider than the content on most pages — don't "fix" that. `.topbar-inner` still uses the same 20px side padding as the page columns, so where the two measures match they line up exactly.
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
 - When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
 - Color inputs use `src/components/ColorField.astro` — it renders the swatch + hex input and wires the shared picker (`src/scripts/tools/color-picker.ts`). Listen for the `colorchange` event on the field root; never hand-roll a second picker.
@@ -136,4 +139,6 @@ PR rules:
 - Merging to `main` deploys to production immediately (Pages workflow); since PRs get no CI, local `npm run build` is the only pre-merge verification.
 - Client logic in `src/scripts/tools/*.ts` runs in the browser and is typechecked by `astro check` — keep it free of Node-only APIs.
 - Page stylesheets load BEFORE `tool.css` in the production bundle (dev order differs) — page overrides must beat shared rules with specificity (e.g. `.workspace .panel`), never rely on source order.
+- Chrome styles that restyle a `tool.css` control must out-specify it: `input[type="text"]` (0,1,1) beats a bare `.my-input` (0,1,0), so the search field's rules are scoped under `.topbar-search-field`. Its input also needs `border-radius: 0` or the caret clips at the start and the selection highlight renders rounded.
+- `::selection` is the accent tint site-wide in `global.css`; don't re-declare it per page.
 - All tools must stay fully client-side ("your data never leaves your browser") — never add server endpoints or analytics.

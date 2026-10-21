@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from './Icon.astro';
-import BackLinkFit from './BackLinkFit.astro';
 import { SITE } from '../data/site';
 import '../styles/tool.css';
 
@@ -22,19 +21,16 @@ const {
 } = Astro.props;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  barTitle={heading}
+  backHref={SITE.toolsUrl}
+  backLabel="Tools"
+  barWidth={900}
+>
   <div class="tool-top">
     <slot name="pre" />
-    <div class="tool-header">
-      <a href={SITE.toolsUrl} class="back-link" aria-label="Back to Tools">
-        <Icon name="arrow-left" /><span class="back-label">Tools</span>
-      </a>
-      <h1>
-        <span class="cube"></span>
-        {heading}
-      </h1>
-    </div>
-    <BackLinkFit />
     {tagline && <p class="tool-desc">{tagline}</p>}
   </div>
 
@@ -52,7 +48,3 @@ const {
     </div>
   </div>
 </BaseLayout>
-
-<script>
-  import '../scripts/back-link';
-</script>

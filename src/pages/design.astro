@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
-import BackLinkFit from '../components/BackLinkFit.astro';
 import ColorField from '../components/ColorField.astro';
 import { icons, type IconName } from '../icons';
 import { TOOLS } from '../data/tools';
+import { DESIGN_SECTIONS } from '../data/nav';
 import { SITE } from '../data/site';
 import '../styles/tool.css';
 import '../styles/tools/icon-maker.css';
@@ -14,24 +14,7 @@ const title = 'Design System | s17 Labs';
 const description =
   'The s17 Labs design system and brand kit — colors, typography, iconography, components, and usage docs for the homepage and tools.';
 
-const nav = [
-  ['brand', 'Brand'],
-  ['colors', 'Colors'],
-  ['typography', 'Typography'],
-  ['icons', 'Icons'],
-  ['spacing', 'Spacing'],
-  ['navigation', 'Navigation'],
-  ['buttons', 'Buttons'],
-  ['forms', 'Forms'],
-  ['feedback', 'Feedback'],
-  ['contributing', 'Contributing'],
-] as const;
-
-interface Swatch {
-  name: string;
-  value: string;
-  use: string;
-}
+interface Swatch { name: string; value: string; use: string; }
 
 const coreColors: Swatch[] = [
   { name: '--primary', value: '#0e0e10', use: 'Page background (global.css)' },
@@ -40,20 +23,22 @@ const coreColors: Swatch[] = [
   { name: '--primary-text', value: '#f1f1f1', use: 'Headings, body copy, values' },
   { name: '--secondary-text', value: '#868686', use: 'Labels, hints, placeholders, meta' },
   { name: '--btn-bg', value: '#1a1a1c', use: 'Default button fill' },
+  { name: '--surface-1', value: '#161618', use: 'Wells nested inside a surface (search field)' },
+  { name: '--surface-2', value: '#1a1a1c', use: 'Panels, inputs, menu' },
+  { name: '--surface-3', value: '#222226', use: 'Slider tracks, thumbnails, bar specimens' },
+  { name: '--border', value: 'rgba(255, 255, 255, 0.07)', use: 'Hairline borders everywhere' },
+  { name: '--accent-dim', value: 'rgba(255, 65, 54, 0.12)', use: 'Active option tint, hover wash' },
+  { name: '--overlay-dim', value: 'rgba(14, 14, 16, 0.72)', use: 'Image overflow dim, dialogs' },
+  { name: '--radius', value: '4px', use: 'One radius, three functional exceptions' },
+  { name: '--t', value: '0.25s ease', use: 'The single easing' },
 ];
 
 const toolColors: Swatch[] = [
-  { name: '--accent-hover', value: '#e8382e', use: 'Accent hover (Download All, ready buttons)' },
-  { name: '--surface-2', value: '#1a1a1c', use: 'Inputs, wells, option buttons' },
-  { name: '--surface-3', value: '#222226', use: 'Slider tracks, thumbnails' },
-  { name: '--border', value: 'rgba(255, 255, 255, 0.07)', use: 'Hairline borders everywhere' },
-  { name: '--accent-dim', value: 'rgba(255, 65, 54, 0.12)', use: 'Active option tint, hover wash' },
-  { name: '--accent-soft', value: 'rgba(255, 65, 54, 0.4)', use: 'Hover borders' },
+  { name: '--accent-soft', value: 'rgba(255, 65, 54, 0.4)', use: 'Hover borders, text selection' },
   { name: '--accent-focus', value: 'rgba(255, 65, 54, 0.5)', use: 'Focus borders' },
   { name: '--android', value: '#3ddc84', use: 'Android export accents, success' },
   { name: '--android-dim', value: 'rgba(61, 220, 132, 0.12)', use: 'Android button fill' },
   { name: '--tile-bg', value: 'rgba(255, 255, 255, 0.05)', use: 'Overflow tiles' },
-  { name: '--overlay-dim', value: 'rgba(14, 14, 16, 0.72)', use: 'Image overflow dim, dialogs' },
 ];
 
 const iconNames = Object.keys(icons) as IconName[];
@@ -75,25 +60,26 @@ const textFonts = [
 ];
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  barTitle="Design System"
+  backHref="/"
+  backLabel="Home"
+  barWidth={900}
+>
   <div class="ds-page">
-    <header class="ds-hero">
-      <a href="/" class="back-link" aria-label="Back to Home">
-        <Icon name="arrow-left" /><span class="back-label">Home</span>
-      </a>
-      <h1><span class="cube"></span> Design System</h1>
-    </header>
-    <BackLinkFit />
     <p class="ds-lead">
       The visual language behind s17 Labs — one dark-first system shared by the
       homepage, the footer, and every tool. Tokens live in
-      <code>src/styles/tool.css</code> (<code>:root</code>) and
-      <code>src/styles/global.css</code>; components below are live specimens
-      using the real classes, so this page can never drift from production.
+      <code>src/styles/global.css</code> (chrome) and
+      <code>src/styles/tool.css</code> (tools); components below are live
+      specimens using the real classes, so this page can never drift from
+      production.
     </p>
 
     <nav class="ds-nav" aria-label="Design system sections">
-      {nav.map(([id, label]) => <a href={`#${id}`}>{label}</a>)}
+      {DESIGN_SECTIONS.map((section) => <a href={`#${section.id}`}>{section.label}</a>)}
     </nav>
 
     <!-- Brand -->
@@ -165,11 +151,12 @@ const textFonts = [
       <table class="ds-table">
         <thead><tr><th>Usage</th><th>Spec</th></tr></thead>
         <tbody>
-          <tr><td>Tool title</td><td>Aldrich 1.8rem (1.5rem under 580px), cube + 0.25em gap</td></tr>
+          <tr><td>Page title</td><td>Aldrich, cube 0.82em + 0.25em gap — home hero 2em (1.8rem under 580px), top bar 1.5rem (1.35rem under 580px)</td></tr>
           <tr><td>Panel title</td><td>Aldrich 0.7rem, uppercase, 0.14em tracking, secondary text</td></tr>
           <tr><td>Form label</td><td>Verdana 0.74rem, uppercase, 0.09em tracking, secondary text</td></tr>
           <tr><td>Body / tagline</td><td>Verdana 0.95–1rem, 1.6 line-height, 520px measure</td></tr>
           <tr><td>Inputs / meta</td><td>Courier New 0.88rem values · 0.65–0.75rem badges and hints</td></tr>
+          <tr><td>Search field</td><td>Verdana 0.95rem — the one input that takes body copy, so it speaks body copy, not Courier</td></tr>
         </tbody>
       </table>
       <p>
@@ -232,11 +219,91 @@ const textFonts = [
       <p class="ds-kicker">Components</p>
       <h2>Navigation</h2>
       <p>
-        Tool cards and lowercase Courier tags carry browsing. Cards lift with
-        an accent wash on hover — position never shifts. The
-        <code>.back-link</code> (arrow + section name, top-left of each header)
-        is how every page gets home.
+        The <code>.topbar</code> is the site's spine — it carries the page
+        header, the back link, search, and the menu on every page but home,
+        rendered by <code>BaseLayout</code> so a page never hand-rolls its own
+        header. Home gets a lone <code>.search-fab</code> instead — no fill,
+        no outline, just a backdrop blur so it floats over whatever scrolls
+        under it. The bar sticks and
+        <code>--topbar-w</code> matches that page's content measure (680
+        tools, 900 design) so the bar and the column share an edge. Back link,
+        header, search, and menu are a three-slot <code>1fr auto 1fr</code>
+        grid, which keeps the header optically centered at any width and gives
+        the back label room to breathe — no measurement script. At the top of
+        the page the bar is invisible (page-colored, no rule);
+        <code>.is-scrolled</code> fades in the blur and hairline. Design
+        sections are reachable by search rather than a menu — the menu stays
+        short enough to scan in one glance. Below it, tool cards and lowercase
+        Courier tags carry browsing; cards lift with an accent wash on hover,
+        so position never shifts.
       </p>
+      <div class="ds-demo">
+        <small>.topbar-back · .topbar-heading · .topbar-btn ×2</small>
+        <div class="ds-topbar-sample">
+          <a href="/" class="topbar-back">
+            <span class="topbar-btn topbar-back-btn"><Icon name="arrow-left" /></span>
+            <span class="topbar-back-label">Home</span>
+          </a>
+          <div class="topbar-heading">
+            <span class="cube"></span>
+            <span class="topbar-title">Design System</span>
+          </div>
+          <div class="topbar-actions">
+            <button type="button" class="topbar-btn" aria-label="Search specimen"><Icon name="search" /></button>
+            <button type="button" class="topbar-btn" aria-expanded="false" aria-label="Menu specimen">
+              <span class="topbar-glyph" data-glyph="open"><Icon name="bars" /></span>
+              <span class="topbar-glyph" data-glyph="close"><Icon name="xmark" /></span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.search-fab — home page, no toolbar</small>
+        <div class="ds-topbar-sample" style="position:relative;min-height:4rem;">
+          <button type="button" class="search-fab" aria-label="Search specimen" style="position:static;">
+            <Icon name="search" />
+          </button>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.topbar-link · .topbar-social — menu contents</small>
+        <div class="ds-menu-sample">
+          <a href={SITE.toolsUrl} class="topbar-link">
+            <span class="topbar-link-label">Tools</span>
+            <span class="topbar-link-desc">Browser utilities that run entirely on your device.</span>
+          </a>
+          <div class="topbar-socials">
+            <a href={SITE.orgUrl} class="topbar-social" aria-label="GitHub"><Icon name="github" /></a>
+            <a href={SITE.socials.x.url} class="topbar-social" aria-label={SITE.socials.x.name}><Icon name="x" /></a>
+            <a href={SITE.socials.discord.url} class="topbar-social" aria-label={SITE.socials.discord.name}><Icon name="discord" /></a>
+          </div>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.topbar-search-field · .topbar-search-clear — Verdana, one line box; the ✕ is hidden with no query (press <kbd>/</kbd> or <kbd>⌘K</kbd> for the live one)</small>
+        <div class="topbar-search-field" style="margin:0 0 0.6rem;">
+          <Icon name="search" class="topbar-search-icon" />
+          <input type="text" class="topbar-search-input" value="icon" readonly />
+          <button type="button" class="topbar-search-clear" aria-label="Clear search specimen"><Icon name="xmark" /></button>
+        </div>
+        <div class="topbar-search-field" style="margin:0;">
+          <Icon name="search" class="topbar-search-icon" />
+          <input type="text" class="topbar-search-input" placeholder="empty — no clear button" readonly />
+          <button type="button" class="topbar-search-clear" aria-label="Clear search specimen" hidden><Icon name="xmark" /></button>
+        </div>
+        <div class="topbar-results" style="border:1px solid var(--border);border-radius:var(--radius);">
+          {TOOLS.slice(0, 2).map((tool) => (
+            <a href={`${SITE.toolsUrl}${tool.slug}/`} class="topbar-result">
+              <span class="topbar-result-icon"><Icon name={tool.icon} /></span>
+              <span class="topbar-result-text">
+                <span class="topbar-result-label">{tool.name}</span>
+                <span class="topbar-result-hint">{tool.description}</span>
+              </span>
+              <span class="topbar-result-kind">Tool</span>
+            </a>
+          ))}
+        </div>
+      </div>
       <div class="ds-demo">
         <small>.tool-tag ×{TOOLS[0].tags.length}</small>
         <div>
@@ -437,6 +504,14 @@ const textFonts = [
         </div>
       </div>
       <div class="ds-demo">
+        <small>selection — drag across this sentence</small>
+        <p class="ds-body-sample">
+          Selected text wears <code>--accent-soft</code> with primary text on
+          top, set once in <code>global.css</code> so it holds on every page
+          instead of being re-declared per stylesheet.
+        </p>
+      </div>
+      <div class="ds-demo">
         <small>.results-list · .result-item</small>
         <div class="results-list">
           <div class="result-item">
@@ -476,7 +551,8 @@ const textFonts = [
           <tr><td>Typecheck</td><td>Client TS is checked by astro check — no Node-only APIs in tools</td></tr>
           <tr><td>Commit</td><td>type(scope): short imperative summary, atomic, no AI trailers</td></tr>
           <tr><td>CSS order</td><td>Page stylesheets load before tool.css in prod — beat shared rules with specificity, never order</td></tr>
-          <tr><td>Headers</td><td>Back-link label collapses by measurement (BackLinkFit + back-link.ts) — flash-free, no breakpoint guessing</td></tr>
+          <tr><td>Selection</td><td><code>::selection</code> is the accent tint site-wide (global.css) — the default blue is the one color that isn't ours</td></tr>
+          <tr><td>Headers</td><td>Every page's header and back link come from the top bar (<code>BaseLayout</code> + <code>TopBar.astro</code>) — never hand-rolled per page</td></tr>
         </tbody>
       </table>
     </section>
@@ -493,10 +569,6 @@ const textFonts = [
     </div>
   </div>
 </BaseLayout>
-
-<script>
-  import '../scripts/back-link';
-</script>
 
 <script>
   const demo = document.getElementById('ds-modal-demo');
