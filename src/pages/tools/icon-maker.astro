@@ -12,7 +12,14 @@ const tagline =
   'Generate custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Control colors, gradients, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
 ---
 
-<ToolLayout title={title} description={description} heading="Icon Maker" tagline={tagline} maxWidth={900}>
+<ToolLayout
+  title={title}
+  description={description}
+  heading="Icon Maker"
+  tagline={tagline}
+  maxWidth={900}
+  preconnect={['https://cdn.jsdelivr.net']}
+>
   <div class="workspace">
     <!-- Preview -->
     <div class="panel preview-panel">
@@ -23,7 +30,7 @@ const tagline =
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
             <p>Enter an icon name, text, or emoji to begin</p>
           </div>
-          <div class="preview-loading" id="preview-loading">
+          <div class="preview-loading" id="preview-loading" role="status" aria-live="polite">
             <span style="display:inline-flex;"><Icon name="circle-notch" class="spin" /></span>
             <span>Fetching emoji…</span>
           </div>
@@ -73,7 +80,9 @@ const tagline =
         <div class="field">
           <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
           <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
-          <div class="status-msg error" id="error-msg">Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a></div>
+          <div class="status-msg error" id="error-msg" role="alert" aria-atomic="true">
+            Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a>
+          </div>
         </div>
       </div>
 
@@ -102,9 +111,9 @@ const tagline =
         <div class="field">
           <span class="group-label">Style</span>
           <div class="style-row">
-            <button type="button" class="style-btn active" id="style-bold" title="Bold" aria-pressed="true"><b>B</b></button>
-            <button type="button" class="style-btn" id="style-italic" title="Italic" aria-pressed="false"><i>I</i></button>
-            <button type="button" class="style-btn" id="style-underline" title="Underline" aria-pressed="false"><u>U</u></button>
+            <button type="button" class="style-btn active" id="style-bold" title="Bold" aria-label="Bold" aria-pressed="true"><b>B</b></button>
+            <button type="button" class="style-btn" id="style-italic" title="Italic" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+            <button type="button" class="style-btn" id="style-underline" title="Underline" aria-label="Underline" aria-pressed="false"><u>U</u></button>
             <select id="font-weight" class="weight-select" aria-label="Font weight">
               <option value="100">Thin 100</option>
               <option value="200">Extra Light 200</option>
@@ -137,18 +146,18 @@ const tagline =
               <button type="button" class="choice-btn bgtype-btn active" data-bgtype="solid" aria-pressed="true">Solid</button>
               <button type="button" class="choice-btn bgtype-btn" data-bgtype="gradient" aria-pressed="false">Gradient</button>
             </div>
-            <ColorField id="cp-bg" value="#ff4136" />
+            <ColorField id="cp-bg" value="#ff4136" ariaLabel="Background" />
             <div class="bg-gradient-panel" id="bg-gradient-panel">
-              <ColorField id="cp-bg2" value="#ffffff" />
+              <ColorField id="cp-bg2" label="Gradient End" value="#ffffff" />
               <div class="angle-row" role="group" aria-label="Gradient direction">
-                <button type="button" class="angle-btn" data-angle="0" aria-pressed="false" title="Up (0°)">↑</button>
-                <button type="button" class="angle-btn" data-angle="45" aria-pressed="false" title="Up-right (45°)">↗</button>
-                <button type="button" class="angle-btn active" data-angle="90" aria-pressed="true" title="Right (90°)">→</button>
-                <button type="button" class="angle-btn" data-angle="135" aria-pressed="false" title="Down-right (135°)">↘</button>
-                <button type="button" class="angle-btn" data-angle="180" aria-pressed="false" title="Down (180°)">↓</button>
-                <button type="button" class="angle-btn" data-angle="225" aria-pressed="false" title="Down-left (225°)">↙</button>
-                <button type="button" class="angle-btn" data-angle="270" aria-pressed="false" title="Left (270°)">←</button>
-                <button type="button" class="angle-btn" data-angle="315" aria-pressed="false" title="Up-left (315°)">↖</button>
+                <button type="button" class="angle-btn" data-angle="0" aria-pressed="false" title="Up (0°)" aria-label="Gradient up, 0 degrees">↑</button>
+                <button type="button" class="angle-btn" data-angle="45" aria-pressed="false" title="Up-right (45°)" aria-label="Gradient up-right, 45 degrees">↗</button>
+                <button type="button" class="angle-btn active" data-angle="90" aria-pressed="true" title="Right (90°)" aria-label="Gradient right, 90 degrees">→</button>
+                <button type="button" class="angle-btn" data-angle="135" aria-pressed="false" title="Down-right (135°)" aria-label="Gradient down-right, 135 degrees">↘</button>
+                <button type="button" class="angle-btn" data-angle="180" aria-pressed="false" title="Down (180°)" aria-label="Gradient down, 180 degrees">↓</button>
+                <button type="button" class="angle-btn" data-angle="225" aria-pressed="false" title="Down-left (225°)" aria-label="Gradient down-left, 225 degrees">↙</button>
+                <button type="button" class="angle-btn" data-angle="270" aria-pressed="false" title="Left (270°)" aria-label="Gradient left, 270 degrees">←</button>
+                <button type="button" class="angle-btn" data-angle="315" aria-pressed="false" title="Up-left (315°)" aria-label="Gradient up-left, 315 degrees">↖</button>
               </div>
               <div class="field">
                 <label for="bg-angle">Angle — <span id="angle-label">90°</span></label>
@@ -211,9 +220,9 @@ const tagline =
 
         <label style="display:block;margin-bottom:0.45rem;" for="custom-w">Custom Size</label>
         <div class="custom-res">
-          <input type="text" id="custom-w" value="128" style="text-align:center;" />
-          <span>×</span>
-          <input type="text" id="custom-h" value="128" style="text-align:center;" />
+          <input type="text" id="custom-w" value="128" style="text-align:center;" aria-label="Custom Size width in pixels" />
+          <span aria-hidden="true">×</span>
+          <input type="text" id="custom-h" value="128" style="text-align:center;" aria-label="Custom Size height in pixels" />
           <span>px</span>
         </div>
 
@@ -221,13 +230,15 @@ const tagline =
           <button type="button" class="btn export-btn" data-fmt="svg"><span class="btn-fmt">SVG</span> Export</button>
           <button type="button" class="btn export-btn" data-fmt="png"><span class="btn-fmt">PNG</span> Export</button>
         </div>
-        <div class="status-msg error" id="export-error">Enter a valid icon, text, or emoji first.</div>
+        <div class="status-msg error" id="export-error" role="alert" aria-atomic="true">
+          Enter a valid icon, text, or emoji first.
+        </div>
 
         <div class="android-divider"><hr /><span>Android</span><hr /></div>
 
         <label class="checkbox-row" id="material-row" for="material-toggle">
           <div class="custom-checkbox">
-            <input type="checkbox" id="material-toggle" />
+            <input type="checkbox" id="material-toggle" aria-describedby="material-sub" />
             <div class="checkbox-box"><Icon name="check" /></div>
           </div>
           <div class="checkbox-text">
@@ -244,8 +255,17 @@ const tagline =
         </button>
 
         <div class="progress-wrap" id="progress-wrap">
-          <div class="progress-bar-track"><div class="progress-bar-fill" id="progress-fill"></div></div>
-          <div class="progress-label" id="progress-label">Preparing…</div>
+          <div
+            class="progress-bar-track"
+            role="progressbar"
+            aria-label="Building Android icon package"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div class="progress-label" id="progress-label" role="status" aria-live="polite">Preparing…</div>
         </div>
       </div>
     </div>

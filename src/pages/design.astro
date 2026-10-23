@@ -21,7 +21,7 @@ const coreColors: Swatch[] = [
   { name: '--accent', value: '#ff4136', use: 'Brand red — actions, active states, logo cube' },
   { name: '--accent-hover', value: '#e8382e', use: 'Accent hover (Download All, ready buttons)' },
   { name: '--primary-text', value: '#f1f1f1', use: 'Headings, body copy, values' },
-  { name: '--secondary-text', value: '#868686', use: 'Labels, hints, placeholders, meta' },
+  { name: '--secondary-text', value: '#909090', use: 'Labels, hints, placeholders, meta' },
   { name: '--btn-bg', value: '#1a1a1c', use: 'Default button fill' },
   { name: '--surface-1', value: '#161618', use: 'Wells nested inside a surface (search field)' },
   { name: '--surface-2', value: '#1a1a1c', use: 'Panels, inputs, menu' },
@@ -240,7 +240,7 @@ const textFonts = [
       <div class="ds-demo">
         <small>.topbar-back · .topbar-heading · .topbar-btn ×2</small>
         <div class="ds-topbar-sample">
-          <a href="/" class="topbar-back">
+          <a href="/" class="topbar-back" aria-label="Back to Home">
             <span class="topbar-btn topbar-back-btn"><Icon name="arrow-left" /></span>
             <span class="topbar-back-label">Home</span>
           </a>
@@ -249,8 +249,8 @@ const textFonts = [
             <span class="topbar-title">Design System</span>
           </div>
           <div class="topbar-actions">
-            <button type="button" class="topbar-btn" aria-label="Search specimen"><Icon name="search" /></button>
-            <button type="button" class="topbar-btn" aria-expanded="false" aria-label="Menu specimen">
+            <button type="button" class="topbar-btn" data-search-open aria-label="Search"><Icon name="search" /></button>
+            <button type="button" class="topbar-btn" aria-expanded="false" aria-label="Menu specimen" data-specimen="Menu is a visual specimen on this page.">
               <span class="topbar-glyph" data-glyph="open"><Icon name="bars" /></span>
               <span class="topbar-glyph" data-glyph="close"><Icon name="xmark" /></span>
             </button>
@@ -260,7 +260,7 @@ const textFonts = [
       <div class="ds-demo">
         <small>.search-fab — home page, no toolbar</small>
         <div class="ds-topbar-sample" style="position:relative;min-height:4rem;">
-          <button type="button" class="search-fab" aria-label="Search specimen" style="position:static;">
+          <button type="button" class="search-fab" data-search-open aria-label="Search" style="position:static;">
             <Icon name="search" />
           </button>
         </div>
@@ -283,12 +283,12 @@ const textFonts = [
         <small>.topbar-search-field · .topbar-search-clear — Verdana, one line box; the ✕ is hidden with no query (press <kbd>/</kbd> or <kbd>⌘K</kbd> for the live one)</small>
         <div class="topbar-search-field" style="margin:0 0 0.6rem;">
           <Icon name="search" class="topbar-search-icon" />
-          <input type="text" class="topbar-search-input" value="icon" readonly />
+          <input type="text" class="topbar-search-input" value="icon" readonly aria-label="Search field specimen with text" />
           <button type="button" class="topbar-search-clear" aria-label="Clear search specimen"><Icon name="xmark" /></button>
         </div>
         <div class="topbar-search-field" style="margin:0;">
           <Icon name="search" class="topbar-search-icon" />
-          <input type="text" class="topbar-search-input" placeholder="empty — no clear button" readonly />
+          <input type="text" class="topbar-search-input" placeholder="empty — no clear button" readonly aria-label="Empty search field specimen" />
           <button type="button" class="topbar-search-clear" aria-label="Clear search specimen" hidden><Icon name="xmark" /></button>
         </div>
         <div class="topbar-results" style="border:1px solid var(--border);border-radius:var(--radius);">
@@ -337,7 +337,7 @@ const textFonts = [
         <small>.tool-item icon variants — glyph · artwork · emoji</small>
         <div style="display:flex;gap:0.6rem;align-items:center;">
           <div class="tool-item-icon"><Icon name="icons" /></div>
-          <div class="tool-item-icon has-img"><img src="/projects/koda-app-icon.png" alt="Koda icon" loading="lazy" /></div>
+          <div class="tool-item-icon has-img"><img src="/projects/koda-app-icon.png" alt="Koda icon" width="256" height="256" loading="lazy" /></div>
           <div class="tool-item-icon has-emoji"><span class="tool-item-emoji" aria-hidden="true">🐚</span></div>
         </div>
       </div>
@@ -426,27 +426,27 @@ const textFonts = [
         <small>input · number · textarea · select · range</small>
         <div class="field">
           <span class="group-label">Text input</span>
-          <input type="text" value="star" readonly />
+          <input type="text" value="star" readonly aria-label="Text input specimen" />
         </div>
         <div class="field">
           <span class="group-label">Number</span>
-          <input type="number" value="128" readonly />
+          <input type="number" value="128" readonly aria-label="Number input specimen" />
         </div>
         <div class="field">
           <span class="group-label">Textarea</span>
-          <textarea readonly>Your data never leaves your browser.</textarea>
+          <textarea readonly aria-label="Textarea specimen">Your data never leaves your browser.</textarea>
         </div>
         <div class="field">
           <span class="group-label">Select</span>
-          <select><option>System Sans</option><option>Montserrat</option></select>
+          <select aria-label="Select specimen"><option>System Sans</option><option>Montserrat</option></select>
         </div>
         <div class="field">
           <span class="group-label">Range — filled trail (70%)</span>
-          <input type="range" min="0" max="100" value="70" />
+          <input type="range" min="0" max="100" value="70" aria-label="Range specimen" />
         </div>
         <div class="field">
           <span class="group-label">Hint</span>
-          <input type="text" value="128" readonly />
+          <input type="text" value="128" readonly aria-label="Hint example input" />
           <div class="field-note">Small hint under a field.</div>
         </div>
       </div>
@@ -459,7 +459,7 @@ const textFonts = [
         <hr class="divider" />
         <div class="panel-header-row">
           <div class="panel-title">Output</div>
-          <button type="button" class="choice-btn">Clear</button>
+          <button type="button" class="choice-btn" data-specimen="Clear is a visual specimen on this page.">Clear</button>
         </div>
       </div>
       <div class="ds-demo">
@@ -499,7 +499,16 @@ const textFonts = [
         <div class="status-msg error visible">Icon not found — check the spelling.</div>
         <div class="status-msg success visible">Done — 11 images + XMLs.</div>
         <div class="zip-progress-wrap visible">
-          <div class="zip-progress-track"><div class="zip-progress-fill" style="width:64%;"></div></div>
+          <div
+            class="zip-progress-track"
+            role="progressbar"
+            aria-label="Example ZIP progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="64"
+          >
+            <div class="zip-progress-fill" style="width:64%;"></div>
+          </div>
           <div class="zip-progress-label">mipmap-xxhdpi/ic_launcher.png 144px…</div>
         </div>
       </div>
@@ -526,7 +535,7 @@ const textFonts = [
       </div>
       <div class="ds-demo">
         <small>.modal-* — blocking choices (live demo)</small>
-        <div><button type="button" class="choice-btn" id="ds-modal-open">Open dialog demo</button></div>
+        <div><button type="button" class="choice-btn" id="ds-modal-open" aria-haspopup="dialog" aria-controls="ds-modal-demo">Open dialog demo</button></div>
       </div>
     </section>
 
@@ -560,9 +569,9 @@ const textFonts = [
 
   <!-- Modal demo (real .modal-* classes) -->
   <div class="modal-overlay" id="ds-modal-demo">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ds-modal-title">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ds-modal-title" aria-describedby="ds-modal-text">
       <div class="modal-title" id="ds-modal-title">Square background recommended</div>
-      <p class="modal-text">Android applies its own mask (circle, squircle, …) to adaptive icons. A baked-in circle or rounded background will clash with it.</p>
+      <p class="modal-text" id="ds-modal-text">Android applies its own mask (circle, squircle, …) to adaptive icons. A baked-in circle or rounded background will clash with it.</p>
       <div class="modal-actions">
         <button type="button" class="modal-btn primary" id="ds-modal-ok">Got it</button>
       </div>
@@ -572,32 +581,127 @@ const textFonts = [
 
 <script>
   const demo = document.getElementById('ds-modal-demo');
+  const demoOpenBtn = document.getElementById('ds-modal-open');
+  const demoOk = document.getElementById('ds-modal-ok');
+  const live = document.getElementById('live-region');
   let demoLockY = 0;
-  function demoLock() {
+  let demoReturnFocus: HTMLElement | null = null;
+
+  function dsAnnounce(message: string): void {
+    if (!live) return;
+    live.textContent = '';
+    requestAnimationFrame(() => {
+      live.textContent = message;
+    });
+  }
+
+  function setDemoBackgroundInert(inert: boolean): void {
+    for (const selector of ['.ds-page', '.topbar', '.footer']) {
+      const el = document.querySelector<HTMLElement>(selector);
+      if (el) el.inert = inert;
+    }
+  }
+
+  function demoLock(): void {
     demoLockY = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${demoLockY}px`;
     document.body.style.width = '100%';
     document.documentElement.style.overflow = 'hidden';
   }
-  function demoUnlock() {
+
+  function demoUnlock(): void {
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
     document.documentElement.style.overflow = '';
     window.scrollTo(0, demoLockY);
   }
-  function demoOpen() {
-    demo?.classList.add('visible');
+
+  function demoOpen(): void {
+    if (!demo || demo.classList.contains('visible')) return;
+    demoReturnFocus = document.activeElement as HTMLElement | null;
+    demo.classList.add('visible');
     demoLock();
+    setDemoBackgroundInert(true);
+    demoOk?.focus();
   }
-  function demoClose() {
-    demo?.classList.remove('visible');
+  function demoClose(): void {
+    if (!demo?.classList.contains('visible')) return;
+    demo.classList.remove('visible');
+    setDemoBackgroundInert(false);
     demoUnlock();
+    const target = demoReturnFocus;
+    demoReturnFocus = null;
+    target?.focus();
   }
-  document.getElementById('ds-modal-open')?.addEventListener('click', demoOpen);
-  document.getElementById('ds-modal-ok')?.addEventListener('click', demoClose);
+
+  demoOpenBtn?.addEventListener('click', demoOpen);
+  demoOk?.addEventListener('click', demoClose);
   demo?.addEventListener('click', (e) => {
     if (e.target === demo) demoClose();
+  });
+
+  demo?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      demoClose();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const card = demo.querySelector<HTMLElement>('.modal-card');
+    if (!card) return;
+    const focusables = [...card.querySelectorAll<HTMLElement>('button, [href], input, select, textarea')].filter(
+      (el) => !el.hasAttribute('disabled') && el.tabIndex !== -1,
+    );
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  // The page is a style reference: controls that are only specimens still
+  // respond, so nothing on the page is a silently dead button.
+  document.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.ds-page button');
+    if (!button || button.id === 'ds-modal-open' || button.hasAttribute('data-search-open')) return;
+    if (button.closest('[data-cp-field]')) return;
+
+    if (button.matches('.topbar-search-clear')) {
+      const field = button.closest('.topbar-search-field');
+      const input = field?.querySelector('input');
+      if (input) {
+        input.value = '';
+        input.focus();
+        button.hidden = true;
+        dsAnnounce('Search specimen cleared');
+      }
+      return;
+    }
+
+    if (button.matches('.choice-btn')) {
+      const siblings = [...(button.parentElement?.querySelectorAll<HTMLElement>('.choice-btn') ?? [])];
+      if (siblings.length > 1) {
+        for (const sibling of siblings) sibling.classList.toggle('active', sibling === button);
+        dsAnnounce('Choice selected — styling specimen only');
+        return;
+      }
+    }
+
+    if (button.hasAttribute('aria-expanded')) {
+      button.setAttribute('aria-expanded', String(button.getAttribute('aria-expanded') !== 'true'));
+    }
+
+    dsAnnounce(button.dataset.specimen || 'Styling specimen — controls on this page are for reference');
+  });
+
+  document.querySelector('.ds-demo .drop-zone')?.addEventListener('click', () => {
+    dsAnnounce('Drop zone is a visual specimen on this page');
   });
 </script>

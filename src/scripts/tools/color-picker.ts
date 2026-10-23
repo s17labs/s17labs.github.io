@@ -169,6 +169,7 @@ function position(p: Picker): void {
 function close(p: Picker): void {
   p.popup.classList.remove('visible');
   p.row.classList.remove('open');
+  p.swatch.setAttribute('aria-expanded', 'false');
   if (openPicker === p) openPicker = null;
 }
 
@@ -180,6 +181,7 @@ function open(p: Picker): void {
   // which reads 0×0 while the popup is display:none.
   p.popup.classList.add('visible');
   p.row.classList.add('open');
+  p.swatch.setAttribute('aria-expanded', 'true');
   draw(p);
   sync(p);
   position(p);

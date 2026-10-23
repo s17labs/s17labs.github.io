@@ -76,7 +76,6 @@
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--secondary-text);
-  opacity: 0.75;
   margin: 0 0 0.3rem;
 }
 
@@ -144,7 +143,6 @@
   font-style: normal;
   font-size: 0.68rem;
   color: var(--secondary-text);
-  opacity: 0.75;
   line-height: 1.45;
 }
 

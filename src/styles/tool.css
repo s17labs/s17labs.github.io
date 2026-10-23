@@ -9,7 +9,6 @@
    live in global.css so the top bar and footer work without this file.
    Only tool-specific tokens are declared here. */
 :root {
-  --accent-soft: rgba(255, 65, 54, 0.4);
   --accent-focus: rgba(255, 65, 54, 0.5);
   --accent-hover: #e8382e;
   --android: #3ddc84;
@@ -232,7 +231,7 @@ button:focus-visible,
 input[type='text']::placeholder,
 textarea::placeholder {
   color: var(--secondary-text);
-  opacity: 0.45;
+  opacity: 1;
 }
 
 input[type='number'] {
@@ -265,7 +264,7 @@ select {
   transition: border-color var(--t);
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23868686'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23909090'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.8rem center;
 }
@@ -278,7 +277,6 @@ select:focus {
 .field-note {
   font-size: 0.72rem;
   color: var(--secondary-text);
-  opacity: 0.7;
 }
 
 /* Side-by-side color pickers — stack on phones */
@@ -536,8 +534,14 @@ input[type='range'] {
     var(--surface-3) 100%
   );
   border-radius: 99px;
-  outline: none;
   cursor: pointer;
+}
+
+/* The transition/outline reset above used to swallow the shared focus ring —
+   draw it on the thumb's track with enough offset to stay visible. */
+input[type='range']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
 }
 
 input[type='range']::-webkit-slider-thumb {
@@ -587,7 +591,9 @@ input[type='range']::-moz-range-thumb {
   padding: 2rem 1.5rem;
   text-align: center;
   cursor: pointer;
-  transition: all var(--t);
+  transition:
+    border-color var(--t),
+    background-color var(--t);
   background: rgba(255, 255, 255, 0.01);
   user-select: none;
   position: relative;
@@ -609,7 +615,6 @@ input[type='range']::-moz-range-thumb {
 .drop-zone span {
   font-size: 0.75rem;
   color: var(--secondary-text);
-  opacity: 0.6;
   display: block;
   margin-top: 0.3rem;
 }
@@ -642,7 +647,6 @@ input[type='range']::-moz-range-thumb {
 .dz-empty span {
   font-size: 0.72rem;
   color: var(--secondary-text);
-  opacity: 0.6;
 }
 
 .dz-filled {
@@ -719,7 +723,10 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.72rem;
   font-family: Verdana, sans-serif;
   cursor: pointer;
-  transition: all var(--t);
+  transition:
+    border-color var(--t),
+    color var(--t),
+    background-color var(--t);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -758,13 +765,12 @@ input[type='range']::-moz-range-thumb {
 
 .btn:hover {
   background: var(--accent);
-  color: var(--primary-text);
+  color: var(--primary);
 }
 
 .btn:disabled {
   opacity: 0.38;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 .btn:disabled:hover {
@@ -776,7 +782,7 @@ input[type='range']::-moz-range-thumb {
 .btn.ready {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--primary);
 }
 
 .btn.ready:hover {
@@ -797,13 +803,21 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.8rem;
   font-family: Verdana, sans-serif;
   cursor: pointer;
-  transition: all var(--t);
+  transition:
+    background-color var(--t),
+    border-color var(--t),
+    color var(--t);
 }
 
 .btn-sm:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--primary);
+}
+
+.btn-sm:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 /* Small selectable option (size presets, format pickers, …).
@@ -820,7 +834,10 @@ input[type='range']::-moz-range-thumb {
   border-radius: var(--radius);
   color: var(--secondary-text);
   cursor: pointer;
-  transition: all var(--t);
+  transition:
+    background-color var(--t),
+    border-color var(--t),
+    color var(--t);
 }
 
 .choice-btn {
@@ -850,6 +867,16 @@ input[type='range']::-moz-range-thumb {
   color: var(--primary-text);
 }
 
+.choice-btn:disabled,
+.source-btn:disabled,
+.style-btn:disabled,
+.shape-btn:disabled,
+.preset-btn:disabled,
+.angle-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
 /* Two-column export row */
 .btn-row {
   display: grid;
@@ -866,7 +893,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 .btn:hover .btn-fmt {
-  color: #fff;
+  color: var(--primary);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -966,7 +993,10 @@ input[type='range']::-moz-range-thumb {
   cursor: pointer;
   font-size: 0.75rem;
   font-family: Verdana, sans-serif;
-  transition: all var(--t);
+  transition:
+    background-color var(--t),
+    border-color var(--t),
+    color var(--t);
   white-space: nowrap;
   flex-shrink: 0;
   display: flex;
@@ -977,12 +1007,12 @@ input[type='range']::-moz-range-thumb {
 .result-dl:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--primary);
 }
 
 .result-dl:disabled {
   opacity: 0.3;
-  pointer-events: none;
+  cursor: not-allowed;
 }
 
 /* Full-width Download All — accent */
@@ -997,11 +1027,13 @@ input[type='range']::-moz-range-thumb {
   background: var(--accent);
   border: 1px solid var(--accent);
   border-radius: var(--radius);
-  color: #fff;
+  color: var(--primary);
   font-size: 1rem;
   font-family: Verdana, sans-serif;
   cursor: pointer;
-  transition: all var(--t);
+  transition:
+    background-color var(--t),
+    border-color var(--t);
 }
 
 .dl-all-btn svg {
@@ -1016,7 +1048,6 @@ input[type='range']::-moz-range-thumb {
 .dl-all-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 /* ZIP packing progress */
@@ -1109,7 +1140,7 @@ input[type='range']::-moz-range-thumb {
 
 .more-tools-btn:hover {
   background: var(--accent);
-  color: var(--primary-text);
+  color: var(--primary);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1207,7 +1238,7 @@ input[type='range']::-moz-range-thumb {
   min-width: 0;
 }
 
-.tool-item-info h3 {
+.tool-item-info :is(h2, h3) {
   font-family: Verdana, sans-serif;
   font-size: 0.95rem;
   font-weight: bold;

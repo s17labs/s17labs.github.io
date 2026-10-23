@@ -2,7 +2,7 @@
    a single result downloads directly, multiple results pack into a ZIP
    with progress. Callers keep their own file processing + button copy. */
 import JSZip from 'jszip';
-import { downloadBlob } from './lib';
+import { announce, downloadBlob } from './lib';
 
 export interface ZipExportUI {
   button: HTMLButtonElement;
@@ -46,14 +46,22 @@ export async function downloadResultsAsZip(opts: ZipExportOptions): Promise<void
   // Single file — direct download, no ZIP.
   if (results.length === 1) {
     downloadBlob(results[0].blob, results[0].name);
+    announce(`Downloaded ${results[0].name}`);
     return;
   }
+
+  const progressBar = ui.progressFill.parentElement;
+  const setProgress = (pct: number): void => {
+    ui.progressFill.style.width = `${pct}%`;
+    progressBar?.setAttribute('aria-valuenow', String(Math.round(pct)));
+  };
 
   // Multiple — pack into a ZIP.
   ui.button.disabled = true;
   const restoreHtml = ui.button.innerHTML;
   ui.button.innerHTML = packingHtml;
   ui.progressWrap.classList.add('visible');
+  setProgress(0);
 
   // Duplicate names silently overwrite each other in the ZIP — suffix extras
   // (`icon-128x128.png` → `icon-128x128-2.png`).
@@ -73,36 +81,38 @@ export async function downloadResultsAsZip(opts: ZipExportOptions): Promise<void
     const zip = new JSZip();
     for (const r of results) zip.file(uniqueName(r.name), r.blob);
 
-    ui.progressFill.style.width = '50%';
+    setProgress(50);
     ui.progressLabel.textContent = `Adding ${results.length} ${kindWord}…`;
 
     const zipBlob = await zip.generateAsync(
       { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
       (meta) => {
-        ui.progressFill.style.width = `${50 + meta.percent * 0.5}%`;
+        setProgress(50 + meta.percent * 0.5);
         ui.progressLabel.textContent = `Compressing… ${Math.round(meta.percent)}%`;
       },
     );
 
-    ui.progressFill.style.width = '100%';
+    setProgress(100);
     ui.progressLabel.textContent = 'Done!';
 
     downloadBlob(zipBlob, typeof zipName === 'function' ? zipName() : zipName);
+    announce(`Downloaded ZIP with ${results.length} ${kindWord}`);
 
     setTimeout(() => {
       ui.button.disabled = false;
       ui.button.innerHTML = restoreHtml;
       renderButton(opts, results.length);
       ui.progressWrap.classList.remove('visible');
-      ui.progressFill.style.width = '0%';
+      setProgress(0);
     }, 1800);
   } catch (e) {
     console.error(e);
     ui.button.disabled = false;
     ui.button.innerHTML = restoreHtml;
     renderButton(opts, results.length);
-    ui.progressFill.style.width = '0%';
+    setProgress(0);
     ui.progressLabel.textContent = 'Export failed — try again.';
+    announce('ZIP export failed — try again');
   }
 }
 

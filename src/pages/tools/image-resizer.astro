@@ -12,34 +12,41 @@ const tagline = 'Batch resize images directly in your browser — your data neve
   <!-- Upload -->
   <div class="panel">
     <h2 class="panel-title">Upload</h2>
-    <div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload images — activate to open the file picker">
+    <div
+      class="drop-zone"
+      id="drop-zone"
+      tabindex="0"
+      role="button"
+      aria-label="Upload images — drag and drop, or activate to open the file picker"
+      aria-describedby="dz-hint"
+    >
       <div class="dz-empty" id="dz-empty">
         <Icon name="cloud-arrow-up" size={29} />
         <p>Drag &amp; drop images here, or click to select</p>
-        <span>PNG, JPG, GIF, WEBP &mdash; batch supported</span>
+        <span id="dz-hint">PNG, JPG, GIF, WEBP &mdash; batch supported</span>
       </div>
       <div class="dz-filled" id="dz-filled">
         <div class="dz-preview-grid" id="dz-preview-grid"></div>
         <div class="dz-filled-meta">
-          <span id="dz-count-label"></span>
+          <span id="dz-count-label" role="status" aria-live="polite"></span>
           <button type="button" class="dz-change" id="dz-change-btn">
             <Icon name="plus" /> Add / Change
           </button>
         </div>
       </div>
     </div>
-    <input type="file" id="file-input" accept="image/*" multiple />
+    <input type="file" id="file-input" accept="image/*" multiple tabindex="-1" />
   </div>
 
   <!-- Settings -->
   <div class="panel">
     <h2 class="panel-title">Resize Settings</h2>
     <div class="field">
-      <label for="input-w">Dimensions (px)</label>
+      <label for="input-w">Dimensions</label>
       <div class="input-row">
-        <input type="number" id="input-w" placeholder="Width" min="1" max="8000" value="800" />
+        <input type="number" id="input-w" placeholder="Width" min="1" max="8000" value="800" aria-label="Dimensions width in pixels" />
         <span class="input-sep">×</span>
-        <input type="number" id="input-h" placeholder="Height" min="1" max="8000" value="600" />
+        <input type="number" id="input-h" placeholder="Height" min="1" max="8000" value="600" aria-label="Dimensions height in pixels" />
       </div>
     </div>
     <div class="field">
@@ -62,15 +69,24 @@ const tagline = 'Batch resize images directly in your browser — your data neve
     </div>
     <!-- ZIP progress -->
     <div class="zip-progress-wrap" id="zip-progress-wrap">
-      <div class="zip-progress-track"><div class="zip-progress-fill" id="zip-progress-fill"></div></div>
-      <div class="zip-progress-label" id="zip-progress-label">Packing…</div>
+      <div
+        class="zip-progress-track"
+        role="progressbar"
+        aria-label="Packing ZIP"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="zip-progress-fill" id="zip-progress-fill"></div>
+      </div>
+      <div class="zip-progress-label" id="zip-progress-label" role="status" aria-live="polite">Packing…</div>
     </div>
     <!-- Download button — label/icon adapt to single vs batch -->
     <button type="button" class="dl-all-btn" id="dl-all-btn" disabled>
       <span id="dl-icon"><Icon name="download" /></span>
       <span id="dl-label">Download Image</span>
     </button>
-    <div class="results-list" id="results-list"></div>
+    <div class="results-list" id="results-list" role="status" aria-live="polite" aria-busy="false"></div>
   </div>
 </ToolLayout>
 
@@ -103,7 +119,7 @@ const tagline = 'Batch resize images directly in your browser — your data neve
 
   input[type='number'] {
     text-align: center;
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 
   /* Toggle */
@@ -139,7 +155,9 @@ const tagline = 'Batch resize images directly in your browser — your data neve
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: all var(--t);
+    transition:
+      left var(--t),
+      background-color var(--t);
   }
 
   .toggle-track.on .toggle-thumb {
@@ -164,6 +182,6 @@ const tagline = 'Batch resize images directly in your browser — your data neve
 
   .btn:not(.ready):not(:disabled):hover {
     background: var(--accent);
-    color: #fff;
+    color: var(--primary);
   }
 </style>

@@ -1,29 +1,34 @@
 import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { iconSvg } from '../../icons';
-import { downloadBlob, downloadUrl, svgTextToPngBlob } from './lib';
+import { announce, downloadBlob, svgTextToPngBlob } from './lib';
 import { paintRangeFill } from '../range-fill';
 
-// Font Awesome packs are ~2MB — load them on first lookup instead of in the
-// initial bundle. The memoized promise also serializes concurrent lookups.
-let faPromise: Promise<void> | null = null;
+// Font Awesome packs are ~2MB — load each style only when a lookup needs it.
+// Most icons are solid, so a normal search never downloads regular + brands.
+type FAPrefix = 'fas' | 'far' | 'fab';
+const faPromises: Partial<Record<FAPrefix, Promise<void>>> = {};
 
-function ensureFA(): Promise<void> {
-  if (!faPromise) {
-    faPromise = (async () => {
-      const [{ fas }, { far }, { fab }] = await Promise.all([
-        import('@fortawesome/free-solid-svg-icons'),
-        import('@fortawesome/free-regular-svg-icons'),
-        import('@fortawesome/free-brands-svg-icons'),
-      ]);
-      library.add(fas, far, fab);
+function ensureFAPrefix(prefix: FAPrefix): Promise<void> {
+  if (!faPromises[prefix]) {
+    faPromises[prefix] = (async () => {
+      if (prefix === 'fas') {
+        const { fas } = await import('@fortawesome/free-solid-svg-icons');
+        library.add(fas);
+      } else if (prefix === 'far') {
+        const { far } = await import('@fortawesome/free-regular-svg-icons');
+        library.add(far);
+      } else {
+        const { fab } = await import('@fortawesome/free-brands-svg-icons');
+        library.add(fab);
+      }
     })();
     // A failed load must not poison future lookups — forget it and retry.
-    faPromise.catch(() => {
-      faPromise = null;
+    faPromises[prefix]!.catch(() => {
+      delete faPromises[prefix];
     });
   }
-  return faPromise;
+  return faPromises[prefix]!;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,6 +143,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.textValue = '';
   clearTimeout(iconTimer); // drop any pending lookup for the old source
   biSeq++; // invalidate any in-flight Bootstrap lookup
+  faSeq++; // invalidate any in-flight Font Awesome lookup
   emojiSeq++; // invalidate any in-flight emoji fetch
 
   // Update source buttons
@@ -165,14 +171,19 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   // Icon color applies to vector sources (FA, Bootstrap) and text.
   // Emoji carry their own colors.
   const isEmoji = src === 'noto' || src === 'twemoji';
-  document.getElementById('cp-icon')!.classList.toggle('cp-disabled', isEmoji);
+  const iconColorField = document.getElementById('cp-icon')!;
+  iconColorField.classList.toggle('cp-disabled', isEmoji);
+  iconColorField.inert = isEmoji;
   document.getElementById('cp-fa-only-note')!.classList.toggle('visible', isEmoji);
 
   // Material You checkbox + VectorDrawable XMLs need real vector paths
   // (FA, Bootstrap). Text and emoji export as PNG-only.
   const isVector = src === 'fa' || src === 'bi';
   const row = document.getElementById('material-row')!;
+  const materialToggle = document.getElementById('material-toggle') as HTMLInputElement;
   row.classList.toggle('cb-disabled', !isVector);
+  row.setAttribute('aria-disabled', String(!isVector));
+  materialToggle.disabled = !isVector;
   document.getElementById('material-sub')!.textContent = isVector
     ? 'Adds <monochrome> layer for Android 13+'
     : src === 'text'
@@ -253,9 +264,10 @@ function svgDataUri(svgText: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 // FA API lookup
 // ─────────────────────────────────────────────────────────────────────────────
-function findFAIcon(name: string): { paths: VectorPath[]; viewBox: string } | null {
+async function findFAIcon(name: string): Promise<{ paths: VectorPath[]; viewBox: string } | null> {
   for (const prefix of ['fas', 'far', 'fab'] as const) {
     try {
+      await ensureFAPrefix(prefix);
       const def = findIconDefinition({ prefix, iconName: name } as Parameters<typeof findIconDefinition>[0]);
       if (def?.icon) {
         const [w, h, , , pd] = def.icon;
@@ -652,6 +664,7 @@ function render(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 let iconTimer: ReturnType<typeof setTimeout>;
 let biSeq = 0; // guards against out-of-order Bootstrap async lookups
+let faSeq = 0; // guards against out-of-order Font Awesome chunk loads
 let emojiSeq = 0; // guards against out-of-order emoji fetches
 
 const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
@@ -700,18 +713,11 @@ function handleIconInput(): void {
   if (S.source === 'fa') {
     // FA: debounce lookup
     const name = val.toLowerCase().replace(/^fa[srbl]?-/, '');
+    const seq = ++faSeq;
     iconTimer = setTimeout(async () => {
-      try {
-        await ensureFA();
-      } catch {
-        // Pack chunk failed to load (e.g. stale deploy) — surface it.
-        S.valid = false;
-        err(true);
-        render();
-        return;
-      }
-      if (S.source !== 'fa') return; // switched away while packs loaded
-      const r = findFAIcon(name);
+      if (seq !== faSeq) return; // stale — user kept typing
+      const r = await findFAIcon(name);
+      if (seq !== faSeq) return; // stale — user kept typing or switched source
       if (r) {
         Object.assign(S, { iconName: name, paths: r.paths, viewBox: r.viewBox, valid: true });
         err(false);
@@ -784,7 +790,16 @@ elIconInput.addEventListener('input', (e) => {
 elIconInput.addEventListener('compositionend', handleIconInput);
 
 function err(show: boolean): void {
-  document.getElementById('error-msg')!.classList.toggle('visible', show);
+  const el = document.getElementById('error-msg')!;
+  const wasVisible = el.classList.contains('visible');
+  el.classList.toggle('visible', show);
+  // role="alert" only fires when content changes while it is rendered —
+  // re-insert the same message so repeated invalid lookups still announce.
+  if (show && !wasVisible) {
+    const html = el.innerHTML;
+    el.innerHTML = '';
+    el.innerHTML = html;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -866,26 +881,40 @@ function setShape(s: string): void {
 // leaves the checkbox as-is.
 // ─────────────────────────────────────────────────────────────────────────────
 let shapeDialogMode: 'export' | 'material' | null = null;
+let dialogReturnFocus: HTMLElement | null = null;
 
 function nonSquareBg(): boolean {
   return S.bgShape === 'circle' || S.bgShape === 'rounded';
 }
 
+/** Keep the page behind the dialog out of the tab order and a11y tree. */
+function setBackgroundInert(inert: boolean): void {
+  for (const selector of ['.workspace', '.tool-top', '.tool-bottom', '.topbar', '.footer']) {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (el) el.inert = inert;
+  }
+}
+
 function openShapeDialog(mode: 'export' | 'material'): void {
   shapeDialogMode = mode;
+  dialogReturnFocus = document.activeElement as HTMLElement | null;
   const primary = document.getElementById('shape-dialog-primary')!;
   const secondary = document.getElementById('shape-dialog-secondary')!;
   primary.textContent = mode === 'export' ? 'Switch to Square & Export' : 'Switch to Square';
   secondary.textContent = mode === 'export' ? 'Export Anyway' : 'Keep Current Shape';
   document.getElementById('shape-dialog')!.classList.add('visible');
   lockScroll();
+  setBackgroundInert(true);
   primary.focus();
 }
 
 function closeShapeDialog(): void {
   document.getElementById('shape-dialog')!.classList.remove('visible');
+  setBackgroundInert(false);
   unlockScroll();
   shapeDialogMode = null;
+  dialogReturnFocus?.focus();
+  dialogReturnFocus = null;
 }
 
 // Bulletproof scroll lock: overflow:hidden is advisory on mobile browsers —
@@ -932,8 +961,32 @@ document.getElementById('shape-dialog')!.addEventListener('click', (e) => {
   if (e.target === document.getElementById('shape-dialog')) closeShapeDialog();
 });
 
+// Keep Tab inside the dialog while it is open (aria-modal alone does not
+// stop keyboard focus from wandering into the inert page behind it).
+document.getElementById('shape-dialog')!.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const card = document.querySelector<HTMLElement>('#shape-dialog .modal-card');
+  if (!card) return;
+  const focusables = [...card.querySelectorAll<HTMLElement>('button, [href], input, select, textarea')].filter(
+    (el) => !el.hasAttribute('disabled') && el.tabIndex !== -1,
+  );
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && shapeDialogMode) closeShapeDialog();
+  if (e.key === 'Escape' && shapeDialogMode) {
+    e.preventDefault();
+    closeShapeDialog();
+  }
 });
 
 document.getElementById('material-toggle')!.addEventListener('change', (e) => {
@@ -1055,8 +1108,14 @@ const EXPORT_ERROR_DEFAULT = 'Enter a valid icon, text, or emoji first.';
 function exportError(show: boolean, message: string = EXPORT_ERROR_DEFAULT): void {
   const el = document.getElementById('export-error');
   if (!el) return;
-  el.textContent = message;
   el.classList.toggle('visible', show);
+  if (!show) return;
+  // role="alert" announces content changes only while rendered — show the
+  // element first, then write the message on the next frame.
+  el.textContent = '';
+  requestAnimationFrame(() => {
+    el.textContent = message;
+  });
 }
 
 function clampExportSize(v: number): number {
@@ -1092,11 +1151,15 @@ async function exportAs(fmt: string): Promise<void> {
 
   if (fmt === 'svg') {
     downloadBlob(new Blob([await buildExportSVG()], { type: 'image/svg+xml' }), fname + '.svg');
+    announce(`SVG icon downloaded as ${fname}.svg`);
     return;
   }
   await fontsReady();
   svgTextToPngBlob(await buildExportSVG(), w, h)
-    .then((b) => downloadBlob(b, `${fname}-${w}x${h}.png`))
+    .then((b) => {
+      downloadBlob(b, `${fname}-${w}x${h}.png`);
+      announce(`PNG icon downloaded at ${w} by ${h} pixels`);
+    })
     .catch(() => exportError(true, 'PNG export failed — try again.'));
 }
 
@@ -1402,6 +1465,7 @@ async function exportAndroid(): Promise<void> {
 
   function setProgress(pct: number, label: string): void {
     progressFill.style.width = pct + '%';
+    progressFill.parentElement?.setAttribute('aria-valuenow', String(Math.round(pct)));
     progressLabel.textContent = label;
   }
 
@@ -1471,6 +1535,7 @@ async function exportAndroid(): Promise<void> {
 
     showAndroidPreview(densities);
     downloadBlob(zipBlob, `${safeName}-android-icons.zip`);
+    announce(`Android icon package downloaded with ${densities.length * 2 + 1} images`);
 
     setTimeout(() => {
       btn.disabled = false;
@@ -1483,6 +1548,7 @@ async function exportAndroid(): Promise<void> {
     btn.innerHTML = ANDROID_BTN_HTML;
     progressWrap.classList.remove('visible');
     exportError(true, 'Export failed: ' + (e as Error).message);
+    announce('Android package export failed');
   }
 }
 

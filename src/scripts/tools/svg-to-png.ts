@@ -1,5 +1,6 @@
 import { iconSvg } from '../../icons';
 import {
+  announce,
   appendDedupeFiles,
   downloadBlob,
   formatKB,
@@ -87,6 +88,7 @@ function renderUploadPreview(): void {
     emptyEl: dzEmpty,
     filledEl: dzFilled,
     countLabel: dzCountLbl,
+    zone: dropZone,
     files,
     countText: (n) => `${n} SVG file${n !== 1 ? 's' : ''} selected`,
     renderTile: makeSVGTile,
@@ -121,7 +123,9 @@ window.addEventListener('resize', () => {
 function setW(px: number): void {
   inputW.value = String(px);
   document.querySelectorAll<HTMLElement>('.choice-btn').forEach((b) => {
-    b.classList.toggle('active', Number(b.textContent) === px);
+    const on = Number(b.textContent) === px;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
   });
 }
 
@@ -130,7 +134,10 @@ for (const b of document.querySelectorAll<HTMLElement>('.choice-btn')) {
 }
 
 inputW.addEventListener('input', () =>
-  document.querySelectorAll<HTMLElement>('.choice-btn').forEach((b) => b.classList.remove('active')),
+  document.querySelectorAll<HTMLElement>('.choice-btn').forEach((b) => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  }),
 );
 
 // ── Convert ────────────────────────────────────────────────────────────────
@@ -140,22 +147,32 @@ convertBtn.addEventListener('click', () => {
   resultsPanel.style.display = '';
   results = [];
   dlAllBtn.disabled = true;
+  resultsList.setAttribute('aria-busy', 'true');
 
   let done = 0;
+  let failed = 0;
 
   for (const file of files) {
-    convertFile(file, () => {
+    convertFile(file, (ok) => {
+      if (!ok) failed++;
       done++;
       if (done === files.length) {
         // All done — update download button
+        resultsList.setAttribute('aria-busy', 'false');
         updateZipButton(zipOpts(), results.length);
-        dlAllBtn.disabled = false;
+        dlAllBtn.disabled = results.length === 0;
+        const succeeded = results.length;
+        if (failed) {
+          announce(`${succeeded} SVG${succeeded === 1 ? '' : 's'} converted, ${failed} failed`);
+        } else {
+          announce(`${succeeded} SVG${succeeded === 1 ? '' : 's'} converted to PNG`);
+        }
       }
     });
   }
 });
 
-function convertFile(file: File, onDone?: () => void): void {
+function convertFile(file: File, onDone?: (ok: boolean) => void): void {
   // Unclamped widths allocate giant canvases (tab OOM) — same bounds as resizer.
   const targetW = Math.min(8000, Math.max(16, Math.round(Number(inputW.value) || 512)));
   inputW.value = String(targetW);
@@ -171,7 +188,8 @@ function convertFile(file: File, onDone?: () => void): void {
   const fail = (msg: string): void => {
     const meta = item.querySelector('.result-meta');
     if (meta) meta.textContent = msg;
-    onDone?.();
+    announce(msg);
+    onDone?.(false);
   };
 
   readFileAsText(file).then(
@@ -197,7 +215,7 @@ function convertFile(file: File, onDone?: () => void): void {
           item.replaceWith(doneItem);
 
           results.push({ blob: pngBlob, name: outName });
-          onDone?.();
+          onDone?.(true);
         },
         () => fail('Failed to render SVG — check the file is valid.'),
       ),
@@ -213,6 +231,7 @@ function clearResults(): void {
   for (const u of thumbUrls) URL.revokeObjectURL(u);
   thumbUrls = [];
   results = [];
+  resultsList.setAttribute('aria-busy', 'false');
   resetResultsUI({
     list: resultsList,
     panel: resultsPanel,
