@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { debounce, downloadUrl } from './lib';
+import { announce, debounce, downloadUrl } from './lib';
 
 interface QrState {
   text: string;
@@ -47,8 +47,10 @@ function showMsg(el: HTMLElement, show: boolean): void {
   el.classList.toggle('visible', show);
 }
 
-function flashExport(): void {
+function flashExport(format: string): void {
   showMsg(elExportMsg, true);
+  elExportMsg.textContent = `Downloaded successfully as ${format}.`;
+  announce(`QR code downloaded as ${format}`);
   setTimeout(() => showMsg(elExportMsg, false), 2000);
 }
 
@@ -70,14 +72,14 @@ async function generateQR(): Promise<void> {
   const text = S.text.trim();
 
   if (!text) {
-    elErrorMsg.textContent = 'Please enter some text or a URL.';
     showMsg(elErrorMsg, true);
+    elErrorMsg.textContent = 'Please enter some text or a URL.';
     clearPreview();
     return;
   }
   if (isSameColor(S.fg, S.bg)) {
-    elErrorMsg.textContent = 'Foreground and background colors match — the QR code would be unscannable.';
     showMsg(elErrorMsg, true);
+    elErrorMsg.textContent = 'Foreground and background colors match — the QR code would be unscannable.';
     clearPreview();
     return;
   }
@@ -87,6 +89,8 @@ async function generateQR(): Promise<void> {
   elPlaceholder.style.display = 'none';
 
   const canvas = document.createElement('canvas');
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', 'Generated QR code preview');
   elContainer.appendChild(canvas);
 
   try {
@@ -106,8 +110,8 @@ async function generateQR(): Promise<void> {
     if (seq !== qrSeq) return; // a newer run owns the preview now
     console.error('QR generation error:', err);
     clearPreview();
-    elErrorMsg.textContent = 'Could not generate QR code for this input.';
     showMsg(elErrorMsg, true);
+    elErrorMsg.textContent = 'Could not generate QR code for this input.';
   }
 }
 
@@ -125,11 +129,11 @@ async function exportPNG(): Promise<void> {
     });
 
     downloadUrl(dataURL, 'qrcode.png');
-    flashExport();
+    flashExport('PNG');
   } catch (err) {
     console.error('PNG export error:', err);
-    elErrorMsg.textContent = 'PNG export failed — try again.';
     showMsg(elErrorMsg, true);
+    elErrorMsg.textContent = 'PNG export failed — try again.';
   }
 }
 
@@ -149,11 +153,11 @@ async function exportSVG(): Promise<void> {
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     downloadUrl(url, 'qrcode.svg');
-    flashExport();
+    flashExport('SVG');
   } catch (err) {
     console.error('SVG export error:', err);
-    elErrorMsg.textContent = 'SVG export failed — try again.';
     showMsg(elErrorMsg, true);
+    elErrorMsg.textContent = 'SVG export failed — try again.';
   }
 }
 
@@ -177,6 +181,7 @@ elSize.addEventListener('input', () => {
   S.size = Math.min(512, Math.max(128, parseInt(elSize.value) || 256));
   elSize.value = String(S.size);
   elSizeVal.textContent = S.size + ' px';
+  elSize.setAttribute('aria-valuetext', `${S.size} pixels`);
   scheduleUpdate();
 });
 
@@ -216,3 +221,4 @@ elBtnPNG.addEventListener('click', exportPNG);
 elBtnSVG.addEventListener('click', exportSVG);
 
 elSizeVal.textContent = S.size + ' px';
+elSize.setAttribute('aria-valuetext', `${S.size} pixels`);

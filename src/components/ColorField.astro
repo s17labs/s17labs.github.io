@@ -7,22 +7,33 @@ interface Props {
   id: string;
   /** Omit for a field that borrows an outer label. */
   label?: string;
+  /** Accessible name for unlabeled fields (the visible label is supplied elsewhere). */
+  ariaLabel?: string;
   value: string;
 }
 
-const { id, label, value } = Astro.props;
+const { id, label, ariaLabel, value } = Astro.props;
+const name = label ?? ariaLabel ?? 'Color';
 // "Icon Color" → "Pick icon color"; "Background" → "Pick background color".
 const pickLabel = label
   ? /color$/i.test(label)
     ? `Pick ${label.toLowerCase()}`
     : `Pick ${label.toLowerCase()} color`
-  : 'Pick color';
+  : `Pick ${name.toLowerCase()} color`;
+const hexLabel = `${name} hex value`;
 ---
 
 <div class="color-field" id={id} data-cp-field>
   {label && <label for={`${id}-hex`}>{label}</label>}
   <div class="cp-row" data-cp-row>
-    <button type="button" class="cp-swatch" data-cp-swatch aria-label={pickLabel}>
+    <button
+      type="button"
+      class="cp-swatch"
+      data-cp-swatch
+      aria-label={pickLabel}
+      aria-expanded="false"
+      aria-controls={`${id}-popup`}
+    >
       <div class="cp-swatch-fill" data-cp-fill style={`background:${value}`}></div>
     </button>
     <input
@@ -34,21 +45,38 @@ const pickLabel = label
       maxlength="7"
       spellcheck="false"
       autocomplete="off"
+      aria-label={hexLabel}
     />
   </div>
   <slot />
 
-  <div class="cp-popup" data-cp-popup>
+  <div class="cp-popup" id={`${id}-popup`} data-cp-popup>
     <div class="cp-canvas-wrap" data-cp-canvas-wrap>
-      <canvas class="cp-canvas" data-cp-canvas width="200" height="148"></canvas>
+      <canvas
+        class="cp-canvas"
+        data-cp-canvas
+        width="200"
+        height="148"
+        role="img"
+        aria-label={`${name} saturation and brightness`}
+      ></canvas>
       <div class="cp-cursor" data-cp-cursor></div>
     </div>
     <div class="cp-hue-track">
-      <input type="range" class="cp-hue" data-cp-hue min="0" max="360" step="1" value="0" />
+      <input
+        type="range"
+        class="cp-hue"
+        data-cp-hue
+        min="0"
+        max="360"
+        step="1"
+        value="0"
+        aria-label={`${name} hue`}
+      />
     </div>
     <div class="cp-bottom">
       <div class="cp-preview"><div class="cp-preview-fill" data-cp-preview></div></div>
-      <input class="cp-hex-popup" data-cp-hex-popup type="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label={label ? `${label} hex value` : 'Hex value'} />
+      <input class="cp-hex-popup" data-cp-hex-popup type="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label={hexLabel} />
     </div>
   </div>
 </div>

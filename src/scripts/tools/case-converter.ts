@@ -1,4 +1,4 @@
-import { copyText } from './lib';
+import { announce, copyText } from './lib';
 
 function words(str: string): string[] {
   return str
@@ -96,7 +96,12 @@ if (typeof document !== 'undefined') {
   copyBtn.addEventListener('click', () => {
     if (!outputEl.value) return;
     void copyText(outputEl.value).then((ok) => {
-      if (ok) flashCopied();
+      if (ok) {
+        flashCopied();
+        announce('Output copied to clipboard');
+      } else {
+        announce('Copy failed — select the output text and copy it manually');
+      }
     });
   });
 }

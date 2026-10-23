@@ -6,6 +6,19 @@ export interface Debounced {
   (...args: []): void;
 }
 
+/** Push a message into the page's polite live region (BaseLayout renders it). */
+export function announce(message: string): void {
+  if (typeof document === 'undefined') return;
+  const region = document.getElementById('live-region');
+  if (!region) return;
+  region.textContent = '';
+  // Clearing then re-setting in the next frame makes identical repeats
+  // announce again (e.g. two successful copies in a row).
+  requestAnimationFrame(() => {
+    region.textContent = message;
+  });
+}
+
 /** Trailing-edge debounce with a fresh timer per call site. */
 export function debounce(fn: () => void, ms: number): Debounced {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -168,6 +181,9 @@ export interface UploadGridOptions {
   emptyEl: HTMLElement;
   filledEl: HTMLElement;
   countLabel: HTMLElement;
+  /** The clickable upload zone. Once files fill it, it stops being a button so
+      the real "Add / Change" button inside it is not a nested interactive. */
+  zone?: HTMLElement;
   files: File[];
   countText: (n: number) => string;
   renderTile: (file: File) => HTMLElement;
@@ -180,6 +196,7 @@ export function renderUploadGrid({
   emptyEl,
   filledEl,
   countLabel,
+  zone,
   files,
   countText,
   renderTile,
@@ -210,6 +227,15 @@ export function renderUploadGrid({
   countLabel.textContent = countText(files.length);
   emptyEl.style.display = 'none';
   filledEl.classList.add('visible');
+  if (zone) {
+    // The filled state contains its own "Add / Change" button. Keeping the
+    // zone as role="button" would nest interactive controls, so it steps back
+    // to a plain container; the button is the keyboard/AT control now.
+    zone.removeAttribute('role');
+    zone.removeAttribute('tabindex');
+    zone.removeAttribute('aria-label');
+    zone.removeAttribute('aria-describedby');
+  }
 }
 
 /** Rasterize an SVG string to a PNG blob. */
@@ -347,5 +373,6 @@ export function resetResultsUI({ list, panel, progressWrap, progressFill, action
   panel.style.display = 'none';
   progressWrap.classList.remove('visible');
   progressFill.style.width = '0%';
+  progressFill.parentElement?.setAttribute('aria-valuenow', '0');
   actionBtn.disabled = true;
 }

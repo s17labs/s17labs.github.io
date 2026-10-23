@@ -1,5 +1,6 @@
 import { iconSvg } from '../../icons';
 import {
+  announce,
   appendDedupeFiles,
   downloadBlob,
   formatKB,
@@ -93,6 +94,7 @@ function renderUploadPreview(): void {
     emptyEl: dzEmpty,
     filledEl: dzFilled,
     countLabel: dzCountLabel,
+    zone: dropZone,
     files,
     countText: (n) => `${n} image${n !== 1 ? 's' : ''} selected`,
     renderTile: (file) => {
@@ -155,14 +157,24 @@ resizeBtn.addEventListener('click', () => {
   clearResults();
   resultsPanel.style.display = '';
   results = [];
+  resultsList.setAttribute('aria-busy', 'true');
   let done = 0;
+  let failed = 0;
 
   for (const file of files) {
-    processFile(file, () => {
+    processFile(file, (ok) => {
+      if (!ok) failed++;
       done++;
       if (done === files.length) {
+        resultsList.setAttribute('aria-busy', 'false');
         updateZipButton(zipOpts(), results.length);
-        dlAllBtn.disabled = false;
+        dlAllBtn.disabled = results.length === 0;
+        const succeeded = results.length;
+        if (failed) {
+          announce(`${succeeded} image${succeeded === 1 ? '' : 's'} resized, ${failed} failed`);
+        } else {
+          announce(`${succeeded} image${succeeded === 1 ? '' : 's'} resized`);
+        }
       }
     });
   }
@@ -170,7 +182,7 @@ resizeBtn.addEventListener('click', () => {
   dlAllBtn.disabled = true; // disable until all processed
 });
 
-function processFile(file: File, onDone?: () => void): void {
+function processFile(file: File, onDone?: (ok: boolean) => void): void {
   const clampDim = (v: number, fallback: number): number =>
     Number.isFinite(v) ? Math.min(8000, Math.max(1, Math.round(v))) : fallback;
   const targetW = clampDim(Number(inputW.value), 800);
@@ -189,7 +201,8 @@ function processFile(file: File, onDone?: () => void): void {
   const fail = (msg: string): void => {
     const meta = item.querySelector('.result-meta');
     if (meta) meta.textContent = msg;
-    onDone?.();
+    announce(msg);
+    onDone?.(false);
   };
 
   readFileAsDataURL(file).then(
@@ -236,7 +249,7 @@ function processFile(file: File, onDone?: () => void): void {
             item.replaceWith(doneItem);
 
             results.push({ blob, name: outName });
-            onDone?.();
+            onDone?.(true);
           },
           mime,
           isJpeg ? 0.92 : undefined,
@@ -256,6 +269,7 @@ function clearResults(): void {
   for (const u of thumbUrls) URL.revokeObjectURL(u);
   thumbUrls = [];
   results = [];
+  resultsList.setAttribute('aria-busy', 'false');
   resetResultsUI({
     list: resultsList,
     panel: resultsPanel,

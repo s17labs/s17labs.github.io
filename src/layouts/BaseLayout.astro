@@ -16,17 +16,23 @@ interface Props {
   backLabel?: string;
   /** Content measure the bar tracks, in px. */
   barWidth?: number;
+  /** Third-party origins to warm up (Icon Maker's emoji CDN only). */
+  preconnect?: string[];
 }
 
-const { title, description, barTitle, backHref, backLabel, barWidth } = Astro.props;
+const { title, description, barTitle, backHref, backLabel, barWidth, preconnect } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <BaseHead title={title} description={description} />
+    {preconnect?.map((href) => <link rel="preconnect" href={href} crossorigin />)}
+    {preconnect?.map((href) => <link rel="dns-prefetch" href={href} />)}
+    <slot name="head" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     {
       barTitle ? (
         <TopBar
@@ -39,9 +45,12 @@ const { title, description, barTitle, backHref, backLabel, barWidth } = Astro.pr
         <SearchFab />
       )
     }
-    <slot />
+    <main id="main-content" tabindex="-1">
+      <slot />
+    </main>
     <SearchDialog />
     <Footer />
+    <div id="live-region" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
       import '../scripts/range-fill';
     </script>
