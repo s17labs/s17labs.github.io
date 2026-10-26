@@ -30,7 +30,7 @@ const tagline = 'Batch resize images directly in your browser — your data neve
         <div class="dz-filled-meta">
           <span id="dz-count-label" role="status" aria-live="polite"></span>
           <button type="button" class="dz-change" id="dz-change-btn">
-            <Icon name="plus" /> Add / Change
+            <Icon name="plus" />Add / Change
           </button>
         </div>
       </div>
@@ -58,7 +58,7 @@ const tagline = 'Batch resize images directly in your browser — your data neve
       </div>
     </div>
     <button type="button" class="btn" id="resize-btn" disabled>
-      <Icon name="scissors" /> Resize Images
+      <Icon name="scissors" />Resize Images
     </button>
   </div>
 
@@ -175,13 +175,5 @@ const tagline = 'Batch resize images directly in your browser — your data neve
     color: var(--primary-text);
   }
 
-  /* Resize button idle state */
-  .btn:not(.ready):not(:disabled) {
-    color: var(--accent);
-  }
-
-  .btn:not(.ready):not(:disabled):hover {
-    background: var(--accent);
-    color: var(--primary);
-  }
+  /* Resize button uses the shared .btn treatment (no accent idle state) */
 </style>

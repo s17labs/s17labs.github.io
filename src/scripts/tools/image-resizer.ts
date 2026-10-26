@@ -82,7 +82,6 @@ function addFiles(newFiles: File[]): void {
   renderUploadPreview();
   clearResults();
   resizeBtn.disabled = false;
-  resizeBtn.classList.add('ready');
 }
 
 // ── Upload preview grid ────────────────────────────────────────────────────
