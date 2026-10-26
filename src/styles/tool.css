@@ -72,6 +72,19 @@ a {
   text-underline-offset: 2px;
 }
 
+/* .link-secondary with a permanent underline (privacy/terms links) */
+.link-secondary-permanent {
+  color: var(--secondary-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-secondary-permanent:hover {
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .link-ghost {
   color: inherit;
   font-weight: bold;
@@ -764,8 +777,9 @@ input[type='range']::-moz-range-thumb {
 }
 
 .btn:hover {
-  background: var(--accent);
-  color: var(--primary);
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--primary-text);
 }
 
 .btn:disabled {
@@ -775,19 +789,40 @@ input[type='range']::-moz-range-thumb {
 
 .btn:disabled:hover {
   background: var(--btn-bg);
+  border-color: transparent;
   color: var(--secondary-text);
+}
+
+/* Button icons: stay aligned with the label and inherit its color in every
+   state (never a separate accent tint). */
+.btn svg,
+.btn-sm svg,
+.choice-btn svg,
+.source-btn svg,
+.style-btn svg,
+.shape-btn svg,
+.preset-btn svg,
+.angle-btn svg,
+.result-dl svg,
+.dl-all-btn svg,
+.more-tools-btn svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
 }
 
 /* Accent state once the action has something to work on */
 .btn.ready {
-  background: var(--accent);
+  background: var(--accent-dim);
   border-color: var(--accent);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .btn.ready:hover {
-  background: var(--accent-hover);
+  background: rgba(255, 65, 54, 0.24);
   border-color: var(--accent-hover);
+  color: var(--primary-text);
 }
 
 /* Inline / small button */
@@ -810,14 +845,20 @@ input[type='range']::-moz-range-thumb {
 }
 
 .btn-sm:hover {
-  background: var(--accent);
+  background: var(--accent-dim);
   border-color: var(--accent);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .btn-sm:disabled {
   opacity: 0.38;
   cursor: not-allowed;
+}
+
+.btn-sm:disabled:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--secondary-text);
 }
 
 /* Small selectable option (size presets, format pickers, …).
@@ -877,6 +918,16 @@ input[type='range']::-moz-range-thumb {
   cursor: not-allowed;
 }
 
+.choice-btn:disabled:hover,
+.source-btn:disabled:hover,
+.style-btn:disabled:hover,
+.shape-btn:disabled:hover,
+.preset-btn:disabled:hover,
+.angle-btn:disabled:hover {
+  border-color: var(--border);
+  color: var(--secondary-text);
+}
+
 /* Two-column export row */
 .btn-row {
   display: grid;
@@ -888,13 +939,15 @@ input[type='range']::-moz-range-thumb {
 .btn-fmt {
   font-family: Aldrich, sans-serif;
   font-size: 0.85rem;
-  color: var(--accent);
+  color: inherit;
   transition: color var(--t);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  transform: translateY(1.5px);
 }
 
-.btn:hover .btn-fmt {
-  color: var(--primary);
-}
+/* .btn-fmt inherits the button's text color in every state */
 
 /* ═══════════════════════════════════════════════════
    STATUS / ERROR MESSAGE
@@ -1005,14 +1058,20 @@ input[type='range']::-moz-range-thumb {
 }
 
 .result-dl:hover {
-  background: var(--accent);
+  background: var(--accent-dim);
   border-color: var(--accent);
-  color: var(--primary);
+  color: var(--primary-text);
 }
 
 .result-dl:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.result-dl:disabled:hover {
+  background: none;
+  border-color: var(--border);
+  color: var(--secondary-text);
 }
 
 /* Full-width Download All — accent */
@@ -1024,10 +1083,10 @@ input[type='range']::-moz-range-thumb {
   width: 100%;
   margin-bottom: 1rem;
   padding: 0.75rem 1.4rem;
-  background: var(--accent);
+  background: var(--accent-dim);
   border: 1px solid var(--accent);
   border-radius: var(--radius);
-  color: var(--primary);
+  color: var(--primary-text);
   font-size: 1rem;
   font-family: Verdana, sans-serif;
   cursor: pointer;
@@ -1041,13 +1100,18 @@ input[type='range']::-moz-range-thumb {
 }
 
 .dl-all-btn:hover {
-  background: var(--accent-hover);
+  background: rgba(255, 65, 54, 0.24);
   border-color: var(--accent-hover);
 }
 
 .dl-all-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.dl-all-btn:disabled:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
 }
 
 /* ZIP packing progress */
@@ -1139,8 +1203,9 @@ input[type='range']::-moz-range-thumb {
 }
 
 .more-tools-btn:hover {
-  background: var(--accent);
-  color: var(--primary);
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--primary-text);
 }
 
 /* ═══════════════════════════════════════════════════

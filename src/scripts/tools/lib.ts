@@ -333,7 +333,7 @@ export function makeResultItem({
   const dlBtn = document.createElement('button');
   dlBtn.className = 'result-dl';
   dlBtn.type = 'button';
-  dlBtn.innerHTML = `${downloadIconHtml} Save`;
+  dlBtn.innerHTML = `${downloadIconHtml}Save`;
   dlBtn.addEventListener('click', onDownload);
 
   item.append(thumb, info, dlBtn);
@@ -354,7 +354,7 @@ export function makePlaceholderItem(opts: {
         <div class="result-name"></div>
         <div class="result-meta">${opts.statusHtml}</div>
       </div>
-      <button class="result-dl" disabled>${opts.downloadIconHtml} Save</button>`;
+      <button class="result-dl" disabled>${opts.downloadIconHtml}Save</button>`;
   item.querySelector('.result-name')!.textContent = opts.fileName;
   return item;
 }

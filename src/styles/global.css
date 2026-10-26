@@ -266,8 +266,17 @@ a:focus-visible {
 }
 
 .github-link:hover {
-  background: var(--accent);
-  color: var(--primary);
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--primary-text);
+}
+
+/* GitHub-link icons stay aligned with the label and inherit its color */
+.github-link svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -445,8 +454,10 @@ a:focus-visible {
    press still speak in accent, like every other bar control. */
 .search-fab {
   position: fixed;
-  top: max(1.15rem, env(safe-area-inset-top));
-  right: max(1.15rem, env(safe-area-inset-right));
+  /* Match the topbar's hamburger button: centered in the 3.75rem bar
+     (center at 1.875rem) and inset to the 900px page column's right edge. */
+  top: max(0.675rem, env(safe-area-inset-top));
+  right: calc(max(0px, (100vw - 900px) / 2) + max(1.25rem, env(safe-area-inset-right)));
   z-index: 40;
   display: inline-flex;
   align-items: center;

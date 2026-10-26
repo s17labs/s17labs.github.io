@@ -79,7 +79,6 @@ function addFiles(newFiles: File[]): void {
   renderUploadPreview();
   clearResults();
   convertBtn.disabled = false;
-  convertBtn.classList.add('ready');
 }
 
 function renderUploadPreview(): void {
