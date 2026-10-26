@@ -409,9 +409,9 @@ input.text-input {
 }
 
 .modal-btn.primary:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--primary);
+  background: rgba(255, 65, 54, 0.24);
+  border-color: var(--accent-hover);
+  color: var(--primary-text);
 }
 
 #icon-scale {
@@ -679,6 +679,13 @@ input.text-input {
 .android-btn:disabled:hover {
   background: var(--android-dim);
   border-color: rgba(61, 220, 132, 0.22);
+}
+
+.android-btn svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
 }
 
 .android-label {
