@@ -174,19 +174,19 @@ const tagline =
         <h2 class="panel-title">Background Shape</h2>
         <div class="shape-row">
           <button type="button" class="shape-btn" data-shape="none" aria-pressed="false">
-            <div class="shape-icon none"></div>
+            <span class="shape-icon none"></span>
             None
           </button>
           <button type="button" class="shape-btn active" data-shape="circle" aria-pressed="true">
-            <div class="shape-icon circle"></div>
+            <span class="shape-icon circle"></span>
             Circle
           </button>
           <button type="button" class="shape-btn" data-shape="rounded" aria-pressed="false">
-            <div class="shape-icon rounded"></div>
+            <span class="shape-icon rounded"></span>
             Rounded
           </button>
           <button type="button" class="shape-btn" data-shape="square" aria-pressed="false">
-            <div class="shape-icon square"></div>
+            <span class="shape-icon square"></span>
             Square
           </button>
         </div>
@@ -237,14 +237,14 @@ const tagline =
         <div class="android-divider"><hr /><span>Android</span><hr /></div>
 
         <label class="checkbox-row" id="material-row" for="material-toggle">
-          <div class="custom-checkbox">
+          <span class="custom-checkbox">
             <input type="checkbox" id="material-toggle" aria-describedby="material-sub" />
-            <div class="checkbox-box"><Icon name="check" /></div>
-          </div>
-          <div class="checkbox-text">
+            <span class="checkbox-box"><Icon name="check" /></span>
+          </span>
+          <span class="checkbox-text">
             <span class="checkbox-label">Include Material You / Themed Icons</span>
             <span class="checkbox-sub" id="material-sub">Adds &lt;monochrome&gt; layer for Android 13+</span>
-          </div>
+          </span>
         </label>
         <button type="button" class="android-btn" id="android-btn">
           <span style="font-size:1.05rem;display:inline-flex;"><Icon name="android" /></span>
@@ -282,8 +282,7 @@ const tagline =
       </div>
     </div>
   </div>
+  <script>
+    import '../../scripts/tools/icon-maker';
+  </script>
 </ToolLayout>
-
-<script>
-  import '../../scripts/tools/icon-maker';
-</script>
