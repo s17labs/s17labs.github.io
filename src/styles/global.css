@@ -915,6 +915,40 @@ html.topbar-open {
   font-size: 0.85em;
 }
 
+.footer-top-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.footer-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--primary-text);
+  font-family: Aldrich, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color var(--t), border-color var(--t);
+}
+
+.footer-top:hover {
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+.footer-top:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .footer-divider {
   border: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.07);

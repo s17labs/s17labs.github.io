@@ -38,6 +38,8 @@ Colors, typography, iconography, components, and brand kit — documented and sh
 
 Every page except the home page gets a sticky top bar from `BaseLayout`: back link, page header, search, and a menu — pass `barTitle` (plus optional `backHref` / `backLabel` / `barWidth`) rather than hand-rolling a page header. The bar is sized to the page's content measure so it and the column below share both edges. The home page renders a floating search button instead. Search (<kbd>/</kbd> or <kbd>⌘K</kbd>) indexes the tools, projects, pages, and design sections straight from the existing registries, so it stays current with no separate index to maintain.
 
+The shared footer includes a TOP button on every page. It scrolls to the beginning of the page, using an immediate scroll when reduced motion is requested.
+
 ## Tools
 
 The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/tools](https://s17labs.github.io/tools/). Tools are native Astro pages sharing a common design system (`src/styles/tool.css`, `ToolLayout.astro`) with logic typechecked in `src/scripts/tools/` — see `src/data/tools.ts` for the registry.
