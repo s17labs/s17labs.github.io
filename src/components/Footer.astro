@@ -40,7 +40,7 @@ const sections: { title: string; items: LinkItem[] }[] = [
 ];
 ---
 
-<footer class="footer">
+<footer class="footer" id="site-footer">
   <div class="footer-inner">
     <div class="footer-cols">
       <div class="footer-col">
@@ -74,6 +74,15 @@ const sections: { title: string; items: LinkItem[] }[] = [
       }
     </div>
 
+    <div class="footer-top-row">
+      <button class="footer-top" type="button" aria-label="Back to top">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 19V5M5 12l7-7 7 7"></path>
+        </svg>
+        TOP
+      </button>
+    </div>
+
     <hr class="footer-divider" />
 
     <p class="footer-byline">
@@ -83,3 +92,10 @@ const sections: { title: string; items: LinkItem[] }[] = [
     <p class="footer-copy">© {year} {SITE.name}. All rights reserved.</p>
   </div>
 </footer>
+
+<script>
+  document.querySelector<HTMLButtonElement>('.footer-top')?.addEventListener('click', () => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' });
+  });
+</script>
