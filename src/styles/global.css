@@ -934,9 +934,21 @@ html.topbar-open {
   color: var(--primary-text);
   font-family: Aldrich, sans-serif;
   font-size: 0.75rem;
+  line-height: 1;
   letter-spacing: 0.1em;
   cursor: pointer;
   transition: color var(--t), border-color var(--t);
+}
+
+.footer-top svg {
+  display: block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+}
+
+.footer-top span {
+  display: block;
 }
 
 .footer-top:hover {
