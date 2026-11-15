@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { iconSvg } from '../../icons';
 import { announce, downloadBlob, svgTextToPngBlob } from './lib';
+import { initColorPickers, setColorPickerValue } from './color-picker';
 import { paintRangeFill } from '../range-fill';
 
 // Font Awesome packs are ~2MB — load each style only when a lookup needs it.
@@ -67,6 +68,8 @@ interface VectorPath {
   d: string;
   fillRule?: string; // 'evenodd' — preserved from Bootstrap and uploaded SVGs
   opacity?: string; // e.g. '0.4' — FA duotone secondary layer / BI fill-opacity
+  color?: string; // uploaded SVG path override; undefined follows Icon Color
+  label?: string; // uploaded SVG path id, used in the path color list
 }
 
 const S = {
@@ -692,10 +695,12 @@ function collectUploadedSvgPaths(root: Element): VectorPath[] {
       const finalOpacity = own.opacity === undefined ? opacity : opacity * own.opacity;
       if (finalOpacity <= 0) continue;
 
+      const pathId = child.getAttribute('id')?.trim();
       paths.push({
         d,
         ...(fillRule === 'evenodd' ? { fillRule } : {}),
         ...(finalOpacity < 1 ? { opacity: String(Math.round(finalOpacity * 10000) / 10000) } : {}),
+        label: pathId ? pathId.slice(0, 80) : `Path ${paths.length + 1}`,
       });
     }
   }
@@ -945,7 +950,7 @@ function buildSVG(shapeOverride?: string): string {
   if (isVectorSource(S.source) && S.paths) {
     const pathEls = S.paths.map(
       (p) =>
-        `<path d="${escapeXml(p.d)}" fill="${iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
+        `<path d="${escapeXml(p.d)}" fill="${p.color ?? iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
     ).join('');
     iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="${S.viewBox}">${pathEls}</svg>`;
   } else if (S.source === 'text' && S.textValue) {
@@ -1172,8 +1177,12 @@ function err(show: boolean): void {
 // Uploaded SVG controls
 // ─────────────────────────────────────────────────────────────────────────────
 let svgSeq = 0; // guards against a late file read replacing another source
+let selectedSvgPath = -1;
 const elSvgFileInput = document.getElementById('svg-file-input') as HTMLInputElement;
 const elSvgUploadError = document.getElementById('svg-upload-error')!;
+const elSvgPathColorsPanel = document.getElementById('svg-path-colors-panel')!;
+const elSvgPathList = document.getElementById('svg-path-list')!;
+const elSvgPathColorField = document.getElementById('cp-svg-path')!;
 
 function setSvgError(show: boolean, message = ''): void {
   const wasVisible = elSvgUploadError.classList.contains('visible');
@@ -1190,6 +1199,70 @@ function setSvgError(show: boolean, message = ''): void {
   });
 }
 
+function svgPathColor(index: number): string {
+  return S.paths?.[index]?.color ?? S.iconColor;
+}
+
+function updateSvgPathControls(rebuild = false): void {
+  const hasPaths = S.source === 'svg' && S.valid && !!S.paths?.length;
+  elSvgPathColorsPanel.hidden = !hasPaths;
+  if (!hasPaths) {
+    selectedSvgPath = -1;
+    elSvgPathList.replaceChildren();
+    return;
+  }
+
+  if (selectedSvgPath < 0 || selectedSvgPath >= S.paths!.length) selectedSvgPath = 0;
+
+  if (rebuild) {
+    elSvgPathList.replaceChildren();
+    S.paths!.forEach((path, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'svg-path-item';
+      button.dataset.pathIndex = String(index);
+      button.setAttribute('aria-pressed', String(index === selectedSvgPath));
+
+      const swatch = document.createElement('span');
+      swatch.className = 'svg-path-swatch';
+      swatch.setAttribute('aria-hidden', 'true');
+
+      const label = document.createElement('span');
+      label.className = 'svg-path-label';
+      const defaultLabel = `Path ${index + 1}`;
+      label.textContent = path.label && path.label !== defaultLabel ? `${defaultLabel} · ${path.label}` : defaultLabel;
+      button.title = label.textContent;
+
+      const state = document.createElement('span');
+      state.className = 'svg-path-state';
+      state.textContent = path.color ? 'Custom' : 'Icon';
+
+      button.append(swatch, label, state);
+      elSvgPathList.appendChild(button);
+    });
+  }
+
+  elSvgPathList.querySelectorAll<HTMLButtonElement>('.svg-path-item').forEach((button) => {
+    const index = Number(button.dataset.pathIndex);
+    const selected = index === selectedSvgPath;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+    const swatch = button.querySelector<HTMLElement>('.svg-path-swatch');
+    if (swatch) swatch.style.background = svgPathColor(index);
+    const state = button.querySelector<HTMLElement>('.svg-path-state');
+    if (state) state.textContent = S.paths![index].color ? 'Custom' : 'Icon';
+  });
+
+  setColorPickerValue(elSvgPathColorField, svgPathColor(selectedSvgPath));
+}
+
+function resetSvgPathControls(): void {
+  selectedSvgPath = -1;
+  elSvgPathColorsPanel.hidden = true;
+  elSvgPathList.replaceChildren();
+  setColorPickerValue(elSvgPathColorField, S.iconColor);
+}
+
 function clearSvgUploadState(): void {
   svgSeq++;
   elSvgFileInput.value = '';
@@ -1198,6 +1271,7 @@ function clearSvgUploadState(): void {
   document.getElementById('svg-file-meta')!.textContent = '';
   document.getElementById('svg-upload-title')!.textContent = 'Upload SVG';
   document.getElementById('svg-upload-subtitle')!.textContent = 'Choose an SVG with filled paths';
+  resetSvgPathControls();
   setSvgError(false);
 }
 
@@ -1244,6 +1318,7 @@ async function handleSvgFile(file: File): Promise<void> {
     document.getElementById('svg-file-card')!.hidden = false;
     document.getElementById('svg-upload-title')!.textContent = 'Replace SVG';
     document.getElementById('svg-upload-subtitle')!.textContent = 'Choose a different SVG file';
+    updateSvgPathControls(true);
     render();
   } catch (e) {
     if (seq !== svgSeq || S.source !== 'svg') return;
@@ -1255,6 +1330,27 @@ document.getElementById('svg-upload-btn')!.addEventListener('click', () => elSvg
 elSvgFileInput.addEventListener('change', () => {
   const file = elSvgFileInput.files?.[0];
   if (file) void handleSvgFile(file);
+});
+elSvgPathList.addEventListener('click', (event) => {
+  const button = (event.target as Element).closest<HTMLButtonElement>('.svg-path-item');
+  if (!button) return;
+  const index = Number(button.dataset.pathIndex);
+  if (!Number.isInteger(index) || !S.paths?.[index]) return;
+  selectedSvgPath = index;
+  updateSvgPathControls();
+});
+elSvgPathColorField.addEventListener('colorchange', (event) => {
+  if (selectedSvgPath < 0 || !S.paths?.[selectedSvgPath]) return;
+  S.paths[selectedSvgPath].color = (event as CustomEvent<string>).detail;
+  updateSvgPathControls();
+  render();
+});
+document.getElementById('svg-path-reset')!.addEventListener('click', () => {
+  if (!S.paths) return;
+  for (const path of S.paths) path.color = undefined;
+  selectedSvgPath = S.paths.length ? 0 : -1;
+  updateSvgPathControls();
+  render();
 });
 document.getElementById('svg-file-remove')!.addEventListener('click', () => {
   clearSvgUploadState();
@@ -1658,6 +1754,7 @@ function watchColorField(id: string, apply: (hex: string) => void): void {
 
 watchColorField('cp-icon', (hex) => {
   S.iconColor = hex;
+  if (S.source === 'svg') updateSvgPathControls();
 });
 watchColorField('cp-bg', (hex) => {
   S.bgColor = hex;
@@ -1685,7 +1782,7 @@ function buildForegroundXML(): string {
     .map((p) => {
       const alpha = p.opacity ? `\n        android:fillAlpha="${p.opacity}"` : '';
       const fillType = p.fillRule === 'evenodd' ? `\n        android:fillType="evenOdd"` : '';
-      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}${fillType}\n        android:pathData="${escapeXml(p.d)}"/>`;
+      return `    <path\n        android:fillColor="${p.color ?? S.iconColor}"${alpha}${fillType}\n        android:pathData="${escapeXml(p.d)}"/>`;
     })
     .join('\n');
 
@@ -1817,6 +1914,14 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
       ? `  Font:              ${S.fontFamily} ${S.fontWeight}${S.fontItalic ? ' italic' : ''}${S.fontUnderline ? ' + underline' : ''}${S.textSpacing ? `, spacing ${S.textSpacing}` : ''}\n`
       : '';
 
+  const customPathColors = S.paths?.filter((path) => path.color).length ?? 0;
+  const iconColorSummary =
+    S.source === 'svg' && customPathColors
+      ? `${S.iconColor} default · ${customPathColors} custom path ${customPathColors === 1 ? 'color' : 'colors'}`
+      : isVector || S.source === 'text'
+        ? S.iconColor
+        : '(emoji own colors)';
+
   const shapeNote = nonSquareBg()
     ? `\n  NOTE:              Background shape is '${S.bgShape}' — switch to square so launchers can mask freely.`
     : '';
@@ -1829,7 +1934,7 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
 ICON DETAILS
   Source:            ${srcLabel}
   Name / Text / Emoji / File: ${S.iconName}
-  Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
+  Icon color:        ${iconColorSummary}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
   Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}${shapeNote}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
@@ -2076,4 +2181,5 @@ async function showAndroidPreview(densities: [string, number][]): Promise<void> 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────────────
+initColorPickers();
 setPreset(128);

@@ -123,8 +123,8 @@ typechecked TypeScript in `src/scripts/tools/` (shared helpers in `lib.ts`
 and `zip-export.ts`) — keep it free of Node-only APIs.
 
 - **Icon Maker** — icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, text, Noto/Twemoji;
-  solid + gradient backgrounds; SVG/PNG + full Android launcher package (XMLs,
-  mipmaps, Material You) export.
+  per-path colors for uploaded SVGs; solid + gradient backgrounds; SVG/PNG + full
+  Android launcher package (XMLs, mipmaps, Material You) export.
 - **Image Resizer** — batch resize with aspect lock.
 - **SVG to PNG** — vector → transparent PNG rasterization.
 - **Case Converter** — string conventions and writing formats.

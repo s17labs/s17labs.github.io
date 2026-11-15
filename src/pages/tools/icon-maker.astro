@@ -109,9 +109,20 @@ const tagline =
               <Icon name="xmark" />
             </button>
           </div>
-          <div class="font-note">Paths use the selected Icon Color · processed locally</div>
+          <div class="font-note">Paths use Icon Color by default · processed locally</div>
           <div class="status-msg error" id="svg-upload-error" role="alert" aria-atomic="true"></div>
         </div>
+      </div>
+
+      <!-- Per-path colors (uploaded SVG source only) -->
+      <div class="panel" id="svg-path-colors-panel" hidden>
+        <div class="panel-header-row">
+          <h2 class="panel-title">Path Colors</h2>
+          <button type="button" class="btn-sm" id="svg-path-reset">Reset to Icon Color</button>
+        </div>
+        <p class="svg-path-note">Select a path, then choose its color. Paths without an override follow Icon Color.</p>
+        <div class="svg-path-list" id="svg-path-list" role="group" aria-label="Uploaded SVG paths"></div>
+        <ColorField id="cp-svg-path" label="Selected Path Color" value="#ffffff" />
       </div>
 
       <!-- Text style panel (text source only) -->
