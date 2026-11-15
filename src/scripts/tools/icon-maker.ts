@@ -65,13 +65,13 @@ function ensureBiDoc(): Promise<Document | null> {
 // ─────────────────────────────────────────────────────────────────────────────
 interface VectorPath {
   d: string;
-  fillRule?: string; // 'evenodd' — preserved from Bootstrap SVGs
+  fillRule?: string; // 'evenodd' — preserved from Bootstrap and uploaded SVGs
   opacity?: string; // e.g. '0.4' — FA duotone secondary layer / BI fill-opacity
 }
 
 const S = {
-  source: 'fa', // 'fa' | 'bi' | 'text' | 'noto' | 'twemoji'
-  iconName: '', // FA/BI icon name, raw emoji character, or text value
+  source: 'fa', // 'fa' | 'bi' | 'text' | 'noto' | 'twemoji' | 'svg'
+  iconName: '', // FA/BI icon name, raw emoji character, text value, or SVG filename
   // Text specific
   textValue: '', // raw text for the 'text' source
   fontFamily: 'System Sans', // display name (built-in or Google Font)
@@ -132,7 +132,17 @@ const INPUT_CONFIG = {
     cls: 'emoji-input',
     error: 'Emoji not found — try a different character',
   },
+  svg: {
+    label: 'Foreground SVG',
+    placeholder: 'Upload an SVG file',
+    cls: '',
+    error: 'Upload a valid path-based SVG file.',
+  },
 } as const;
+
+function isVectorSource(source: string): boolean {
+  return source === 'fa' || source === 'bi' || source === 'svg';
+}
 
 function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.source = src;
@@ -145,6 +155,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   biSeq++; // invalidate any in-flight Bootstrap lookup
   faSeq++; // invalidate any in-flight Font Awesome lookup
   emojiSeq++; // invalidate any in-flight emoji fetch
+  clearSvgUploadState();
 
   // Update source buttons
   document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => {
@@ -153,13 +164,20 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
     b.setAttribute('aria-pressed', String(on));
   });
 
-  // Update input appearance
+  // Update input appearance. The SVG source has its own file picker.
   const cfg = INPUT_CONFIG[src];
   const input = document.getElementById('icon-input') as HTMLInputElement;
+  const isSvg = src === 'svg';
   document.getElementById('input-label')!.textContent = cfg.label;
   input.placeholder = cfg.placeholder;
   input.value = '';
   input.className = cfg.cls;
+  input.disabled = isSvg;
+  document.getElementById('icon-input-field')!.hidden = isSvg;
+  document.getElementById('svg-upload-panel')!.hidden = !isSvg;
+  document.getElementById('placeholder-copy')!.textContent = isSvg
+    ? 'Upload a foreground SVG to begin'
+    : 'Enter an icon name, text, or emoji to begin';
   if (src === 'text') input.setAttribute('maxlength', '8');
   else input.removeAttribute('maxlength');
 
@@ -168,7 +186,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   errorMsg.innerHTML = cfg.error;
   errorMsg.classList.remove('visible');
 
-  // Icon color applies to vector sources (FA, Bootstrap) and text.
+  // Icon color applies to vector sources (FA, Bootstrap, uploaded SVG) and text.
   // Emoji carry their own colors.
   const isEmoji = src === 'noto' || src === 'twemoji';
   const iconColorField = document.getElementById('cp-icon')!;
@@ -177,8 +195,8 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   document.getElementById('cp-fa-only-note')!.classList.toggle('visible', isEmoji);
 
   // Material You checkbox + VectorDrawable XMLs need real vector paths
-  // (FA, Bootstrap). Text and emoji export as PNG-only.
-  const isVector = src === 'fa' || src === 'bi';
+  // (FA, Bootstrap, uploaded SVG). Text and emoji export as PNG-only.
+  const isVector = isVectorSource(src);
   const row = document.getElementById('material-row')!;
   const materialToggle = document.getElementById('material-toggle') as HTMLInputElement;
   row.classList.toggle('cb-disabled', !isVector);
@@ -379,6 +397,345 @@ async function findBootstrapIcon(name: string): Promise<{ paths: VectorPath[]; v
   } catch {
     return null;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Uploaded SVG source
+//
+// Uploaded artwork is parsed as data and reduced to filled paths. The original
+// markup is never inserted into the page, so scripts, external references, and
+// other active content cannot run. Path-only input also maps cleanly to the
+// existing SVG, PNG, and Android VectorDrawable export pipelines.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const MAX_SVG_BYTES = 2 * 1024 * 1024;
+const MAX_SVG_PATHS = 512;
+const MAX_SVG_PATH_CHARS = 1_000_000;
+const MAX_SVG_COORDINATE = 1_000_000;
+
+interface SvgPresentation {
+  fill?: string;
+  fillRule?: string;
+  fillOpacity?: number;
+  hidden?: boolean;
+}
+
+function parseInlineStyle(style: string | null): Record<string, string> {
+  const values: Record<string, string> = {};
+  if (!style) return values;
+  for (const declaration of style.split(';')) {
+    const colon = declaration.indexOf(':');
+    if (colon <= 0) continue;
+    const property = declaration.slice(0, colon).trim().toLowerCase();
+    const value = declaration.slice(colon + 1).trim();
+    if (property && value) values[property] = value;
+  }
+  return values;
+}
+
+function svgPresentation(el: Element): SvgPresentation & { opacity?: number } {
+  const style = parseInlineStyle(el.getAttribute('style'));
+  const fill = style.fill ?? el.getAttribute('fill') ?? undefined;
+  const fillRule = style['fill-rule'] ?? el.getAttribute('fill-rule') ?? undefined;
+  const fillOpacityValue = style['fill-opacity'] ?? el.getAttribute('fill-opacity') ?? undefined;
+  const opacityValue = style.opacity ?? el.getAttribute('opacity') ?? undefined;
+  const display = style.display ?? el.getAttribute('display') ?? undefined;
+  const visibility = style.visibility ?? el.getAttribute('visibility') ?? undefined;
+  return {
+    fill,
+    fillRule,
+    fillOpacity: fillOpacityValue === undefined ? undefined : parseSvgOpacity(fillOpacityValue, 'fill opacity'),
+    opacity: opacityValue === undefined ? undefined : parseSvgOpacity(opacityValue, 'opacity'),
+    hidden: display === 'none' || visibility === 'hidden' || visibility === 'collapse',
+  };
+}
+
+function parseSvgOpacity(value: string, label: string): number {
+  const trimmed = value.trim();
+  let n: number;
+  if (trimmed.endsWith('%')) n = Number.parseFloat(trimmed.slice(0, -1)) / 100;
+  else n = Number(trimmed);
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    throw new Error(`The SVG ${label} must be between 0 and 1.`);
+  }
+  return n;
+}
+
+function assertSafeSvgElement(el: Element): void {
+  const style = parseInlineStyle(el.getAttribute('style'));
+  const allowedStyleProps = new Set(['fill', 'fill-rule', 'fill-opacity', 'opacity', 'display', 'visibility']);
+  for (const property of Object.keys(style)) {
+    if (!allowedStyleProps.has(property)) {
+      throw new Error('SVG CSS styles are not supported. Use presentation attributes instead.');
+    }
+  }
+
+  for (const attr of el.attributes) {
+    const name = attr.name.toLowerCase();
+    if (name.startsWith('on')) {
+      throw new Error('This SVG contains active content and cannot be used.');
+    }
+    if (name === 'href' || name.endsWith(':href')) {
+      throw new Error('SVG references are not supported. Flatten the artwork before uploading.');
+    }
+    if (name === 'transform') {
+      throw new Error('SVG transforms are not supported. Flatten the artwork before uploading.');
+    }
+    if (
+      name === 'stroke' ||
+      name.startsWith('stroke-') ||
+      name === 'filter' ||
+      name === 'mask' ||
+      name === 'clip-path'
+    ) {
+      throw new Error('Strokes, filters, masks, and clipping are not supported. Use filled paths only.');
+    }
+  }
+}
+
+function parseSvgLength(value: string | null): number | null {
+  if (!value) return null;
+  const match = /^\s*([+-]?(?:\d+\.?\d*|\.\d+))\s*(px)?\s*$/i.exec(value);
+  if (!match) return null;
+  const n = Number(match[1]);
+  return Number.isFinite(n) && n > 0 && n <= MAX_SVG_COORDINATE ? n : null;
+}
+
+function parseSvgViewBox(root: Element): { viewBox: string; width: number; height: number } {
+  const raw = root.getAttribute('viewBox');
+  if (raw) {
+    const parts = raw.trim().split(/[,\s]+/).map(Number);
+    if (parts.length === 4 && parts.every(Number.isFinite)) {
+      const [x, y, width, height] = parts;
+      if (
+        width > 0 &&
+        height > 0 &&
+        width <= MAX_SVG_COORDINATE &&
+        height <= MAX_SVG_COORDINATE &&
+        Math.abs(x) <= MAX_SVG_COORDINATE &&
+        Math.abs(y) <= MAX_SVG_COORDINATE
+      ) {
+        return { viewBox: `${x} ${y} ${width} ${height}`, width, height };
+      }
+    }
+  }
+
+  const width = parseSvgLength(root.getAttribute('width'));
+  const height = parseSvgLength(root.getAttribute('height'));
+  if (width && height) return { viewBox: `0 0 ${width} ${height}`, width, height };
+  throw new Error('The SVG needs a valid viewBox or numeric width and height.');
+}
+
+const PATH_COMMAND_ARITY: Record<string, number> = {
+  M: 2,
+  L: 2,
+  H: 1,
+  V: 1,
+  C: 6,
+  S: 4,
+  Q: 4,
+  T: 4,
+  A: 7,
+};
+
+function isPathCommand(char: string): boolean {
+  return 'MmLlHhVvCcSsQqTtAaZz'.includes(char);
+}
+
+function validatePathData(d: string): void {
+  const trimmed = d.trim();
+  if (!trimmed) throw new Error('The SVG contains an empty path.');
+
+  let index = 0;
+  const skipSeparators = (): void => {
+    while (index < trimmed.length && (trimmed[index] === ',' || /\s/.test(trimmed[index]))) index++;
+  };
+  const readNumber = (): number => {
+    skipSeparators();
+    const match = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/.exec(trimmed.slice(index));
+    if (!match) throw new Error('The SVG contains invalid path data.');
+    index += match[0].length;
+    const value = Number(match[0]);
+    if (!Number.isFinite(value) || Math.abs(value) > MAX_SVG_COORDINATE) {
+      throw new Error('The SVG contains invalid path coordinates.');
+    }
+    return value;
+  };
+  const readFlag = (): number => {
+    skipSeparators();
+    const flag = trimmed[index];
+    if (flag !== '0' && flag !== '1') throw new Error('The SVG contains invalid arc data.');
+    index++;
+    return Number(flag);
+  };
+
+  while (index < trimmed.length) {
+    skipSeparators();
+    if (index >= trimmed.length) break;
+    const command = trimmed[index];
+    if (!isPathCommand(command)) throw new Error('The SVG contains invalid path commands.');
+    index++;
+    const upper = command.toUpperCase();
+    if (upper === 'Z') continue;
+
+    let groups = 0;
+    while (true) {
+      skipSeparators();
+      if (index >= trimmed.length || isPathCommand(trimmed[index])) break;
+      if (upper === 'A') {
+        readNumber(); // rx
+        readNumber(); // ry
+        readNumber(); // x-axis rotation
+        readFlag(); // large-arc flag
+        readFlag(); // sweep flag
+        readNumber(); // x
+        readNumber(); // y
+      } else {
+        const arity = PATH_COMMAND_ARITY[upper];
+        for (let n = 0; n < arity; n++) readNumber();
+      }
+      groups++;
+    }
+    if (!groups) throw new Error('The SVG contains incomplete path data.');
+  }
+
+  // Path2D catches parser edge cases that a hand-written validator misses.
+  if (typeof Path2D !== 'undefined') {
+    try {
+      new Path2D(trimmed);
+    } catch {
+      throw new Error('The SVG contains invalid path data.');
+    }
+  }
+}
+
+function collectUploadedSvgPaths(root: Element): VectorPath[] {
+  const paths: VectorPath[] = [];
+  let totalPathChars = 0;
+
+  function visit(parent: Element, inherited: SvgPresentation): void {
+    for (const child of Array.from(parent.children)) {
+      const tag = child.localName.toLowerCase();
+      assertSafeSvgElement(child);
+
+      if (tag === 'title' || tag === 'desc' || tag === 'metadata') continue;
+      if (tag === 'defs') {
+        for (const definition of Array.from(child.querySelectorAll('*'))) {
+          const definitionTag = definition.localName.toLowerCase();
+          if (
+            definitionTag === 'script' ||
+            definitionTag === 'style' ||
+            definitionTag === 'foreignobject' ||
+            definitionTag === 'animate' ||
+            definitionTag === 'animatemotion' ||
+            definitionTag === 'set' ||
+            definitionTag === 'use' ||
+            definitionTag === 'image' ||
+            definitionTag === 'text'
+          ) {
+            throw new Error('This SVG contains active or styled content and cannot be used.');
+          }
+        }
+        continue;
+      }
+      if (tag === 'style') {
+        throw new Error('SVG CSS styles are not supported. Use presentation attributes instead.');
+      }
+
+      const own = svgPresentation(child);
+      if (own.opacity !== undefined && tag !== 'path') {
+        throw new Error('Group opacity is not supported. Apply opacity to individual paths instead.');
+      }
+
+      if (tag === 'g') {
+        if (own.hidden) continue;
+        visit(child, {
+          fill: own.fill ?? inherited.fill,
+          fillRule: own.fillRule ?? inherited.fillRule,
+          fillOpacity: own.fillOpacity ?? inherited.fillOpacity,
+          hidden: false,
+        });
+        continue;
+      }
+
+      if (tag !== 'path') {
+        throw new Error('This SVG must use filled <path> elements only.');
+      }
+      if (own.hidden) continue;
+
+      const d = child.getAttribute('d')?.trim();
+      if (!d) continue;
+      totalPathChars += d.length;
+      if (totalPathChars > MAX_SVG_PATH_CHARS) {
+        throw new Error('This SVG has too much path data. Simplify the artwork before uploading.');
+      }
+      validatePathData(d);
+      if (paths.length >= MAX_SVG_PATHS) {
+        throw new Error('This SVG has too many paths. Simplify the artwork before uploading.');
+      }
+
+      const fill = own.fill ?? inherited.fill;
+      const normalizedFill = fill?.trim().toLowerCase();
+      if (normalizedFill === 'none') continue;
+      if (normalizedFill?.includes('url(')) {
+        throw new Error('Gradients and pattern fills are not supported. Use a solid fill.');
+      }
+
+      const fillRule = own.fillRule ?? inherited.fillRule;
+      if (fillRule && fillRule !== 'evenodd' && fillRule !== 'nonzero') {
+        throw new Error('The SVG uses an unsupported fill rule.');
+      }
+
+      const fillOpacity = own.fillOpacity ?? inherited.fillOpacity;
+      const opacity = fillOpacity === undefined ? 1 : fillOpacity;
+      const finalOpacity = own.opacity === undefined ? opacity : opacity * own.opacity;
+      if (finalOpacity <= 0) continue;
+
+      paths.push({
+        d,
+        ...(fillRule === 'evenodd' ? { fillRule } : {}),
+        ...(finalOpacity < 1 ? { opacity: String(Math.round(finalOpacity * 10000) / 10000) } : {}),
+      });
+    }
+  }
+
+  const rootPresentation = svgPresentation(root);
+  if (rootPresentation.opacity !== undefined) {
+    throw new Error('Root opacity is not supported. Apply opacity to individual paths instead.');
+  }
+  visit(root, {
+    fill: rootPresentation.fill,
+    fillRule: rootPresentation.fillRule,
+    fillOpacity: rootPresentation.fillOpacity,
+    hidden: false,
+  });
+
+  if (!paths.length) throw new Error('This SVG has no visible filled paths.');
+  return paths;
+}
+
+function parseUploadedSvg(svgText: string): { paths: VectorPath[]; viewBox: string } {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  if (doc.getElementsByTagName('parsererror').length) {
+    throw new Error('This file is not valid SVG.');
+  }
+  if (doc.doctype) {
+    throw new Error('SVG document types are not supported.');
+  }
+
+  const root = doc.documentElement;
+  if (root.localName.toLowerCase() !== 'svg') {
+    throw new Error('Choose a file whose root element is <svg>.');
+  }
+  if (root.namespaceURI && root.namespaceURI !== SVG_NS) {
+    throw new Error('This file is not a standard SVG document.');
+  }
+
+  assertSafeSvgElement(root);
+  const { viewBox } = parseSvgViewBox(root);
+  const paths = collectUploadedSvgPaths(root);
+  return { paths, viewBox };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -585,10 +942,10 @@ function buildSVG(shapeOverride?: string): string {
 
   let iconEl = '';
 
-  if ((S.source === 'fa' || S.source === 'bi') && S.paths) {
+  if (isVectorSource(S.source) && S.paths) {
     const pathEls = S.paths.map(
       (p) =>
-        `<path d="${p.d}" fill="${iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
+        `<path d="${escapeXml(p.d)}" fill="${iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
     ).join('');
     iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="${S.viewBox}">${pathEls}</svg>`;
   } else if (S.source === 'text' && S.textValue) {
@@ -639,7 +996,8 @@ function render(): void {
   const svgDoc = new DOMParser().parseFromString(buildSVG(), 'image/svg+xml');
   if (svgDoc.documentElement.tagName === 'parsererror' || svgDoc.getElementsByTagName('parsererror').length) {
     // Never swap a broken parse into the preview — keep the last good icon.
-    err(true);
+    if (S.source === 'svg') setSvgError(true, 'The SVG could not be rendered. Check its path data.');
+    else err(true);
     return;
   }
   const svg = svgDoc.documentElement;
@@ -648,7 +1006,14 @@ function render(): void {
   if (old) old.replaceWith(svg);
   else container.appendChild(svg);
 
-  const sourceLabels: Record<string, string> = { fa: 'Font Awesome', bi: 'Bootstrap', text: 'Text', noto: 'Noto', twemoji: 'Twemoji' };
+  const sourceLabels: Record<string, string> = {
+    fa: 'Font Awesome',
+    bi: 'Bootstrap',
+    text: 'Text',
+    noto: 'Noto',
+    twemoji: 'Twemoji',
+    svg: 'Custom SVG',
+  };
   document.getElementById('meta-source')!.textContent = sourceLabels[S.source];
   document.getElementById('meta-icon')!.textContent = S.iconName;
   document.getElementById('meta-bg')!.textContent =
@@ -671,6 +1036,7 @@ const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
 
 function handleIconInput(): void {
   clearTimeout(iconTimer);
+  if (S.source === 'svg') return;
   const raw = elIconInput.value;
   const val = raw.trim();
 
@@ -801,6 +1167,102 @@ function err(show: boolean): void {
     el.innerHTML = html;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Uploaded SVG controls
+// ─────────────────────────────────────────────────────────────────────────────
+let svgSeq = 0; // guards against a late file read replacing another source
+const elSvgFileInput = document.getElementById('svg-file-input') as HTMLInputElement;
+const elSvgUploadError = document.getElementById('svg-upload-error')!;
+
+function setSvgError(show: boolean, message = ''): void {
+  const wasVisible = elSvgUploadError.classList.contains('visible');
+  elSvgUploadError.classList.toggle('visible', show);
+  if (!show) {
+    elSvgUploadError.textContent = '';
+    return;
+  }
+  // Re-insert the message so repeated failures are announced even when the
+  // alert was already visible.
+  if (wasVisible) elSvgUploadError.textContent = '';
+  requestAnimationFrame(() => {
+    elSvgUploadError.textContent = message;
+  });
+}
+
+function clearSvgUploadState(): void {
+  svgSeq++;
+  elSvgFileInput.value = '';
+  document.getElementById('svg-file-card')!.hidden = true;
+  document.getElementById('svg-file-name')!.textContent = '';
+  document.getElementById('svg-file-meta')!.textContent = '';
+  document.getElementById('svg-upload-title')!.textContent = 'Upload SVG';
+  document.getElementById('svg-upload-subtitle')!.textContent = 'Choose an SVG with filled paths';
+  setSvgError(false);
+}
+
+async function handleSvgFile(file: File): Promise<void> {
+  const seq = ++svgSeq;
+  setSvgError(false);
+
+  // Clear the native value so choosing the same file again still fires change.
+  elSvgFileInput.value = '';
+  if (!/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') {
+    setSvgError(true, 'Choose an SVG file.');
+    return;
+  }
+  if (file.size > MAX_SVG_BYTES) {
+    setSvgError(true, 'This SVG is too large. Choose a file no larger than 2 MB.');
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await file.text();
+  } catch {
+    setSvgError(true, 'The SVG file could not be read.');
+    return;
+  }
+  if (seq !== svgSeq || S.source !== 'svg') return;
+
+  try {
+    const parsed = parseUploadedSvg(text);
+    if (seq !== svgSeq || S.source !== 'svg') return;
+    Object.assign(S, {
+      iconName: file.name,
+      paths: parsed.paths,
+      viewBox: parsed.viewBox,
+      valid: true,
+    });
+    err(false);
+    setSvgError(false);
+
+    const [, , viewWidth, viewHeight] = parsed.viewBox.split(' ').map(Number);
+    const pathLabel = parsed.paths.length === 1 ? '1 path' : `${parsed.paths.length} paths`;
+    document.getElementById('svg-file-name')!.textContent = file.name;
+    document.getElementById('svg-file-meta')!.textContent = `${pathLabel} · ${viewWidth} × ${viewHeight}`;
+    document.getElementById('svg-file-card')!.hidden = false;
+    document.getElementById('svg-upload-title')!.textContent = 'Replace SVG';
+    document.getElementById('svg-upload-subtitle')!.textContent = 'Choose a different SVG file';
+    render();
+  } catch (e) {
+    if (seq !== svgSeq || S.source !== 'svg') return;
+    setSvgError(true, e instanceof Error ? e.message : 'This SVG could not be used.');
+  }
+}
+
+document.getElementById('svg-upload-btn')!.addEventListener('click', () => elSvgFileInput.click());
+elSvgFileInput.addEventListener('change', () => {
+  const file = elSvgFileInput.files?.[0];
+  if (file) void handleSvgFile(file);
+});
+document.getElementById('svg-file-remove')!.addEventListener('click', () => {
+  clearSvgUploadState();
+  S.paths = null;
+  S.iconName = '';
+  S.valid = false;
+  render();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Text style controls (font family, weight, italic, underline)
@@ -1103,7 +1565,7 @@ async function fontsReady(): Promise<void> {
   }
 }
 
-const EXPORT_ERROR_DEFAULT = 'Enter a valid icon, text, or emoji first.';
+const EXPORT_ERROR_DEFAULT = 'Choose a valid icon, text, emoji, or SVG first.';
 
 function exportError(show: boolean, message: string = EXPORT_ERROR_DEFAULT): void {
   const el = document.getElementById('export-error');
@@ -1124,13 +1586,28 @@ function clampExportSize(v: number): number {
 
 // Export base name: <provider>_<name>_<fill>
 // e.g. fontawesome_star_gradient, bootstrap_alarm_solid,
-// text_hi_solid, emoji_1f600_gradient
+// svg_my-icon_solid, text_hi_solid, emoji_1f600_gradient
 function exportBaseName(): string {
   const provider =
-    S.source === 'fa' ? 'fontawesome' : S.source === 'bi' ? 'bootstrap' : S.source === 'text' ? 'text' : 'emoji';
+    S.source === 'fa'
+      ? 'fontawesome'
+      : S.source === 'bi'
+        ? 'bootstrap'
+        : S.source === 'svg'
+          ? 'svg'
+          : S.source === 'text'
+            ? 'text'
+            : 'emoji';
   let name: string;
   if (S.source === 'fa' || S.source === 'bi') name = S.iconName;
-  else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
+  else if (S.source === 'svg') {
+    name =
+      S.iconName
+        .replace(/\.svg$/i, '')
+        .toLowerCase()
+        .replace(/[^\w-]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'icon';
+  } else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
   else name = emojiCodepoints(S.iconName).join('-') || 'emoji';
   return `${provider}_${name}_${S.bgType === 'gradient' ? 'gradient' : 'solid'}`;
 }
@@ -1190,24 +1667,25 @@ watchColorField('cp-bg2', (hex) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Android XML builders (vector sources: FA + Bootstrap)
+// Android XML builders (vector sources: FA + Bootstrap + uploaded SVG)
 // ─────────────────────────────────────────────────────────────────────────────
 function buildForegroundXML(): string {
-  const [, , vbW, vbH] = S.viewBox.split(' ').map(Number);
+  const [vbX, vbY, vbW, vbH] = S.viewBox.trim().split(/[,\s]+/).map(Number);
   const safeDp = 72 * (S.iconScale / 100);
   const scale = safeDp / Math.max(vbW, vbH);
   const scaledW = vbW * scale,
     scaledH = vbH * scale;
-  const tx = ((108 - scaledW) / 2).toFixed(4);
+  // Account for a non-zero viewBox origin before centering the artwork.
+  const tx = ((108 - scaledW) / 2 - vbX * scale).toFixed(4);
   // Vertical offset: composite canvas units map 100 → 108dp
-  const ty = ((108 - scaledH) / 2 + (S.iconOffsetY * 108) / 100).toFixed(4);
+  const ty = ((108 - scaledH) / 2 - vbY * scale + (S.iconOffsetY * 108) / 100).toFixed(4);
   const sc = scale.toFixed(6);
 
   const pathEls = S.paths!
     .map((p) => {
       const alpha = p.opacity ? `\n        android:fillAlpha="${p.opacity}"` : '';
       const fillType = p.fillRule === 'evenodd' ? `\n        android:fillType="evenOdd"` : '';
-      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}${fillType}\n        android:pathData="${p.d}"/>`;
+      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}${fillType}\n        android:pathData="${escapeXml(p.d)}"/>`;
     })
     .join('\n');
 
@@ -1287,7 +1765,7 @@ function buildColorsXML(): string {
 }
 
 function buildReadme(withMonochrome: boolean): string {
-  const isVector = S.source === 'fa' || S.source === 'bi';
+  const isVector = isVectorSource(S.source);
   const isEmoji = S.source === 'noto' || S.source === 'twemoji';
   const srcLabel = {
     fa: 'Font Awesome',
@@ -1295,6 +1773,7 @@ function buildReadme(withMonochrome: boolean): string {
     text: 'Custom Text',
     noto: 'Noto Emoji',
     twemoji: 'Twemoji',
+    svg: 'Uploaded SVG',
   }[S.source];
 
   const monoSection = !isVector
@@ -1318,8 +1797,8 @@ function buildReadme(withMonochrome: boolean): string {
   └── values/
       └── colors.xml                   ic_launcher_background color resource`
     : `  (No XML files — VectorDrawable adaptive icons require a vector source
-    (Font Awesome or Bootstrap). PNG mipmaps are sufficient for all
-    Android versions.)`;
+    (Font Awesome, Bootstrap, or uploaded SVG). PNG mipmaps are sufficient
+    for all Android versions.)`;
 
   const rasterNote = !isVector
     ? `
@@ -1327,7 +1806,7 @@ NOTE FOR ${isEmoji ? 'EMOJI' : 'TEXT'} ICONS
   ${isEmoji ? 'Emoji sources (Noto, Twemoji)' : 'Text icons'} export PNG mipmaps only. Android's
   VectorDrawable format does not support the ${isEmoji ? 'gradients and raster\n  references used in emoji SVGs' : 'text elements used in text icons'}. For full adaptive icon XML support
   (API 26+ shape masking, Material You theming), use a vector
-  source (Font Awesome or Bootstrap) instead.
+  source (Font Awesome, Bootstrap, or uploaded SVG) instead.
 ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface, so they\n  render identically anywhere. PNG exports are fully rasterized.\n`}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
@@ -1349,7 +1828,7 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
 
 ICON DETAILS
   Source:            ${srcLabel}
-  Name / Text / Emoji: ${S.iconName}
+  Name / Text / Emoji / File: ${S.iconName}
   Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
   Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}${shapeNote}
@@ -1450,7 +1929,7 @@ async function exportAndroid(): Promise<void> {
     return;
   }
 
-  const isVector = S.source === 'fa' || S.source === 'bi';
+  const isVector = isVectorSource(S.source);
   const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;
   const btn = document.getElementById('android-btn') as HTMLButtonElement;
   const progressWrap = document.getElementById('progress-wrap')!;
@@ -1504,7 +1983,7 @@ async function exportAndroid(): Promise<void> {
     const playBlob = await svgTextToPngBlob(await buildExportSVG(), 512, 512);
     zip.file('play_store_icon.png', playBlob);
 
-    // XML files: vector sources (FA, Bootstrap) only
+    // XML files: vector sources (FA, Bootstrap, uploaded SVG) only
     if (isVector) {
       setProgress(86, 'Building adaptive icon XMLs…');
       const adaptiveXML = buildAdaptiveIconXML(withMonochrome);

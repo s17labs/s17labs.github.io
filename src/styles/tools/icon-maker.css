@@ -149,8 +149,8 @@
 /* Text inputs use the shared tool.css base; only icon-maker extras live here. */
 /* ── Option buttons — base recipe lives on .choice-btn in tool.css;
    per-group rules below add only layout/typography ── */
-/* 3+2 layout at every width — the controls column is narrow (~320px)
-   on desktop too, so 5-across squeezes the buttons. */
+/* 3+3 layout at every width — the controls column is narrow (~320px)
+   on desktop too, so 6-across squeezes the buttons. */
 .source-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -199,6 +199,138 @@ input.text-input {
   font-weight: 700;
   letter-spacing: 0.04em;
   font-family: Verdana, sans-serif;
+}
+
+/* ── Uploaded SVG source ── */
+.svg-upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.workspace .field[hidden],
+.svg-upload-panel[hidden],
+.svg-file-card[hidden] {
+  display: none;
+}
+
+.workspace .svg-upload-btn {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--secondary-text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color var(--t),
+    background-color var(--t),
+    color var(--t);
+}
+
+.workspace .svg-upload-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
+}
+
+.svg-upload-mark {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--tile-bg);
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.svg-upload-copy,
+.svg-file-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.svg-upload-title {
+  font-family: Verdana, sans-serif;
+  font-size: 0.8rem;
+  color: var(--primary-text);
+}
+
+.svg-upload-subtitle,
+.svg-file-meta {
+  font-size: 0.65rem;
+  color: var(--secondary-text);
+  font-family: 'Courier New', monospace;
+}
+
+.svg-file-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.svg-file-mark {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.svg-file-copy {
+  flex: 1;
+}
+
+.svg-file-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--primary-text);
+  font-family: Verdana, sans-serif;
+}
+
+.workspace .svg-file-remove {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  transition:
+    border-color var(--t),
+    color var(--t),
+    background-color var(--t);
+}
+
+.workspace .svg-file-remove:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--primary-text);
 }
 
 /* ── Text style panel (text source only) ── */

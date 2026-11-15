@@ -122,7 +122,7 @@ Native Astro pages sharing the s17 design system, served at
 typechecked TypeScript in `src/scripts/tools/` (shared helpers in `lib.ts`
 and `zip-export.ts`) — keep it free of Node-only APIs.
 
-- **Icon Maker** — icons from Font Awesome, Bootstrap Icons, text, Noto/Twemoji;
+- **Icon Maker** — icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, text, Noto/Twemoji;
   solid + gradient backgrounds; SVG/PNG + full Android launcher package (XMLs,
   mipmaps, Material You) export.
 - **Image Resizer** — batch resize with aspect lock.

@@ -7,9 +7,9 @@ import '../../styles/tools/icon-maker-fonts.css';
 
 const title = 'Icon Maker | s17 Labs Tools';
 const description =
-  'Generate and export custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
+  'Generate and export custom icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
 const tagline =
-  'Generate custom icons from Font Awesome, Bootstrap Icons, custom text, Noto Emoji, or Twemoji. Control colors, gradients, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
+  'Generate custom icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, custom text, Noto Emoji, or Twemoji. Control colors, gradients, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
 ---
 
 <ToolLayout
@@ -28,7 +28,7 @@ const tagline =
         <div id="preview-container">
           <div class="icon-placeholder" id="placeholder">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path></svg>
-            <p>Enter an icon name, text, or emoji to begin</p>
+            <p id="placeholder-copy">Enter an icon name, text, or emoji to begin</p>
           </div>
           <div class="preview-loading" id="preview-loading" role="status" aria-live="polite">
             <span style="display:inline-flex;"><Icon name="circle-notch" class="spin" /></span>
@@ -75,14 +75,42 @@ const tagline =
             <span class="src-ico">🐦</span>
             <span class="src-lbl">Twemoji</span>
           </button>
+          <button type="button" class="source-btn" data-source="svg" aria-pressed="false">
+            <span class="src-ico"><Icon name="cloud-arrow-up" /></span>
+            <span class="src-lbl">Upload SVG</span>
+          </button>
         </div>
 
-        <div class="field">
+        <div class="field" id="icon-input-field">
           <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
           <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
           <div class="status-msg error" id="error-msg" role="alert" aria-atomic="true">
             Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a>
           </div>
+        </div>
+
+        <div class="svg-upload-panel" id="svg-upload-panel" hidden>
+          <span class="group-label">Foreground SVG</span>
+          <input type="file" id="svg-file-input" accept=".svg,image/svg+xml" hidden />
+          <button type="button" class="svg-upload-btn" id="svg-upload-btn">
+            <span class="svg-upload-mark"><Icon name="cloud-arrow-up" /></span>
+            <span class="svg-upload-copy">
+              <span class="svg-upload-title" id="svg-upload-title">Upload SVG</span>
+              <span class="svg-upload-subtitle" id="svg-upload-subtitle">Choose an SVG with filled paths</span>
+            </span>
+          </button>
+          <div class="svg-file-card" id="svg-file-card" hidden>
+            <span class="svg-file-mark"><Icon name="bezier-curve" /></span>
+            <span class="svg-file-copy">
+              <span class="svg-file-name" id="svg-file-name"></span>
+              <span class="svg-file-meta" id="svg-file-meta" role="status" aria-live="polite"></span>
+            </span>
+            <button type="button" class="svg-file-remove" id="svg-file-remove" aria-label="Remove uploaded SVG">
+              <Icon name="xmark" />
+            </button>
+          </div>
+          <div class="font-note">Paths use the selected Icon Color · processed locally</div>
+          <div class="status-msg error" id="svg-upload-error" role="alert" aria-atomic="true"></div>
         </div>
       </div>
 
@@ -231,7 +259,7 @@ const tagline =
           <button type="button" class="btn export-btn" data-fmt="png"><span class="btn-fmt">PNG</span>Export</button>
         </div>
         <div class="status-msg error" id="export-error" role="alert" aria-atomic="true">
-          Enter a valid icon, text, or emoji first.
+          Choose a valid icon, text, emoji, or SVG first.
         </div>
 
         <div class="android-divider"><hr /><span>Android</span><hr /></div>
