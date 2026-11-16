@@ -658,7 +658,11 @@ function parsePathCommands(d: string): RawPathCommand[] {
 }
 
 function validatePathData(d: string): void {
-  parsePathCommands(d);
+  const commands = parsePathCommands(d);
+  const absoluteCommands = absolutePathCommands(commands);
+  if (absoluteCommands.some(absoluteCommandHasLargeCoordinate)) {
+    throw new Error('The SVG contains invalid path coordinates.');
+  }
 
   // Path2D catches parser edge cases that a hand-written validator misses.
   if (typeof Path2D !== 'undefined') {
@@ -1409,6 +1413,13 @@ function collectUploadedSvgPaths(root: Element, viewBounds: SvgPathBounds): Uplo
 function parseUploadedSvg(
   svgText: string
 ): { paths: VectorPath[]; viewBox: string; pathCount: number } {
+  // Reject document types before XML parsing. A doctype can declare entities,
+  // and rejecting it only after DOMParser has already expanded them would
+  // leave an avoidable resource-exhaustion path.
+  if (/<!doctype/i.test(svgText)) {
+    throw new Error('SVG document types are not supported.');
+  }
+
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   if (doc.getElementsByTagName('parsererror').length) {
     throw new Error('This file is not valid SVG.');
@@ -1876,8 +1887,10 @@ const elSvgUploadError = document.getElementById('svg-upload-error')!;
 const elSvgPathColorsPanel = document.getElementById('svg-path-colors-panel')!;
 const elSvgPathList = document.getElementById('svg-path-list')!;
 const elSvgPathColorField = document.getElementById('cp-svg-path')!;
+let svgErrorRevision = 0;
 
 function setSvgError(show: boolean, message = ''): void {
+  const revision = ++svgErrorRevision;
   const wasVisible = elSvgUploadError.classList.contains('visible');
   elSvgUploadError.classList.toggle('visible', show);
   if (!show) {
@@ -1885,9 +1898,11 @@ function setSvgError(show: boolean, message = ''): void {
     return;
   }
   // Re-insert the message so repeated failures are announced even when the
-  // alert was already visible.
+  // alert was already visible. The revision prevents an older queued frame
+  // from restoring a stale error after a newer upload or source change.
   if (wasVisible) elSvgUploadError.textContent = '';
   requestAnimationFrame(() => {
+    if (revision !== svgErrorRevision) return;
     elSvgUploadError.textContent = message;
   });
 }

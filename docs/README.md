@@ -135,8 +135,9 @@ and `zip-export.ts`) — keep it free of Node-only APIs.
 The **Upload SVG** source parses artwork locally in the browser and renders it
 from filled `<path>` elements only. The uploaded markup is never inserted into
 the page, and the file never leaves the browser. Unsupported or active content
-(unsupported CSS, scripts, external references, transforms, strokes, filters,
-masks, clipping paths, gradients, and patterns) is rejected with a clear error.
+(document types and entities, unsupported CSS, scripts, external references,
+transforms, strokes, filters, masks, clipping paths, gradients, and patterns)
+is rejected with a clear error.
 
 - **Path & Region Colors** lists every colorable item. Separate SVG paths are
   independently colorable; a merged path is split only where it contains
