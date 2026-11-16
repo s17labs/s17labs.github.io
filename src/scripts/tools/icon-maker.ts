@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { library, findIconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { iconSvg } from '../../icons';
 import { announce, downloadBlob, svgTextToPngBlob } from './lib';
+import { initColorPickers, setColorPickerValue } from './color-picker';
 import { paintRangeFill } from '../range-fill';
 
 // Font Awesome packs are ~2MB — load each style only when a lookup needs it.
@@ -65,13 +66,15 @@ function ensureBiDoc(): Promise<Document | null> {
 // ─────────────────────────────────────────────────────────────────────────────
 interface VectorPath {
   d: string;
-  fillRule?: string; // 'evenodd' — preserved from Bootstrap SVGs
+  fillRule?: string; // 'evenodd' — preserved from Bootstrap and uploaded SVGs
   opacity?: string; // e.g. '0.4' — FA duotone secondary layer / BI fill-opacity
+  color?: string; // uploaded SVG path override; undefined follows Icon Color
+  label?: string; // uploaded SVG path or merged-region label
 }
 
 const S = {
-  source: 'fa', // 'fa' | 'bi' | 'text' | 'noto' | 'twemoji'
-  iconName: '', // FA/BI icon name, raw emoji character, or text value
+  source: 'fa', // 'fa' | 'bi' | 'text' | 'noto' | 'twemoji' | 'svg'
+  iconName: '', // FA/BI icon name, raw emoji character, text value, or SVG filename
   // Text specific
   textValue: '', // raw text for the 'text' source
   fontFamily: 'System Sans', // display name (built-in or Google Font)
@@ -95,6 +98,29 @@ const S = {
   emojiSvg: null as string | null, // raw SVG string from CDN
   valid: false,
 };
+
+const elIconColorField = document.getElementById('cp-icon')!;
+const elIconColorHex = document.getElementById('cp-icon-hex') as HTMLInputElement;
+const elIconColorSwatch = elIconColorField.querySelector<HTMLButtonElement>('[data-cp-swatch]')!;
+
+function iconColorHasRegionOverrides(): boolean {
+  return S.source === 'svg' && !!S.paths?.some((path) => path.color);
+}
+
+function isIconColorDisabled(): boolean {
+  const isEmoji = S.source === 'noto' || S.source === 'twemoji';
+  return isEmoji || iconColorHasRegionOverrides();
+}
+
+function updateIconColorAvailability(): void {
+  const disabled = isIconColorDisabled();
+  elIconColorField.classList.toggle('cp-disabled', disabled);
+  elIconColorField.inert = disabled;
+  elIconColorField.setAttribute('aria-disabled', String(disabled));
+  elIconColorHex.disabled = disabled;
+  elIconColorSwatch.disabled = disabled;
+  if (disabled) setColorPickerValue(elIconColorField, S.iconColor);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Source switching
@@ -132,7 +158,17 @@ const INPUT_CONFIG = {
     cls: 'emoji-input',
     error: 'Emoji not found — try a different character',
   },
+  svg: {
+    label: 'Foreground SVG',
+    placeholder: 'Upload an SVG file',
+    cls: '',
+    error: 'Upload a valid path-based SVG file.',
+  },
 } as const;
+
+function isVectorSource(source: string): boolean {
+  return source === 'fa' || source === 'bi' || source === 'svg';
+}
 
 function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.source = src;
@@ -145,6 +181,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   biSeq++; // invalidate any in-flight Bootstrap lookup
   faSeq++; // invalidate any in-flight Font Awesome lookup
   emojiSeq++; // invalidate any in-flight emoji fetch
+  clearSvgUploadState();
 
   // Update source buttons
   document.querySelectorAll<HTMLElement>('.source-btn').forEach((b) => {
@@ -153,13 +190,20 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
     b.setAttribute('aria-pressed', String(on));
   });
 
-  // Update input appearance
+  // Update input appearance. The SVG source has its own file picker.
   const cfg = INPUT_CONFIG[src];
   const input = document.getElementById('icon-input') as HTMLInputElement;
+  const isSvg = src === 'svg';
   document.getElementById('input-label')!.textContent = cfg.label;
   input.placeholder = cfg.placeholder;
   input.value = '';
   input.className = cfg.cls;
+  input.disabled = isSvg;
+  document.getElementById('icon-input-field')!.hidden = isSvg;
+  document.getElementById('svg-upload-panel')!.hidden = !isSvg;
+  document.getElementById('placeholder-copy')!.textContent = isSvg
+    ? 'Upload a foreground SVG to begin'
+    : 'Enter an icon name, text, or emoji to begin';
   if (src === 'text') input.setAttribute('maxlength', '8');
   else input.removeAttribute('maxlength');
 
@@ -168,17 +212,15 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   errorMsg.innerHTML = cfg.error;
   errorMsg.classList.remove('visible');
 
-  // Icon color applies to vector sources (FA, Bootstrap) and text.
+  // Icon color applies to vector sources (FA, Bootstrap, uploaded SVG) and text.
   // Emoji carry their own colors.
   const isEmoji = src === 'noto' || src === 'twemoji';
-  const iconColorField = document.getElementById('cp-icon')!;
-  iconColorField.classList.toggle('cp-disabled', isEmoji);
-  iconColorField.inert = isEmoji;
+  updateIconColorAvailability();
   document.getElementById('cp-fa-only-note')!.classList.toggle('visible', isEmoji);
 
   // Material You checkbox + VectorDrawable XMLs need real vector paths
-  // (FA, Bootstrap). Text and emoji export as PNG-only.
-  const isVector = src === 'fa' || src === 'bi';
+  // (FA, Bootstrap, uploaded SVG). Text and emoji export as PNG-only.
+  const isVector = isVectorSource(src);
   const row = document.getElementById('material-row')!;
   const materialToggle = document.getElementById('material-toggle') as HTMLInputElement;
   row.classList.toggle('cb-disabled', !isVector);
@@ -379,6 +421,1030 @@ async function findBootstrapIcon(name: string): Promise<{ paths: VectorPath[]; v
   } catch {
     return null;
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Uploaded SVG source
+//
+// Uploaded artwork is parsed as data and reduced to filled paths. The original
+// markup is never inserted into the page, so scripts, external references, and
+// other active content cannot run. Path-only input also maps cleanly to the
+// existing SVG, PNG, and Android VectorDrawable export pipelines.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const MAX_SVG_BYTES = 2 * 1024 * 1024;
+const MAX_SVG_PATHS = 512;
+const MAX_SVG_PATH_CHARS = 1_000_000;
+const MAX_SVG_COORDINATE = 1_000_000;
+
+interface SvgPresentation {
+  fill?: string;
+  fillRule?: string;
+  fillOpacity?: number;
+  hidden?: boolean;
+}
+
+function parseInlineStyle(style: string | null): Record<string, string> {
+  const values: Record<string, string> = {};
+  if (!style) return values;
+  for (const declaration of style.split(';')) {
+    const colon = declaration.indexOf(':');
+    if (colon <= 0) continue;
+    const property = declaration.slice(0, colon).trim().toLowerCase();
+    const value = declaration.slice(colon + 1).trim();
+    if (property && value) values[property] = value;
+  }
+  return values;
+}
+
+function svgPresentation(el: Element): SvgPresentation & { opacity?: number } {
+  const style = parseInlineStyle(el.getAttribute('style'));
+  const fill = style.fill ?? el.getAttribute('fill') ?? undefined;
+  const fillRule = style['fill-rule'] ?? el.getAttribute('fill-rule') ?? undefined;
+  const fillOpacityValue = style['fill-opacity'] ?? el.getAttribute('fill-opacity') ?? undefined;
+  const opacityValue = style.opacity ?? el.getAttribute('opacity') ?? undefined;
+  const display = style.display ?? el.getAttribute('display') ?? undefined;
+  const visibility = style.visibility ?? el.getAttribute('visibility') ?? undefined;
+  return {
+    fill,
+    fillRule,
+    fillOpacity: fillOpacityValue === undefined ? undefined : parseSvgOpacity(fillOpacityValue, 'fill opacity'),
+    opacity: opacityValue === undefined ? undefined : parseSvgOpacity(opacityValue, 'opacity'),
+    hidden: display === 'none' || visibility === 'hidden' || visibility === 'collapse',
+  };
+}
+
+function parseSvgOpacity(value: string, label: string): number {
+  const trimmed = value.trim();
+  let n: number;
+  if (trimmed.endsWith('%')) n = Number.parseFloat(trimmed.slice(0, -1)) / 100;
+  else n = Number(trimmed);
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    throw new Error(`The SVG ${label} must be between 0 and 1.`);
+  }
+  return n;
+}
+
+function assertSafeSvgElement(el: Element): void {
+  const style = parseInlineStyle(el.getAttribute('style'));
+  const allowedStyleProps = new Set(['fill', 'fill-rule', 'fill-opacity', 'opacity', 'display', 'visibility']);
+  for (const property of Object.keys(style)) {
+    if (!allowedStyleProps.has(property)) {
+      throw new Error('SVG CSS styles are not supported. Use presentation attributes instead.');
+    }
+  }
+
+  for (const attr of el.attributes) {
+    const name = attr.name.toLowerCase();
+    if (name.startsWith('on')) {
+      throw new Error('This SVG contains active content and cannot be used.');
+    }
+    if (name === 'href' || name.endsWith(':href')) {
+      throw new Error('SVG references are not supported. Flatten the artwork before uploading.');
+    }
+    if (name === 'transform') {
+      throw new Error('SVG transforms are not supported. Flatten the artwork before uploading.');
+    }
+    if (
+      name === 'stroke' ||
+      name.startsWith('stroke-') ||
+      name === 'filter' ||
+      name === 'mask' ||
+      name === 'clip-path'
+    ) {
+      throw new Error('Strokes, filters, masks, and clipping are not supported. Use filled paths only.');
+    }
+  }
+}
+
+function parseSvgLength(value: string | null): number | null {
+  if (!value) return null;
+  const match = /^\s*([+-]?(?:\d+\.?\d*|\.\d+))\s*(px)?\s*$/i.exec(value);
+  if (!match) return null;
+  const n = Number(match[1]);
+  return Number.isFinite(n) && n > 0 && n <= MAX_SVG_COORDINATE ? n : null;
+}
+
+function parseSvgViewBox(
+  root: Element
+): { viewBox: string; x: number; y: number; width: number; height: number } {
+  const raw = root.getAttribute('viewBox');
+  if (raw) {
+    const parts = raw.trim().split(/[,\s]+/).map(Number);
+    if (parts.length === 4 && parts.every(Number.isFinite)) {
+      const [x, y, width, height] = parts;
+      if (
+        width > 0 &&
+        height > 0 &&
+        width <= MAX_SVG_COORDINATE &&
+        height <= MAX_SVG_COORDINATE &&
+        Math.abs(x) <= MAX_SVG_COORDINATE &&
+        Math.abs(y) <= MAX_SVG_COORDINATE
+      ) {
+        return { viewBox: `${x} ${y} ${width} ${height}`, x, y, width, height };
+      }
+    }
+  }
+
+  const width = parseSvgLength(root.getAttribute('width'));
+  const height = parseSvgLength(root.getAttribute('height'));
+  if (width && height) {
+    return { viewBox: `0 0 ${width} ${height}`, x: 0, y: 0, width, height };
+  }
+  throw new Error('The SVG needs a valid viewBox or numeric width and height.');
+}
+
+const PATH_COMMAND_ARITY: Record<string, number> = {
+  M: 2,
+  L: 2,
+  H: 1,
+  V: 1,
+  C: 6,
+  S: 4,
+  Q: 4,
+  T: 2,
+  A: 7,
+};
+
+function isPathCommand(char: string): boolean {
+  return 'MmLlHhVvCcSsQqTtAaZz'.includes(char);
+}
+
+interface RawPathCommand {
+  command: string;
+  args: number[];
+}
+
+interface AbsolutePathCommand {
+  command: 'M' | 'L' | 'H' | 'V' | 'C' | 'S' | 'Q' | 'T' | 'A' | 'Z';
+  args: number[];
+  implicitControl?: { x: number; y: number };
+}
+
+/** Parse path data into numeric command groups, validating as we go. */
+function parsePathCommands(d: string): RawPathCommand[] {
+  const trimmed = d.trim();
+  if (!trimmed) throw new Error('The SVG contains an empty path.');
+
+  let index = 0;
+  const skipSeparators = (): void => {
+    while (index < trimmed.length && (trimmed[index] === ',' || /\s/.test(trimmed[index]))) index++;
+  };
+  const readNumber = (): number => {
+    skipSeparators();
+    const match = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/.exec(trimmed.slice(index));
+    if (!match) throw new Error('The SVG contains invalid path data.');
+    index += match[0].length;
+    const value = Number(match[0]);
+    if (!Number.isFinite(value) || Math.abs(value) > MAX_SVG_COORDINATE) {
+      throw new Error('The SVG contains invalid path coordinates.');
+    }
+    return value;
+  };
+  const readFlag = (): number => {
+    skipSeparators();
+    const flag = trimmed[index];
+    if (flag !== '0' && flag !== '1') throw new Error('The SVG contains invalid arc data.');
+    index++;
+    return Number(flag);
+  };
+
+  const commands: RawPathCommand[] = [];
+  while (index < trimmed.length) {
+    skipSeparators();
+    if (index >= trimmed.length) break;
+    const command = trimmed[index];
+    if (!isPathCommand(command)) throw new Error('The SVG contains invalid path commands.');
+    index++;
+    const upper = command.toUpperCase();
+    if (upper === 'Z') {
+      commands.push({ command: 'Z', args: [] });
+      continue;
+    }
+
+    let groups = 0;
+    while (true) {
+      skipSeparators();
+      if (index >= trimmed.length || isPathCommand(trimmed[index])) break;
+
+      let args: number[];
+      if (upper === 'A') {
+        args = [
+          readNumber(), // rx
+          readNumber(), // ry
+          readNumber(), // x-axis rotation
+          readFlag(), // large-arc flag
+          readFlag(), // sweep flag
+          readNumber(), // x
+          readNumber(), // y
+        ];
+      } else {
+        const arity = PATH_COMMAND_ARITY[upper];
+        args = [];
+        for (let n = 0; n < arity; n++) args.push(readNumber());
+      }
+
+      // Extra coordinate pairs after a moveto are implicit linetos.
+      const normalizedCommand =
+        upper === 'M' && groups > 0 ? (command === 'm' ? 'l' : 'L') : command;
+      commands.push({ command: normalizedCommand, args });
+      groups++;
+    }
+    if (!groups) throw new Error('The SVG contains incomplete path data.');
+  }
+
+  return commands;
+}
+
+function validatePathData(d: string): void {
+  const commands = parsePathCommands(d);
+  const absoluteCommands = absolutePathCommands(commands);
+  if (absoluteCommands.some(absoluteCommandHasLargeCoordinate)) {
+    throw new Error('The SVG contains invalid path coordinates.');
+  }
+
+  // Path2D catches parser edge cases that a hand-written validator misses.
+  if (typeof Path2D !== 'undefined') {
+    try {
+      new Path2D(d.trim());
+    } catch {
+      throw new Error('The SVG contains invalid path data.');
+    }
+  }
+}
+
+/** Convert every command to absolute coordinates so each subpath stands alone. */
+function absolutePathCommands(raw: RawPathCommand[]): AbsolutePathCommand[] {
+  const commands: AbsolutePathCommand[] = [];
+  let currentX = 0;
+  let currentY = 0;
+  let startX = 0;
+  let startY = 0;
+  let afterClose = false;
+  let cubicControl: { x: number; y: number } | null = null;
+  let quadraticControl: { x: number; y: number } | null = null;
+
+  for (const rawCommand of raw) {
+    const command = rawCommand.command.toUpperCase();
+    const relative = rawCommand.command !== command;
+    const args = rawCommand.args;
+
+    // A command after closepath starts a new subpath at the closed path's
+    // initial point. Make that implicit move explicit so each subpath can be
+    // rendered independently.
+    if (afterClose && command !== 'M') {
+      commands.push({ command: 'M', args: [currentX, currentY] });
+      startX = currentX;
+      startY = currentY;
+      afterClose = false;
+    }
+
+    switch (command) {
+      case 'M': {
+        const x = relative ? currentX + args[0] : args[0];
+        const y = relative ? currentY + args[1] : args[1];
+        commands.push({ command: 'M', args: [x, y] });
+        currentX = x;
+        currentY = y;
+        startX = x;
+        startY = y;
+        cubicControl = null;
+        quadraticControl = null;
+
+        afterClose = false;
+        break;
+      }
+      case 'L': {
+        const x = relative ? currentX + args[0] : args[0];
+        const y = relative ? currentY + args[1] : args[1];
+        commands.push({ command: 'L', args: [x, y] });
+        currentX = x;
+        currentY = y;
+        cubicControl = null;
+        quadraticControl = null;
+
+        break;
+      }
+      case 'H': {
+        const x = relative ? currentX + args[0] : args[0];
+        commands.push({ command: 'H', args: [x] });
+        currentX = x;
+        cubicControl = null;
+        quadraticControl = null;
+
+        break;
+      }
+      case 'V': {
+        const y = relative ? currentY + args[0] : args[0];
+        commands.push({ command: 'V', args: [y] });
+        currentY = y;
+        cubicControl = null;
+        quadraticControl = null;
+
+        break;
+      }
+      case 'C': {
+        const c1x = relative ? currentX + args[0] : args[0];
+        const c1y = relative ? currentY + args[1] : args[1];
+        const c2x = relative ? currentX + args[2] : args[2];
+        const c2y = relative ? currentY + args[3] : args[3];
+        const x = relative ? currentX + args[4] : args[4];
+        const y = relative ? currentY + args[5] : args[5];
+        commands.push({ command: 'C', args: [c1x, c1y, c2x, c2y, x, y] });
+        currentX = x;
+        currentY = y;
+        cubicControl = { x: c2x, y: c2y };
+        quadraticControl = null;
+        break;
+      }
+      case 'S': {
+        const reflected: { x: number; y: number } = cubicControl
+          ? { x: currentX * 2 - cubicControl.x, y: currentY * 2 - cubicControl.y }
+          : { x: currentX, y: currentY };
+        const c2x = relative ? currentX + args[0] : args[0];
+        const c2y = relative ? currentY + args[1] : args[1];
+        const x = relative ? currentX + args[2] : args[2];
+        const y = relative ? currentY + args[3] : args[3];
+        commands.push({
+          command: 'S',
+          args: [c2x, c2y, x, y],
+          implicitControl: reflected,
+        });
+        currentX = x;
+        currentY = y;
+        cubicControl = { x: c2x, y: c2y };
+        quadraticControl = null;
+        break;
+      }
+      case 'Q': {
+        const qx = relative ? currentX + args[0] : args[0];
+        const qy = relative ? currentY + args[1] : args[1];
+        const x = relative ? currentX + args[2] : args[2];
+        const y = relative ? currentY + args[3] : args[3];
+        commands.push({ command: 'Q', args: [qx, qy, x, y] });
+        currentX = x;
+        currentY = y;
+        quadraticControl = { x: qx, y: qy };
+        cubicControl = null;
+        break;
+      }
+      case 'T': {
+        const reflected: { x: number; y: number } = quadraticControl
+          ? { x: currentX * 2 - quadraticControl.x, y: currentY * 2 - quadraticControl.y }
+          : { x: currentX, y: currentY };
+        const x = relative ? currentX + args[0] : args[0];
+        const y = relative ? currentY + args[1] : args[1];
+        commands.push({ command: 'T', args: [x, y], implicitControl: reflected });
+        currentX = x;
+        currentY = y;
+        quadraticControl = reflected;
+        cubicControl = null;
+        break;
+      }
+      case 'A': {
+        const x = relative ? currentX + args[5] : args[5];
+        const y = relative ? currentY + args[6] : args[6];
+        commands.push({ command: 'A', args: [args[0], args[1], args[2], args[3], args[4], x, y] });
+        currentX = x;
+        currentY = y;
+        cubicControl = null;
+        quadraticControl = null;
+
+        break;
+      }
+      case 'Z': {
+        commands.push({ command: 'Z', args: [] });
+        currentX = startX;
+        currentY = startY;
+        cubicControl = null;
+        quadraticControl = null;
+
+        afterClose = true;
+        break;
+      }
+    }
+  }
+
+  return commands;
+}
+
+function absoluteCommandHasLargeCoordinate(command: AbsolutePathCommand): boolean {
+  const coordinateIndexes: Record<AbsolutePathCommand['command'], number[]> = {
+    M: [0, 1],
+    L: [0, 1],
+    H: [0],
+    V: [0],
+    C: [0, 1, 2, 3, 4, 5],
+    S: [0, 1, 2, 3],
+    Q: [0, 1, 2, 3],
+    T: [0, 1],
+    A: [5, 6],
+    Z: [],
+  };
+  if (
+    command.implicitControl &&
+    (Math.abs(command.implicitControl.x) > MAX_SVG_COORDINATE ||
+      Math.abs(command.implicitControl.y) > MAX_SVG_COORDINATE)
+  ) {
+    return true;
+  }
+  return coordinateIndexes[command.command].some(
+    (index) => Math.abs(command.args[index]) > MAX_SVG_COORDINATE
+  );
+}
+
+interface SvgPathBounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+interface SvgSubpath {
+  d: string;
+  bounds: SvgPathBounds;
+}
+
+function formatPathNumber(value: number): string {
+  return Object.is(value, -0) ? '0' : String(value);
+}
+
+function serializePathCommands(commands: AbsolutePathCommand[]): string {
+  return commands
+    .map((command) =>
+      command.command === 'Z'
+        ? 'Z'
+        : `${command.command} ${command.args.map(formatPathNumber).join(' ')}`
+    )
+    .join(' ');
+}
+
+function extendPathBounds(bounds: SvgPathBounds, x: number, y: number): void {
+  bounds.minX = Math.min(bounds.minX, x);
+  bounds.minY = Math.min(bounds.minY, y);
+  bounds.maxX = Math.max(bounds.maxX, x);
+  bounds.maxY = Math.max(bounds.maxY, y);
+}
+
+function absoluteCommandBounds(command: AbsolutePathCommand, bounds: SvgPathBounds): void {
+  const args = command.args;
+  switch (command.command) {
+    case 'M':
+    case 'L':
+      extendPathBounds(bounds, args[0], args[1]);
+      break;
+    case 'H':
+      extendPathBounds(bounds, args[0], bounds.minY);
+      extendPathBounds(bounds, args[0], bounds.maxY);
+      break;
+    case 'V':
+      extendPathBounds(bounds, bounds.minX, args[0]);
+      extendPathBounds(bounds, bounds.maxX, args[0]);
+      break;
+    case 'C':
+      extendPathBounds(bounds, args[0], args[1]);
+      extendPathBounds(bounds, args[2], args[3]);
+      extendPathBounds(bounds, args[4], args[5]);
+      break;
+    case 'S':
+      extendPathBounds(bounds, args[0], args[1]);
+      extendPathBounds(bounds, args[2], args[3]);
+      if (command.implicitControl) {
+        extendPathBounds(bounds, command.implicitControl.x, command.implicitControl.y);
+      }
+      break;
+    case 'Q':
+      extendPathBounds(bounds, args[0], args[1]);
+      extendPathBounds(bounds, args[2], args[3]);
+      break;
+    case 'T':
+      extendPathBounds(bounds, args[0], args[1]);
+      if (command.implicitControl) {
+        extendPathBounds(bounds, command.implicitControl.x, command.implicitControl.y);
+      }
+      break;
+    case 'A': {
+      // A rotated arc can extend past both endpoints. The radius is a safe
+      // upper bound for that extra reach in either axis.
+      const radius = Math.max(args[0], args[1]);
+      extendPathBounds(bounds, args[5] - radius, args[6] - radius);
+      extendPathBounds(bounds, args[5] + radius, args[6] + radius);
+      break;
+    }
+  }
+}
+
+function splitAbsolutePathCommands(commands: AbsolutePathCommand[]): SvgSubpath[] {
+  const subpaths: SvgSubpath[] = [];
+  let current: AbsolutePathCommand[] = [];
+
+  const pushCurrent = (): void => {
+    if (!current.length) return;
+    const bounds: SvgPathBounds = {
+      minX: Number.POSITIVE_INFINITY,
+      minY: Number.POSITIVE_INFINITY,
+      maxX: Number.NEGATIVE_INFINITY,
+      maxY: Number.NEGATIVE_INFINITY,
+    };
+    for (const command of current) absoluteCommandBounds(command, bounds);
+    subpaths.push({ d: serializePathCommands(current), bounds });
+    current = [];
+  };
+
+  for (const command of commands) {
+    if (command.command === 'M' && current.length) pushCurrent();
+    current.push(command);
+  }
+  pushCurrent();
+  return subpaths;
+}
+
+type SvgContourKind = 'visible' | 'hole' | 'internal' | 'empty';
+
+interface SvgSubpathInfo {
+  subpath: SvgSubpath;
+  path: Path2D;
+  inside: { x: number; y: number };
+  outside: { x: number; y: number };
+  kind: SvgContourKind;
+}
+
+interface SvgPathRegion {
+  d: string;
+  path: Path2D;
+  bounds: SvgPathBounds;
+}
+
+function pathBoundsArea(bounds: SvgPathBounds): number {
+  return Math.max(0, bounds.maxX - bounds.minX) * Math.max(0, bounds.maxY - bounds.minY);
+}
+
+/** Check whether two candidate regions overlap anywhere in their shared bounds. */
+function sampledPathsOverlap(
+  context: CanvasRenderingContext2D,
+  first: SvgPathRegion,
+  second: SvgPathRegion,
+  fillRule: CanvasFillRule
+): boolean {
+  const minX = Math.max(first.bounds.minX, second.bounds.minX);
+  const minY = Math.max(first.bounds.minY, second.bounds.minY);
+  const maxX = Math.min(first.bounds.maxX, second.bounds.maxX);
+  const maxY = Math.min(first.bounds.maxY, second.bounds.maxY);
+  if (minX >= maxX || minY >= maxY) return false;
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const gridSize = 32;
+  for (let row = 0; row < gridSize; row++) {
+    const y = minY + ((row + 0.5) / gridSize) * height;
+    for (let column = 0; column < gridSize; column++) {
+      const x = minX + ((column + 0.5) / gridSize) * width;
+      if (
+        context.isPointInPath(first.path, x, y, fillRule) &&
+        context.isPointInPath(second.path, x, y, fillRule)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** Count disconnected filled areas in the contour sample grid. */
+function countInsideCellComponents(cells: Uint8Array, gridSize: number): number {
+  const visited = new Uint8Array(cells.length);
+  const queue = new Int32Array(cells.length);
+  let components = 0;
+
+  for (let start = 0; start < cells.length; start++) {
+    if (!cells[start] || visited[start]) continue;
+    components++;
+
+    let head = 0;
+    let tail = 0;
+    queue[tail++] = start;
+    visited[start] = 1;
+
+    while (head < tail) {
+      const index = queue[head++];
+      const row = Math.floor(index / gridSize);
+      const column = index % gridSize;
+      const neighbors = [
+        row > 0 ? index - gridSize : -1,
+        row < gridSize - 1 ? index + gridSize : -1,
+        column > 0 ? index - 1 : -1,
+        column < gridSize - 1 ? index + 1 : -1,
+      ];
+      for (const neighbor of neighbors) {
+        if (neighbor < 0 || visited[neighbor] || !cells[neighbor]) continue;
+        visited[neighbor] = 1;
+        queue[tail++] = neighbor;
+      }
+    }
+  }
+
+  return components;
+}
+
+/** Find one point inside a contour and one immediately outside it. */
+function findPathBoundarySamples(
+  context: CanvasRenderingContext2D,
+  path: Path2D,
+  bounds: SvgPathBounds,
+  fillRule: CanvasFillRule
+): {
+  inside: { x: number; y: number };
+  outside: { x: number; y: number };
+  components: number;
+} | null {
+  if (!Number.isFinite(bounds.minX) || !Number.isFinite(bounds.maxX)) return null;
+  const width = bounds.maxX - bounds.minX;
+  const height = bounds.maxY - bounds.minY;
+  if (width <= 0 || height <= 0) return null;
+
+  const gridSize = 64;
+  const insideCells = new Uint8Array(gridSize * gridSize);
+  const pointAt = (row: number, column: number): { x: number; y: number } => ({
+    x: bounds.minX + ((column + 0.5) / gridSize) * width,
+    y: bounds.minY + ((row + 0.5) / gridSize) * height,
+  });
+
+  let firstInside = -1;
+  for (let row = 0; row < gridSize; row++) {
+    for (let column = 0; column < gridSize; column++) {
+      const point = pointAt(row, column);
+      if (context.isPointInPath(path, point.x, point.y, fillRule)) {
+        insideCells[row * gridSize + column] = 1;
+        if (firstInside < 0) firstInside = row * gridSize + column;
+      }
+    }
+  }
+  if (firstInside < 0) return null;
+  const components = countInsideCellComponents(insideCells, gridSize);
+
+  const neighbors = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+  for (let index = 0; index < insideCells.length; index++) {
+    if (!insideCells[index]) continue;
+    const row = Math.floor(index / gridSize);
+    const column = index % gridSize;
+    for (const [rowOffset, columnOffset] of neighbors) {
+      const neighborRow = row + rowOffset;
+      const neighborColumn = column + columnOffset;
+      if (
+        neighborRow < 0 ||
+        neighborRow >= gridSize ||
+        neighborColumn < 0 ||
+        neighborColumn >= gridSize ||
+        insideCells[neighborRow * gridSize + neighborColumn]
+      ) {
+        continue;
+      }
+      return {
+        inside: pointAt(row, column),
+        outside: pointAt(neighborRow, neighborColumn),
+        components,
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Split one merged path into separately colorable visible regions.
+ *
+ * A compound path can contain both visible artwork and holes. Splitting every
+ * `M` section literally would fill those holes, so each section is classified
+ * against the original compound fill. Hole sections stay attached to the
+ * visible region that contains them. The candidate result is compared with
+ * the original fill before it is accepted; unusual nested winding falls back
+ * to the untouched merged path instead of changing the artwork.
+ */
+function splitMergedPathRegions(
+  d: string,
+  fillRule: CanvasFillRule,
+  searchBounds: SvgPathBounds
+): string[] | null {
+  if (typeof Path2D === 'undefined') return null;
+
+  const rawCommands = parsePathCommands(d);
+  const absoluteCommands = absolutePathCommands(rawCommands);
+  if (absoluteCommands.some(absoluteCommandHasLargeCoordinate)) return null;
+  const subpaths = splitAbsolutePathCommands(absoluteCommands);
+  if (subpaths.length < 2 || subpaths.length > 64) return null;
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+
+  let originalPath: Path2D;
+  try {
+    originalPath = new Path2D(d);
+  } catch {
+    return null;
+  }
+
+  const overallBounds: SvgPathBounds = { ...searchBounds };
+  for (const subpath of subpaths) {
+    extendPathBounds(overallBounds, subpath.bounds.minX, subpath.bounds.minY);
+    extendPathBounds(overallBounds, subpath.bounds.maxX, subpath.bounds.maxY);
+  }
+  const boundsMargin = Math.max(
+    overallBounds.maxX - overallBounds.minX,
+    overallBounds.maxY - overallBounds.minY
+  ) * 0.01;
+  if (boundsMargin > 0) {
+    overallBounds.minX -= boundsMargin;
+    overallBounds.minY -= boundsMargin;
+    overallBounds.maxX += boundsMargin;
+    overallBounds.maxY += boundsMargin;
+  }
+
+  const subpathInfos: SvgSubpathInfo[] = [];
+  for (const subpath of subpaths) {
+    let path: Path2D;
+    try {
+      path = new Path2D(subpath.d);
+    } catch {
+      return null;
+    }
+    const samples = findPathBoundarySamples(context, path, overallBounds, fillRule);
+    if (!samples || samples.components !== 1) {
+      return null; // zero-area, too-thin, or multi-part contour
+    }
+    const insideFilled = context.isPointInPath(
+      originalPath,
+      samples.inside.x,
+      samples.inside.y,
+      fillRule
+    );
+    const outsideFilled = context.isPointInPath(
+      originalPath,
+      samples.outside.x,
+      samples.outside.y,
+      fillRule
+    );
+    const kind: SvgContourKind = insideFilled
+      ? outsideFilled
+        ? 'internal'
+        : 'visible'
+      : outsideFilled
+        ? 'hole'
+        : 'empty';
+    subpathInfos.push({ subpath, path, inside: samples.inside, outside: samples.outside, kind });
+  }
+
+  const visible = subpathInfos.filter((info) => info.kind === 'visible');
+  if (visible.length < 2) return null;
+
+  const groups = visible.map((info) => ({
+    base: info,
+    attached: [] as SvgSubpathInfo[],
+  }));
+
+  for (const contour of subpathInfos.filter((info) => info.kind !== 'visible')) {
+    if (contour.kind === 'empty') return null;
+    const containing = visible
+      .filter((candidate) =>
+        context.isPointInPath(candidate.path, contour.outside.x, contour.outside.y)
+      )
+      .sort((a, b) => pathBoundsArea(a.subpath.bounds) - pathBoundsArea(b.subpath.bounds));
+    if (!containing.length) return null;
+
+    const parent = containing[0];
+    const group = groups.find((candidate) => candidate.base === parent);
+    if (!group) return null;
+    group.attached.push(contour);
+  }
+
+  const regions: SvgPathRegion[] = [];
+  for (const group of groups) {
+    const d = [group.base.subpath.d, ...group.attached.map((contour) => contour.subpath.d)].join(' ');
+    const bounds = { ...group.base.subpath.bounds };
+    for (const contour of group.attached) {
+      extendPathBounds(bounds, contour.subpath.bounds.minX, contour.subpath.bounds.minY);
+      extendPathBounds(bounds, contour.subpath.bounds.maxX, contour.subpath.bounds.maxY);
+    }
+    try {
+      regions.push({ d, path: new Path2D(d), bounds });
+    } catch {
+      return null;
+    }
+  }
+
+  // Only disconnected visible regions can be colored independently. If two
+  // candidate regions overlap, keep the original merged path so recoloring
+  // cannot change which shape appears on top.
+  for (let first = 0; first < regions.length; first++) {
+    for (let second = first + 1; second < regions.length; second++) {
+      if (sampledPathsOverlap(context, regions[first], regions[second], fillRule)) return null;
+    }
+  }
+
+  // Confirm that the split regions have the same visible geometry as the
+  // original compound path. This catches non-zero winding combinations that
+  // cannot be represented as independent filled paths without losing holes.
+  const samplePoints = subpathInfos.flatMap((info) => [info.inside, info.outside]);
+  const gridSize = 32;
+  const width = overallBounds.maxX - overallBounds.minX;
+  const height = overallBounds.maxY - overallBounds.minY;
+  for (let row = 0; row <= gridSize; row++) {
+    const y = overallBounds.minY + ((row + 0.5) / (gridSize + 1)) * height;
+    for (let column = 0; column <= gridSize; column++) {
+      const x = overallBounds.minX + ((column + 0.5) / (gridSize + 1)) * width;
+      samplePoints.push({ x, y });
+    }
+  }
+
+  for (const point of samplePoints) {
+    const originalFilled = context.isPointInPath(originalPath, point.x, point.y, fillRule);
+    const splitMatches = regions.filter((region) =>
+      context.isPointInPath(region.path, point.x, point.y, fillRule)
+    );
+    if (originalFilled !== (splitMatches.length > 0)) return null;
+    if (splitMatches.length > 1) return null;
+  }
+
+  return regions.map((region) => region.d);
+}
+
+interface UploadedSvgPaths {
+  paths: VectorPath[];
+  pathCount: number;
+}
+
+function collectUploadedSvgPaths(root: Element, viewBounds: SvgPathBounds): UploadedSvgPaths {
+  const paths: VectorPath[] = [];
+  let pathElementCount = 0;
+  let totalPathChars = 0;
+
+  function visit(parent: Element, inherited: SvgPresentation): void {
+    for (const child of Array.from(parent.children)) {
+      const tag = child.localName.toLowerCase();
+      assertSafeSvgElement(child);
+
+      if (tag === 'title' || tag === 'desc' || tag === 'metadata') continue;
+      if (tag === 'defs') {
+        for (const definition of Array.from(child.querySelectorAll('*'))) {
+          const definitionTag = definition.localName.toLowerCase();
+          if (
+            definitionTag === 'script' ||
+            definitionTag === 'style' ||
+            definitionTag === 'foreignobject' ||
+            definitionTag === 'animate' ||
+            definitionTag === 'animatemotion' ||
+            definitionTag === 'set' ||
+            definitionTag === 'use' ||
+            definitionTag === 'image' ||
+            definitionTag === 'text'
+          ) {
+            throw new Error('This SVG contains active or styled content and cannot be used.');
+          }
+        }
+        continue;
+      }
+      if (tag === 'style') {
+        throw new Error('SVG CSS styles are not supported. Use presentation attributes instead.');
+      }
+
+      const own = svgPresentation(child);
+      if (own.opacity !== undefined && tag !== 'path') {
+        throw new Error('Group opacity is not supported. Apply opacity to individual paths instead.');
+      }
+
+      if (tag === 'g') {
+        if (own.hidden) continue;
+        visit(child, {
+          fill: own.fill ?? inherited.fill,
+          fillRule: own.fillRule ?? inherited.fillRule,
+          fillOpacity: own.fillOpacity ?? inherited.fillOpacity,
+          hidden: false,
+        });
+        continue;
+      }
+
+      if (tag !== 'path') {
+        throw new Error('This SVG must use filled <path> elements only.');
+      }
+      if (own.hidden) continue;
+
+      const d = child.getAttribute('d')?.trim();
+      if (!d) continue;
+      totalPathChars += d.length;
+      if (totalPathChars > MAX_SVG_PATH_CHARS) {
+        throw new Error('This SVG has too much path data. Simplify the artwork before uploading.');
+      }
+      validatePathData(d);
+
+      const fill = own.fill ?? inherited.fill;
+      const normalizedFill = fill?.trim().toLowerCase();
+      if (normalizedFill === 'none') continue;
+      if (normalizedFill?.includes('url(')) {
+        throw new Error('Gradients and pattern fills are not supported. Use a solid fill.');
+      }
+
+      const fillRule = own.fillRule ?? inherited.fillRule;
+      if (fillRule && fillRule !== 'evenodd' && fillRule !== 'nonzero') {
+        throw new Error('The SVG uses an unsupported fill rule.');
+      }
+
+      const fillOpacity = own.fillOpacity ?? inherited.fillOpacity;
+      const opacity = fillOpacity === undefined ? 1 : fillOpacity;
+      const finalOpacity = own.opacity === undefined ? opacity : opacity * own.opacity;
+      if (finalOpacity <= 0) continue;
+
+      pathElementCount++;
+      const pathId = child.getAttribute('id')?.trim();
+      const pathLabel = `Path ${pathElementCount}`;
+      const idLabel = pathId ? ` · ${pathId.slice(0, 80)}` : '';
+
+      let regionData: string[] = [d];
+      if (finalOpacity === 1) {
+        try {
+          regionData =
+            splitMergedPathRegions(
+              d,
+              fillRule === 'evenodd' ? 'evenodd' : 'nonzero',
+              viewBounds
+            ) ?? [d];
+        } catch {
+          regionData = [d];
+        }
+      }
+
+      if (paths.length + regionData.length > MAX_SVG_PATHS) {
+        throw new Error('This SVG has too many color regions. Simplify the artwork before uploading.');
+      }
+
+      regionData.forEach((regionD, regionIndex) => {
+        paths.push({
+          d: regionD,
+          ...(fillRule === 'evenodd' ? { fillRule } : {}),
+          ...(finalOpacity < 1 ? { opacity: String(Math.round(finalOpacity * 10000) / 10000) } : {}),
+          label:
+            regionData.length > 1
+              ? `${pathLabel} · Region ${regionIndex + 1}/${regionData.length}${idLabel}`
+              : `${pathLabel}${idLabel}`,
+        });
+      });
+    }
+  }
+
+  const rootPresentation = svgPresentation(root);
+  if (rootPresentation.opacity !== undefined) {
+    throw new Error('Root opacity is not supported. Apply opacity to individual paths instead.');
+  }
+  visit(root, {
+    fill: rootPresentation.fill,
+    fillRule: rootPresentation.fillRule,
+    fillOpacity: rootPresentation.fillOpacity,
+    hidden: false,
+  });
+
+  if (!paths.length) throw new Error('This SVG has no visible filled paths.');
+  return { paths, pathCount: pathElementCount };
+}
+
+function parseUploadedSvg(
+  svgText: string
+): { paths: VectorPath[]; viewBox: string; pathCount: number } {
+  // Reject document types before XML parsing. A doctype can declare entities,
+  // and rejecting it only after DOMParser has already expanded them would
+  // leave an avoidable resource-exhaustion path.
+  if (/<!doctype/i.test(svgText)) {
+    throw new Error('SVG document types are not supported.');
+  }
+
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  if (doc.getElementsByTagName('parsererror').length) {
+    throw new Error('This file is not valid SVG.');
+  }
+  if (doc.doctype) {
+    throw new Error('SVG document types are not supported.');
+  }
+
+  const root = doc.documentElement;
+  if (root.localName.toLowerCase() !== 'svg') {
+    throw new Error('Choose a file whose root element is <svg>.');
+  }
+  if (root.namespaceURI && root.namespaceURI !== SVG_NS) {
+    throw new Error('This file is not a standard SVG document.');
+  }
+
+  assertSafeSvgElement(root);
+  const view = parseSvgViewBox(root);
+  const { paths, pathCount } = collectUploadedSvgPaths(root, {
+    minX: view.x,
+    minY: view.y,
+    maxX: view.x + view.width,
+    maxY: view.y + view.height,
+  });
+  return { paths, viewBox: view.viewBox, pathCount };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -585,10 +1651,10 @@ function buildSVG(shapeOverride?: string): string {
 
   let iconEl = '';
 
-  if ((S.source === 'fa' || S.source === 'bi') && S.paths) {
+  if (isVectorSource(S.source) && S.paths) {
     const pathEls = S.paths.map(
       (p) =>
-        `<path d="${p.d}" fill="${iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
+        `<path d="${escapeXml(p.d)}" fill="${p.color ?? iconColor}"${p.fillRule ? ` fill-rule="${p.fillRule}"` : ''}${p.opacity ? ` opacity="${p.opacity}"` : ''}/>`
     ).join('');
     iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="${S.viewBox}">${pathEls}</svg>`;
   } else if (S.source === 'text' && S.textValue) {
@@ -639,7 +1705,8 @@ function render(): void {
   const svgDoc = new DOMParser().parseFromString(buildSVG(), 'image/svg+xml');
   if (svgDoc.documentElement.tagName === 'parsererror' || svgDoc.getElementsByTagName('parsererror').length) {
     // Never swap a broken parse into the preview — keep the last good icon.
-    err(true);
+    if (S.source === 'svg') setSvgError(true, 'The SVG could not be rendered. Check its path data.');
+    else err(true);
     return;
   }
   const svg = svgDoc.documentElement;
@@ -648,7 +1715,14 @@ function render(): void {
   if (old) old.replaceWith(svg);
   else container.appendChild(svg);
 
-  const sourceLabels: Record<string, string> = { fa: 'Font Awesome', bi: 'Bootstrap', text: 'Text', noto: 'Noto', twemoji: 'Twemoji' };
+  const sourceLabels: Record<string, string> = {
+    fa: 'Font Awesome',
+    bi: 'Bootstrap',
+    text: 'Text',
+    noto: 'Noto',
+    twemoji: 'Twemoji',
+    svg: 'Custom SVG',
+  };
   document.getElementById('meta-source')!.textContent = sourceLabels[S.source];
   document.getElementById('meta-icon')!.textContent = S.iconName;
   document.getElementById('meta-bg')!.textContent =
@@ -671,6 +1745,7 @@ const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
 
 function handleIconInput(): void {
   clearTimeout(iconTimer);
+  if (S.source === 'svg') return;
   const raw = elIconInput.value;
   const val = raw.trim();
 
@@ -801,6 +1876,203 @@ function err(show: boolean): void {
     el.innerHTML = html;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Uploaded SVG controls
+// ─────────────────────────────────────────────────────────────────────────────
+let svgSeq = 0; // guards against a late file read replacing another source
+let selectedSvgRegion = -1;
+const elSvgFileInput = document.getElementById('svg-file-input') as HTMLInputElement;
+const elSvgUploadError = document.getElementById('svg-upload-error')!;
+const elSvgPathColorsPanel = document.getElementById('svg-path-colors-panel')!;
+const elSvgPathList = document.getElementById('svg-path-list')!;
+const elSvgPathColorField = document.getElementById('cp-svg-path')!;
+let svgErrorRevision = 0;
+
+function setSvgError(show: boolean, message = ''): void {
+  const revision = ++svgErrorRevision;
+  const wasVisible = elSvgUploadError.classList.contains('visible');
+  elSvgUploadError.classList.toggle('visible', show);
+  if (!show) {
+    elSvgUploadError.textContent = '';
+    return;
+  }
+  // Re-insert the message so repeated failures are announced even when the
+  // alert was already visible. The revision prevents an older queued frame
+  // from restoring a stale error after a newer upload or source change.
+  if (wasVisible) elSvgUploadError.textContent = '';
+  requestAnimationFrame(() => {
+    if (revision !== svgErrorRevision) return;
+    elSvgUploadError.textContent = message;
+  });
+}
+
+function svgRegionColor(index: number): string {
+  return S.paths?.[index]?.color ?? S.iconColor;
+}
+
+function updateSvgRegionControls(rebuild = false): void {
+  const hasPaths = S.source === 'svg' && S.valid && !!S.paths?.length;
+  updateIconColorAvailability();
+  elSvgPathColorsPanel.hidden = !hasPaths;
+  if (!hasPaths) {
+    selectedSvgRegion = -1;
+    elSvgPathList.replaceChildren();
+    return;
+  }
+
+  if (selectedSvgRegion < 0 || selectedSvgRegion >= S.paths!.length) selectedSvgRegion = 0;
+
+  if (rebuild) {
+    elSvgPathList.replaceChildren();
+    S.paths!.forEach((path, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'svg-path-item';
+      button.dataset.pathIndex = String(index);
+      button.setAttribute('aria-pressed', String(index === selectedSvgRegion));
+
+      const swatch = document.createElement('span');
+      swatch.className = 'svg-path-swatch';
+      swatch.setAttribute('aria-hidden', 'true');
+
+      const label = document.createElement('span');
+      label.className = 'svg-path-label';
+      const defaultLabel = `Path ${index + 1}`;
+      label.textContent = path.label ?? defaultLabel;
+      button.title = label.textContent;
+
+      const state = document.createElement('span');
+      state.className = 'svg-path-state';
+      state.textContent = path.color ? 'Custom' : 'Icon';
+
+      button.append(swatch, label, state);
+      elSvgPathList.appendChild(button);
+    });
+  }
+
+  elSvgPathList.querySelectorAll<HTMLButtonElement>('.svg-path-item').forEach((button) => {
+    const index = Number(button.dataset.pathIndex);
+    const selected = index === selectedSvgRegion;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+    const swatch = button.querySelector<HTMLElement>('.svg-path-swatch');
+    if (swatch) swatch.style.background = svgRegionColor(index);
+    const state = button.querySelector<HTMLElement>('.svg-path-state');
+    if (state) state.textContent = S.paths![index].color ? 'Custom' : 'Icon';
+  });
+
+  setColorPickerValue(elSvgPathColorField, svgRegionColor(selectedSvgRegion));
+}
+
+function resetSvgRegionControls(): void {
+  selectedSvgRegion = -1;
+  elSvgPathColorsPanel.hidden = true;
+  elSvgPathList.replaceChildren();
+  setColorPickerValue(elSvgPathColorField, S.iconColor);
+  updateIconColorAvailability();
+}
+
+function clearSvgUploadState(): void {
+  svgSeq++;
+  S.paths = null;
+  elSvgFileInput.value = '';
+  document.getElementById('svg-file-card')!.hidden = true;
+  document.getElementById('svg-file-name')!.textContent = '';
+  document.getElementById('svg-file-meta')!.textContent = '';
+  document.getElementById('svg-upload-title')!.textContent = 'Upload SVG';
+  document.getElementById('svg-upload-subtitle')!.textContent = 'Choose an SVG with filled paths';
+  resetSvgRegionControls();
+  setSvgError(false);
+}
+
+async function handleSvgFile(file: File): Promise<void> {
+  const seq = ++svgSeq;
+  setSvgError(false);
+
+  // Clear the native value so choosing the same file again still fires change.
+  elSvgFileInput.value = '';
+  if (!/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') {
+    setSvgError(true, 'Choose an SVG file.');
+    return;
+  }
+  if (file.size > MAX_SVG_BYTES) {
+    setSvgError(true, 'This SVG is too large. Choose a file no larger than 2 MB.');
+    return;
+  }
+
+  let text: string;
+  try {
+    text = await file.text();
+  } catch {
+    setSvgError(true, 'The SVG file could not be read.');
+    return;
+  }
+  if (seq !== svgSeq || S.source !== 'svg') return;
+
+  try {
+    const parsed = parseUploadedSvg(text);
+    if (seq !== svgSeq || S.source !== 'svg') return;
+    Object.assign(S, {
+      iconName: file.name,
+      paths: parsed.paths,
+      viewBox: parsed.viewBox,
+      valid: true,
+    });
+    err(false);
+    setSvgError(false);
+
+    const [, , viewWidth, viewHeight] = parsed.viewBox.split(' ').map(Number);
+    const pathLabel = parsed.pathCount === 1 ? '1 path' : `${parsed.pathCount} paths`;
+    const regionLabel = ` · ${parsed.paths.length} color ${
+      parsed.paths.length === 1 ? 'region' : 'regions'
+    }`;
+    document.getElementById('svg-file-name')!.textContent = file.name;
+    document.getElementById('svg-file-meta')!.textContent = `${pathLabel}${regionLabel} · ${viewWidth} × ${viewHeight}`;
+    document.getElementById('svg-file-card')!.hidden = false;
+    document.getElementById('svg-upload-title')!.textContent = 'Replace SVG';
+    document.getElementById('svg-upload-subtitle')!.textContent = 'Choose a different SVG file';
+    updateSvgRegionControls(true);
+    render();
+  } catch (e) {
+    if (seq !== svgSeq || S.source !== 'svg') return;
+    setSvgError(true, e instanceof Error ? e.message : 'This SVG could not be used.');
+  }
+}
+
+document.getElementById('svg-upload-btn')!.addEventListener('click', () => elSvgFileInput.click());
+elSvgFileInput.addEventListener('change', () => {
+  const file = elSvgFileInput.files?.[0];
+  if (file) void handleSvgFile(file);
+});
+elSvgPathList.addEventListener('click', (event) => {
+  const button = (event.target as Element).closest<HTMLButtonElement>('.svg-path-item');
+  if (!button) return;
+  const index = Number(button.dataset.pathIndex);
+  if (!Number.isInteger(index) || !S.paths?.[index]) return;
+  selectedSvgRegion = index;
+  updateSvgRegionControls();
+});
+elSvgPathColorField.addEventListener('colorchange', (event) => {
+  if (selectedSvgRegion < 0 || !S.paths?.[selectedSvgRegion]) return;
+  S.paths[selectedSvgRegion].color = (event as CustomEvent<string>).detail;
+  updateSvgRegionControls();
+  render();
+});
+document.getElementById('svg-path-reset')!.addEventListener('click', () => {
+  if (!S.paths) return;
+  for (const path of S.paths) path.color = undefined;
+  selectedSvgRegion = S.paths.length ? 0 : -1;
+  updateSvgRegionControls();
+  render();
+});
+document.getElementById('svg-file-remove')!.addEventListener('click', () => {
+  clearSvgUploadState();
+  S.paths = null;
+  S.iconName = '';
+  S.valid = false;
+  render();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Text style controls (font family, weight, italic, underline)
@@ -1103,7 +2375,7 @@ async function fontsReady(): Promise<void> {
   }
 }
 
-const EXPORT_ERROR_DEFAULT = 'Enter a valid icon, text, or emoji first.';
+const EXPORT_ERROR_DEFAULT = 'Choose a valid icon, text, emoji, or SVG first.';
 
 function exportError(show: boolean, message: string = EXPORT_ERROR_DEFAULT): void {
   const el = document.getElementById('export-error');
@@ -1124,13 +2396,28 @@ function clampExportSize(v: number): number {
 
 // Export base name: <provider>_<name>_<fill>
 // e.g. fontawesome_star_gradient, bootstrap_alarm_solid,
-// text_hi_solid, emoji_1f600_gradient
+// svg_my-icon_solid, text_hi_solid, emoji_1f600_gradient
 function exportBaseName(): string {
   const provider =
-    S.source === 'fa' ? 'fontawesome' : S.source === 'bi' ? 'bootstrap' : S.source === 'text' ? 'text' : 'emoji';
+    S.source === 'fa'
+      ? 'fontawesome'
+      : S.source === 'bi'
+        ? 'bootstrap'
+        : S.source === 'svg'
+          ? 'svg'
+          : S.source === 'text'
+            ? 'text'
+            : 'emoji';
   let name: string;
   if (S.source === 'fa' || S.source === 'bi') name = S.iconName;
-  else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
+  else if (S.source === 'svg') {
+    name =
+      S.iconName
+        .replace(/\.svg$/i, '')
+        .toLowerCase()
+        .replace(/[^\w-]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'icon';
+  } else if (S.source === 'text') name = S.textValue.replace(/[^\w-]+/g, '').toLowerCase() || 'text';
   else name = emojiCodepoints(S.iconName).join('-') || 'emoji';
   return `${provider}_${name}_${S.bgType === 'gradient' ? 'gradient' : 'solid'}`;
 }
@@ -1180,7 +2467,12 @@ function watchColorField(id: string, apply: (hex: string) => void): void {
 }
 
 watchColorField('cp-icon', (hex) => {
+  if (isIconColorDisabled()) {
+    setColorPickerValue(elIconColorField, S.iconColor);
+    return;
+  }
   S.iconColor = hex;
+  if (S.source === 'svg') updateSvgRegionControls();
 });
 watchColorField('cp-bg', (hex) => {
   S.bgColor = hex;
@@ -1190,24 +2482,25 @@ watchColorField('cp-bg2', (hex) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Android XML builders (vector sources: FA + Bootstrap)
+// Android XML builders (vector sources: FA + Bootstrap + uploaded SVG)
 // ─────────────────────────────────────────────────────────────────────────────
 function buildForegroundXML(): string {
-  const [, , vbW, vbH] = S.viewBox.split(' ').map(Number);
+  const [vbX, vbY, vbW, vbH] = S.viewBox.trim().split(/[,\s]+/).map(Number);
   const safeDp = 72 * (S.iconScale / 100);
   const scale = safeDp / Math.max(vbW, vbH);
   const scaledW = vbW * scale,
     scaledH = vbH * scale;
-  const tx = ((108 - scaledW) / 2).toFixed(4);
+  // Account for a non-zero viewBox origin before centering the artwork.
+  const tx = ((108 - scaledW) / 2 - vbX * scale).toFixed(4);
   // Vertical offset: composite canvas units map 100 → 108dp
-  const ty = ((108 - scaledH) / 2 + (S.iconOffsetY * 108) / 100).toFixed(4);
+  const ty = ((108 - scaledH) / 2 - vbY * scale + (S.iconOffsetY * 108) / 100).toFixed(4);
   const sc = scale.toFixed(6);
 
   const pathEls = S.paths!
     .map((p) => {
       const alpha = p.opacity ? `\n        android:fillAlpha="${p.opacity}"` : '';
       const fillType = p.fillRule === 'evenodd' ? `\n        android:fillType="evenOdd"` : '';
-      return `    <path\n        android:fillColor="${S.iconColor}"${alpha}${fillType}\n        android:pathData="${p.d}"/>`;
+      return `    <path\n        android:fillColor="${p.color ?? S.iconColor}"${alpha}${fillType}\n        android:pathData="${escapeXml(p.d)}"/>`;
     })
     .join('\n');
 
@@ -1287,7 +2580,7 @@ function buildColorsXML(): string {
 }
 
 function buildReadme(withMonochrome: boolean): string {
-  const isVector = S.source === 'fa' || S.source === 'bi';
+  const isVector = isVectorSource(S.source);
   const isEmoji = S.source === 'noto' || S.source === 'twemoji';
   const srcLabel = {
     fa: 'Font Awesome',
@@ -1295,6 +2588,7 @@ function buildReadme(withMonochrome: boolean): string {
     text: 'Custom Text',
     noto: 'Noto Emoji',
     twemoji: 'Twemoji',
+    svg: 'Uploaded SVG',
   }[S.source];
 
   const monoSection = !isVector
@@ -1318,8 +2612,8 @@ function buildReadme(withMonochrome: boolean): string {
   └── values/
       └── colors.xml                   ic_launcher_background color resource`
     : `  (No XML files — VectorDrawable adaptive icons require a vector source
-    (Font Awesome or Bootstrap). PNG mipmaps are sufficient for all
-    Android versions.)`;
+    (Font Awesome, Bootstrap, or uploaded SVG). PNG mipmaps are sufficient
+    for all Android versions.)`;
 
   const rasterNote = !isVector
     ? `
@@ -1327,7 +2621,7 @@ NOTE FOR ${isEmoji ? 'EMOJI' : 'TEXT'} ICONS
   ${isEmoji ? 'Emoji sources (Noto, Twemoji)' : 'Text icons'} export PNG mipmaps only. Android's
   VectorDrawable format does not support the ${isEmoji ? 'gradients and raster\n  references used in emoji SVGs' : 'text elements used in text icons'}. For full adaptive icon XML support
   (API 26+ shape masking, Material You theming), use a vector
-  source (Font Awesome or Bootstrap) instead.
+  source (Font Awesome, Bootstrap, or uploaded SVG) instead.
 ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface, so they\n  render identically anywhere. PNG exports are fully rasterized.\n`}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
@@ -1337,6 +2631,14 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
     S.source === 'text'
       ? `  Font:              ${S.fontFamily} ${S.fontWeight}${S.fontItalic ? ' italic' : ''}${S.fontUnderline ? ' + underline' : ''}${S.textSpacing ? `, spacing ${S.textSpacing}` : ''}\n`
       : '';
+
+  const customPathColors = S.paths?.filter((path) => path.color).length ?? 0;
+  const iconColorSummary =
+    S.source === 'svg' && customPathColors
+      ? `${S.iconColor} default · ${customPathColors} custom region ${customPathColors === 1 ? 'color' : 'colors'}`
+      : isVector || S.source === 'text'
+        ? S.iconColor
+        : '(emoji own colors)';
 
   const shapeNote = nonSquareBg()
     ? `\n  NOTE:              Background shape is '${S.bgShape}' — switch to square so launchers can mask freely.`
@@ -1349,8 +2651,8 @@ ${isEmoji ? '' : `  Standalone SVG exports embed the "${S.fontFamily}" typeface,
 
 ICON DETAILS
   Source:            ${srcLabel}
-  Name / Text / Emoji: ${S.iconName}
-  Icon color:        ${isVector || S.source === 'text' ? S.iconColor : '(emoji own colors)'}
+  Name / Text / Emoji / File: ${S.iconName}
+  Icon color:        ${iconColorSummary}
 ${fontLine}  Icon offset:       ${S.iconOffsetY}% vertical
   Background:        ${S.bgType === 'gradient' ? `gradient ${S.bgColor} → ${S.bgColor2} @ ${S.bgAngle}°` : S.bgColor}${shapeNote}
   Icon scale:        ${S.iconScale}% of adaptive safe zone
@@ -1450,7 +2752,7 @@ async function exportAndroid(): Promise<void> {
     return;
   }
 
-  const isVector = S.source === 'fa' || S.source === 'bi';
+  const isVector = isVectorSource(S.source);
   const withMonochrome = isVector && (document.getElementById('material-toggle') as HTMLInputElement).checked;
   const btn = document.getElementById('android-btn') as HTMLButtonElement;
   const progressWrap = document.getElementById('progress-wrap')!;
@@ -1504,7 +2806,7 @@ async function exportAndroid(): Promise<void> {
     const playBlob = await svgTextToPngBlob(await buildExportSVG(), 512, 512);
     zip.file('play_store_icon.png', playBlob);
 
-    // XML files: vector sources (FA, Bootstrap) only
+    // XML files: vector sources (FA, Bootstrap, uploaded SVG) only
     if (isVector) {
       setProgress(86, 'Building adaptive icon XMLs…');
       const adaptiveXML = buildAdaptiveIconXML(withMonochrome);
@@ -1597,4 +2899,5 @@ async function showAndroidPreview(densities: [string, number][]): Promise<void> 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────────────
+initColorPickers();
 setPreset(128);

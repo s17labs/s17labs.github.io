@@ -91,6 +91,7 @@ function isDisabled(field: HTMLElement): boolean {
 
 let openPicker: Picker | null = null;
 let listenersAttached = false;
+const pickerInstances = new WeakMap<HTMLElement, Picker>();
 
 function toHex(p: Picker): string {
   const { r, g, b } = hsvToRgb(p.h, p.s, p.v);
@@ -327,6 +328,7 @@ export function initColorPickers(root: ParentNode = document): void {
     const picker = createPicker(field);
     if (!picker) return;
     field.dataset.cpBound = 'true';
+    pickerInstances.set(field, picker);
     wire(picker);
   });
 
@@ -347,4 +349,18 @@ export function initColorPickers(root: ParentNode = document): void {
   window.addEventListener('resize', () => {
     if (openPicker) position(openPicker);
   });
+}
+
+/**
+ * Update a field's visible and internal color without firing `colorchange`.
+ * Useful when one picker controls a changing target, such as a selected path.
+ */
+export function setColorPickerValue(field: HTMLElement, hex: string): boolean {
+  const picker = pickerInstances.get(field);
+  const normalized = normalizeHex(hex);
+  if (!picker || !normalized) return false;
+  picker.current = normalized;
+  applyHex(picker, normalized, true);
+  sync(picker);
+  return true;
 }
