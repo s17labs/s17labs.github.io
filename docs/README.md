@@ -130,6 +130,34 @@ and `zip-export.ts`) — keep it free of Node-only APIs.
 - **Case Converter** — string conventions and writing formats.
 - **QR Generator** — QR codes with custom colors/sizes, PNG/SVG export.
 
+### Icon Maker: uploaded SVG artwork
+
+The **Upload SVG** source parses artwork locally in the browser and renders it
+from filled `<path>` elements only. The uploaded markup is never inserted into
+the page, and the file never leaves the browser. Unsupported or active content
+(unsupported CSS, scripts, external references, transforms, strokes, filters,
+masks, clipping paths, gradients, and patterns) is rejected with a clear error.
+
+- **Path & Region Colors** lists every colorable item. Separate SVG paths are
+  independently colorable; a merged path is split only where it contains
+  visibly disconnected filled regions.
+- Items without a custom color inherit **Icon Color**. Setting any custom
+  path or region color locks Icon Color so the fallback color cannot drift;
+  **Reset to Icon Color** removes every override and unlocks it again.
+- Holes stay attached to their containing visible region rather than becoming
+  separate color targets. Each split region keeps the source path's original
+  `fill-rule`, including nonzero winding.
+- A merged path remains intact when splitting would be unsafe or would change
+  the artwork — for example, overlapping regions, translucent paths, ambiguous
+  internal contours, or a split that fails comparison with the original
+  compound fill.
+- The upload card reports both the source path count and the resulting
+  color-region count. Region labels identify the path, region number, and SVG
+  `id` when one exists.
+- Per-path and per-region colors are preserved in standalone SVG, PNG, and
+  Android VectorDrawable exports. The Android package also includes its
+  launcher PNGs, mipmaps, and Material You resources.
+
 ## Design System & Brand
 
 Tokens, typography, iconography, and components — documented and showcased

@@ -46,6 +46,8 @@ The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/
 
 - **Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator** — Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
 
+Icon Maker's **Upload SVG** source parses filled artwork locally, supports colors for individual paths and safely separated merged regions, and preserves those colors in SVG, PNG, and Android VectorDrawable exports. Items without a custom color inherit Icon Color; resetting the path and region colors unlocks Icon Color again.
+
 All tools run fully client-side — no server endpoints. Font Awesome icon data comes from npm packages; client logic is typechecked TypeScript in `src/scripts/tools/`. Note: emoji SVGs in Icon Maker are fetched from a CDN at runtime, so emoji sources need network access. The registry lives in `src/data/tools.ts`.
 
 ### Adding a new tool
