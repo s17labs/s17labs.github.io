@@ -333,7 +333,7 @@ input.text-input {
   color: var(--primary-text);
 }
 
-/* ── Per-path colors for uploaded SVGs ── */
+/* ── Per-path and merged-region colors for uploaded SVGs ── */
 #svg-path-colors-panel[hidden] {
   display: none;
 }
@@ -412,6 +412,18 @@ input.text-input {
 
 .svg-path-item.active .svg-path-state {
   color: var(--primary-text);
+}
+
+/* The longer title and reset action need separate rows on narrow phones. */
+@media (max-width: 480px) {
+  #svg-path-colors-panel .panel-header-row {
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  #svg-path-colors-panel #svg-path-reset {
+    margin-left: auto;
+  }
 }
 
 /* ── Text style panel (text source only) ── */
@@ -969,6 +981,10 @@ input.text-input {
 
 @media (max-width: 680px) {
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workspace > * {
+    min-width: 0;
   }
 }
