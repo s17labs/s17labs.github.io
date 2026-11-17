@@ -1,0 +1,176 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Image Compressor | s17 Labs Tools';
+const description =
+  'Compress images and convert between JPEG, PNG, and WebP locally — with a quality slider and before/after size savings.';
+const tagline = 'Shrink images and convert between JPEG, PNG, and WebP locally — see exactly how much you saved. Nothing leaves your browser.';
+---
+
+<ToolLayout title={title} description={description} heading="Image Compressor" tagline={tagline}>
+  <!-- Upload -->
+  <div class="panel">
+    <h2 class="panel-title">Upload</h2>
+    <div
+      class="drop-zone"
+      id="drop-zone"
+      tabindex="0"
+      role="button"
+      aria-label="Upload images — drag and drop, or activate to open the file picker"
+      aria-describedby="dz-hint"
+    >
+      <div class="dz-empty" id="dz-empty">
+        <Icon name="cloud-arrow-up" size={29} />
+        <p>Drag &amp; drop images here, or click to select</p>
+        <span id="dz-hint">PNG, JPG, WEBP &mdash; batch supported</span>
+      </div>
+      <div class="dz-filled" id="dz-filled">
+        <div class="dz-preview-grid" id="dz-preview-grid"></div>
+        <div class="dz-filled-meta">
+          <span id="dz-count-label" role="status" aria-live="polite"></span>
+          <button type="button" class="dz-change" id="dz-change-btn">
+            <Icon name="plus" />Add / Change
+          </button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="file-input" accept="image/*" multiple tabindex="-1" />
+  </div>
+
+  <!-- Settings -->
+  <div class="panel">
+    <h2 class="panel-title">Compression Settings</h2>
+    <div class="field">
+      <span class="field-label" id="format-label">Output Format</span>
+      <div class="format-row" id="format-row" role="group" aria-labelledby="format-label">
+        <button type="button" class="choice-btn active" data-format="original" aria-pressed="true">Original</button>
+        <button type="button" class="choice-btn" data-format="jpeg" aria-pressed="false">JPEG</button>
+        <button type="button" class="choice-btn" data-format="png" aria-pressed="false">PNG</button>
+        <button type="button" class="choice-btn" data-format="webp" aria-pressed="false">WebP</button>
+      </div>
+    </div>
+    <div class="field quality-field" id="quality-field">
+      <div class="quality-head">
+        <label for="quality">Quality</label>
+        <span id="quality-value" aria-hidden="true">80%</span>
+      </div>
+      <input type="range" id="quality" min="10" max="100" value="80" aria-describedby="quality-note" />
+      <span class="field-note" id="quality-note">Applies to JPEG and WebP inputs. PNG stays lossless.</span>
+    </div>
+    <button type="button" class="btn" id="compress-btn" disabled>
+      <Icon name="wand-magic-sparkles" />Compress Images
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div class="panel" id="results-panel" style="display:none;">
+    <div class="panel-header-row">
+      <h2 class="panel-title">Output</h2>
+      <span class="compress-summary" id="compress-summary" role="status" aria-live="polite"></span>
+    </div>
+    <!-- ZIP packing progress -->
+    <div class="zip-progress-wrap" id="zip-progress-wrap">
+      <div
+        class="zip-progress-track"
+        role="progressbar"
+        aria-label="Packing ZIP"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <div class="zip-progress-fill" id="zip-progress-fill"></div>
+      </div>
+      <div class="zip-progress-label" id="zip-progress-label" role="status" aria-live="polite">Packing…</div>
+    </div>
+    <!-- Download button — label/icon adapt to single vs batch -->
+    <button type="button" class="dl-all-btn" id="dl-all-btn" disabled>
+      <span id="dl-icon"><Icon name="download" /></span>
+      <span id="dl-label">Download Image</span>
+    </button>
+    <div class="results-list" id="results-list" role="status" aria-live="polite" aria-busy="false"></div>
+  </div>
+  <script>
+    import '../../scripts/tools/image-compressor';
+  </script>
+</ToolLayout>
+
+<style>
+  /* Format picker */
+  .field-label {
+    font-size: 0.74rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+  }
+
+  .format-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .format-row .choice-btn {
+    font-size: 0.78rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  /* Quality slider */
+  .quality-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #quality-value {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  .quality-field.inactive #quality {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .quality-field.inactive #quality-value {
+    color: var(--secondary-text);
+  }
+
+  /* Savings summary + per-image size change */
+  .compress-summary {
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+  }
+
+  .compress-summary :global(.saved) {
+    color: var(--android);
+  }
+
+  .compress-summary :global(.larger) {
+    color: var(--accent);
+  }
+
+  /* Checkerboard shows transparency of PNG/WebP output */
+  .results-list :global(.result-thumb) {
+    background-image: linear-gradient(45deg, #333 25%, transparent 25%),
+      linear-gradient(-45deg, #333 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #333 75%),
+      linear-gradient(-45deg, transparent 75%, #333 75%);
+    background-size: 8px 8px;
+    background-position:
+      0 0,
+      0 4px,
+      4px -4px,
+      -4px 0;
+    background-color: #1e1e20;
+  }
+
+  @media (max-width: 580px) {
+    .format-row .choice-btn {
+      padding: 0.45rem 0.7rem;
+      font-size: 0.74rem;
+    }
+  }
+</style>

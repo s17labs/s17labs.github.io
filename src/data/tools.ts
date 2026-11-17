@@ -31,6 +31,13 @@ export const TOOLS: Tool[] = [
     icon: 'image',
   },
   {
+    name: 'Image Compressor',
+    slug: 'image-compressor',
+    description: 'Compress images and convert between JPEG, PNG, and WebP with a quality slider and before/after size savings.',
+    tags: ['images', 'conversion'],
+    icon: 'file-zipper',
+  },
+  {
     name: 'SVG to PNG',
     slug: 'svg-to-png',
     description: 'Convert vector graphics to high-quality transparent PNGs locally in your browser.',
