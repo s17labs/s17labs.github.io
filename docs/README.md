@@ -28,7 +28,7 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 |---|---|---|
 | `/` | `src/pages/index.astro` | Homepage hero, card, footer |
 | `/tools/` | `src/pages/tools/index.astro` | Tool listing, rendered from the registry |
-| `/tools/<slug>/` | `src/pages/tools/<slug>.astro` | One page per tool (Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator) |
+| `/tools/<slug>/` | `src/pages/tools/<slug>.astro` | One page per tool (Icon Maker, Image Resizer, Image Compressor, SVG to PNG, Case Converter, QR Generator) |
 | `/design/` | `src/pages/design.astro` | Design system + brand kit with live specimens |
 | `/projects/` | `src/pages/projects.astro` | Project showcase, rendered from `src/data/projects.ts` |
 | `/privacy/` | `src/pages/privacy.astro` | Privacy policy statement |
@@ -69,6 +69,10 @@ Key patterns:
   `/tools` listing renders from that registry — never hardcode tool entries.
 - **Shared design system** (`src/styles/tool.css` + `ToolLayout.astro`).
   Anything used twice gets promoted from tool stylesheets into `tool.css`.
+- **Upload preview tiles** use the shared `.dz-thumb img` rule (`object-fit: contain`
+  shows the whole image, including the SVG tool's rendered artwork). Tiles are
+  created at runtime in client TS, so this rule must stay unscoped in `tool.css`
+  — a page-scoped `.dz-thumb` selector can never match them.
 - **Production CSS order differs from dev** — page stylesheets load BEFORE
   `tool.css`, so page overrides must win on specificity (e.g.
   `.workspace .panel`), never on source order.
@@ -101,6 +105,8 @@ Key patterns:
   either. `.topbar-inner` uses the same 20px side padding as the page columns,
   so where the two measures do match (the design/policy pages, Icon Maker) they
   line up exactly.
+- The bar's grid gives the back and action tracks fixed minimums, so a long
+  title ellipsizes on narrow screens instead of squeezing the back button.
 - **Search** (<kbd>/</kbd> or <kbd>⌘K</kbd>) indexes tools, projects, pages,
   and `/design/` sections straight from the existing registries — there is no
   separate index to keep in sync. Arrow keys move, <kbd>Enter</kbd> opens,
@@ -126,6 +132,7 @@ and `zip-export.ts`) — keep it free of Node-only APIs.
   per-path and merged-region colors for uploaded SVGs; solid + gradient backgrounds; SVG/PNG + full
   Android launcher package (XMLs, mipmaps, Material You) export.
 - **Image Resizer** — batch resize with aspect lock.
+- **Image Compressor** — batch compression/conversion to JPEG, PNG, or WebP with a quality slider, before/after sizes and percentage saved, and single/ZIP download; in "Original" mode it keeps the source when a re-encode would be larger.
 - **SVG to PNG** — vector → transparent PNG rasterization.
 - **Case Converter** — string conventions and writing formats.
 - **QR Generator** — QR codes with custom colors/sizes, PNG/SVG export.

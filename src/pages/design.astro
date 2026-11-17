@@ -491,6 +491,19 @@ const textFonts = [
             <span>PNG, JPG, SVG, WebP — processed on-device</span>
           </div>
         </div>
+        <small>.dz-thumb img — upload previews show the whole image</small>
+        <div class="dz-preview-grid" style="grid-template-columns: repeat(2, 84px);">
+          <div class="dz-thumb">
+            <img src="/link_preview.png" alt="Wide upload preview scaled to fit its tile" />
+          </div>
+          <div class="dz-thumb svg-file">
+            <img
+              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='100'%3E%3Crect width='400' height='100' fill='%23ff4136'/%3E%3C/svg%3E"
+              alt="Wide SVG upload preview scaled to fit its tile"
+            />
+            <div class="svg-name">icon.svg</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -540,6 +553,29 @@ const textFonts = [
               <div class="result-meta"><span>512 × 512</span><span>84 KB</span></div>
             </div>
             <button type="button" class="result-dl">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="ds-demo">
+        <small>.result-meta .meta-saved · .meta-kept · .meta-larger</small>
+        <div class="results-list">
+          <div class="result-item">
+            <div class="result-info">
+              <div class="result-name">photo.jpg</div>
+              <div class="result-meta">66.9 KB &rarr; 63.4 KB &middot; <span class="meta-saved">saved 5%</span></div>
+            </div>
+          </div>
+          <div class="result-item">
+            <div class="result-info">
+              <div class="result-name">optimized.png</div>
+              <div class="result-meta">5.0 KB &rarr; 5.0 KB &middot; <span class="meta-kept">kept original — already optimal</span></div>
+            </div>
+          </div>
+          <div class="result-item">
+            <div class="result-info">
+              <div class="result-name">icon.png</div>
+              <div class="result-meta">5.0 KB &rarr; 30.3 KB &middot; <span class="meta-larger">510% larger</span></div>
+            </div>
           </div>
         </div>
       </div>
