@@ -44,9 +44,11 @@ The shared footer includes a TOP button on every page. It scrolls to the beginni
 
 The s17 Labs Tools suite lives in this repo and is served at [s17labs.github.io/tools](https://s17labs.github.io/tools/). Tools are native Astro pages sharing a common design system (`src/styles/tool.css`, `ToolLayout.astro`) with logic typechecked in `src/scripts/tools/` — see `src/data/tools.ts` for the registry.
 
-- **Icon Maker, Image Resizer, SVG to PNG, Case Converter, QR Generator** — Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
+- **Icon Maker, Image Resizer, Image Compressor, SVG to PNG, Case Converter, QR Generator** — Astro pages sharing the s17 design system (`src/styles/tool.css`, `ToolLayout.astro`)
 
 Icon Maker's **Upload SVG** source parses filled artwork locally, supports colors for individual paths and safely separated merged regions, and preserves those colors in SVG, PNG, and Android VectorDrawable exports. Items without a custom color inherit Icon Color; resetting the path and region colors unlocks Icon Color again.
+
+**Image Compressor** re-encodes images locally to JPEG, PNG, or WebP with a quality slider, reports before/after file sizes and the percentage saved, and downloads results individually or as a ZIP. In "Original" mode it keeps the source file when re-encoding would make it bigger.
 
 All tools run fully client-side — no server endpoints. Font Awesome icon data comes from npm packages; client logic is typechecked TypeScript in `src/scripts/tools/`. Note: emoji SVGs in Icon Maker are fetched from a CDN at runtime, so emoji sources need network access. The registry lives in `src/data/tools.ts`.
 

@@ -93,45 +93,6 @@ const tagline = 'Convert SVG vectors to transparent PNG files locally — batch 
 </ToolLayout>
 
 <style>
-  /* SVG file tile — icon only, no canvas render */
-  .dz-thumb {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .dz-thumb :global(.svg-icon) {
-    font-size: 1.1rem;
-    color: var(--secondary-text);
-    line-height: 1;
-  }
-
-  .dz-thumb :global(.svg-name),
-  :global(.svg-name) {
-    font-size: 0.5rem;
-    color: var(--secondary-text);
-    font-family: 'Courier New', monospace;
-    max-width: 90%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
-    padding: 0 2px;
-  }
-
-  /* Desktop solid overflow tile */
-  .dz-thumb.overflow-solid {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .dz-thumb.overflow-solid span {
-    font-family: Aldrich, sans-serif;
-    font-size: 0.82rem;
-    color: var(--primary-text);
-  }
-
   /* Form fields */
   input[type='number'] {
     font-size: 1rem;

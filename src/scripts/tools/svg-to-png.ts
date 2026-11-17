@@ -37,6 +37,9 @@ const zipWrap = document.getElementById('zip-progress-wrap')!;
 const zipFill = document.getElementById('zip-progress-fill')!;
 const zipLabel = document.getElementById('zip-progress-label')!;
 
+// Object URLs for upload previews (revoked on re-render to avoid leaks)
+let previewUrls: string[] = [];
+
 // Object URLs for result thumbnails (revoked when results are cleared)
 let thumbUrls: string[] = [];
 
@@ -82,6 +85,8 @@ function addFiles(newFiles: File[]): void {
 }
 
 function renderUploadPreview(): void {
+  for (const u of previewUrls) URL.revokeObjectURL(u);
+  previewUrls = [];
   renderUploadGrid({
     grid: dzGrid,
     emptyEl: dzEmpty,
@@ -94,21 +99,22 @@ function renderUploadPreview(): void {
   });
 }
 
-// Build a simple SVG file tile (icon + truncated filename — no canvas rendering)
+// Render the actual SVG artwork (scripts don't run in an <img>) plus a
+// truncated filename. The shared .dz-thumb img rule scales it to fit.
 function makeSVGTile(file: File): HTMLElement {
   const tile = document.createElement('div');
-  tile.className = 'dz-thumb';
+  tile.className = 'dz-thumb svg-file';
 
-  const icon = document.createElement('span');
-  icon.className = 'svg-icon';
-  icon.innerHTML = iconSvg('bezier-curve');
-  tile.appendChild(icon);
+  const img = document.createElement('img');
+  img.alt = file.name;
+  const url = URL.createObjectURL(file);
+  previewUrls.push(url);
+  img.src = url;
+  tile.appendChild(img);
 
-  // Short name: strip .svg and truncate
-  const shortName = file.name.replace(/\.svg$/i, '');
   const nameEl = document.createElement('div');
   nameEl.className = 'svg-name';
-  nameEl.textContent = shortName;
+  nameEl.textContent = file.name.replace(/\.svg$/i, '');
   tile.appendChild(nameEl);
 
   return tile;
