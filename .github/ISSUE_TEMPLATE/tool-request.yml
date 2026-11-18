@@ -1,44 +1,54 @@
-name: Tool request
-description: Suggest a new browser-based tool for the s17 Labs suite
+name: Tool suggestion
+description: Suggest a small, browser-based utility for the s17 Labs Tools suite
 title: '[Tool]: '
 labels: ['enhancement']
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a tool! Keep it small and focused — s17 Labs tools run entirely in the browser.
+        Have an idea for a tool? Keep it focused — s17 Labs tools are lightweight, run entirely in the browser, and never send your data anywhere.
+
   - type: input
-    id: tool-name
+    id: name
     attributes:
       label: Tool name
-      description: A short, descriptive name for the tool.
+      description: A short, descriptive name.
       placeholder: e.g. Base64 Encoder
     validations:
       required: true
+
   - type: textarea
-    id: description
+    id: idea
     attributes:
       label: What should it do?
-      description: Describe the tool and the features it needs.
-      placeholder: It should take ... and produce ...
+      description: Describe the input, the output, and the main controls. One or two sentences is plenty.
+      placeholder: Paste text in, get a URL-safe Base64 string out, with a copy button.
     validations:
       required: true
-  - type: textarea
-    id: use-case
+
+  - type: dropdown
+    id: category
     attributes:
-      label: Use case
-      description: What are you trying to accomplish? How do the existing tools fall short?
-    validations:
-      required: true
-  - type: input
-    id: links
-    attributes:
-      label: Links or references (optional)
-      description: Specs, examples, screenshots, or similar tools that help explain the idea.
+      label: Category (optional)
+      description: Where would it fit in the suite?
+      options:
+        - Images
+        - Text
+        - Developer
+        - Generator
+        - Other
     validations:
       required: false
+
+  - type: input
+    id: references
+    attributes:
+      label: Examples or links (optional)
+      description: A similar tool, a spec, or a screenshot that explains the idea.
+    validations:
+      required: false
+
   - type: markdown
     attributes:
       value: |
-        > **Privacy note:** s17 Labs tools are fully client-side — your data never leaves your browser.
-        > Please don't include any sensitive or personal data in this request.
+        > **Privacy first:** every s17 Labs tool runs locally. Please don't include personal or sensitive data in this suggestion.
