@@ -1,0 +1,303 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import ColorField from '../../components/ColorField.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Favicon & Web App Icon Generator | s17 Labs Tools';
+const description =
+  'Turn one SVG or PNG into a complete web icon set: favicon.ico, PNG sizes, Apple touch icon, manifest, and HTML snippet. Runs locally in your browser.';
+const tagline =
+  'One image in, every web icon you need out. Generate favicon.ico, PNG sizes, a web manifest, and the HTML to go with it.';
+---
+
+<ToolLayout
+  title={title}
+  description={description}
+  heading="Favicon Generator"
+  tagline={tagline}
+  maxWidth={760}
+>
+  <!-- Upload panel -->
+  <div class="panel">
+    <h2 class="panel-title">Source image</h2>
+    <div
+      class="drop-zone"
+      id="fav-drop"
+      role="button"
+      tabindex="0"
+      aria-label="Choose an SVG or PNG image or drop one here"
+      aria-describedby="fav-drop-hint"
+    >
+      <Icon name="cloud-arrow-up" size={28} />
+      <span>Drop an SVG or PNG here or click to browse</span>
+      <span class="field-note" id="fav-drop-hint">
+        Square artwork works best. Anything 512 × 512 or larger stays crisp. Your image never leaves the browser.
+      </span>
+      <input type="file" id="fav-input" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden />
+    </div>
+    <div class="status-msg error" id="fav-error" role="alert" aria-atomic="true">
+      Could not read that image. Try a PNG or SVG file.
+    </div>
+    <div class="status-msg" id="fav-ready" role="status" aria-atomic="true">
+      Ready — choose your sizes below.
+    </div>
+  </div>
+
+  <!-- Settings panel -->
+  <div class="panel">
+    <h2 class="panel-title">Settings</h2>
+
+    <div class="field">
+      <label for="app-name">App name</label>
+      <input type="text" id="app-name" value="My App" maxlength="60" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="theme-color">Theme color</label>
+      <ColorField id="theme-color" label="Theme color" value="#0e0e10" />
+    </div>
+
+    <hr class="divider" />
+
+    <div class="field">
+      <label for="bg-color">Background fill</label>
+      <ColorField id="bg-color" label="Background fill" value="#0e0e10" />
+      <label class="check-row" for="bg-transparent">
+        <input type="checkbox" id="bg-transparent" />
+        <span>Keep background transparent</span>
+      </label>
+    </div>
+
+    <div class="field">
+      <div class="label-row">
+        <label for="fav-radius">Corner radius</label>
+        <span class="label-val" id="radius-val">18%</span>
+      </div>
+      <input type="range" id="fav-radius" min="0" max="50" value="18" aria-describedby="radius-val" />
+    </div>
+
+    <div class="field">
+      <div class="label-row">
+        <label for="fav-padding">Inner padding</label>
+        <span class="label-val" id="padding-val">8%</span>
+      </div>
+      <input type="range" id="fav-padding" min="0" max="30" value="8" aria-describedby="padding-val" />
+    </div>
+
+    <hr class="divider" />
+
+    <fieldset class="sizes-field">
+      <legend>PNG sizes</legend>
+      <div class="sizes-grid" id="sizes-grid">
+        <label class="check-row"><input type="checkbox" value="16" checked /><span>16</span></label>
+        <label class="check-row"><input type="checkbox" value="32" checked /><span>32</span></label>
+        <label class="check-row"><input type="checkbox" value="48" checked /><span>48</span></label>
+        <label class="check-row"><input type="checkbox" value="64" /><span>64</span></label>
+        <label class="check-row"><input type="checkbox" value="180" checked /><span>180 · Apple</span></label>
+        <label class="check-row"><input type="checkbox" value="192" checked /><span>192 · PWA</span></label>
+        <label class="check-row"><input type="checkbox" value="256" /><span>256</span></label>
+        <label class="check-row"><input type="checkbox" value="512" checked /><span>512 · PWA</span></label>
+      </div>
+    </fieldset>
+
+    <label class="check-row" for="include-ico">
+      <input type="checkbox" id="include-ico" checked />
+      <span>Include favicon.ico (16, 32, 48)</span>
+    </label>
+  </div>
+
+  <!-- Preview panel -->
+  <div class="panel">
+    <h2 class="panel-title">Preview</h2>
+    <div class="preview-wrap">
+      <canvas id="fav-preview" width="192" height="192" role="img" aria-label="Icon preview"></canvas>
+      <canvas id="fav-preview-small" width="32" height="32" role="img" aria-label="Favicon preview at 32 pixels"></canvas>
+    </div>
+  </div>
+
+  <!-- Export panel -->
+  <div class="panel">
+    <h2 class="panel-title">Export</h2>
+
+    <div class="progress-wrap" id="zip-progress" aria-hidden="true">
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="progress-fill" id="zip-fill"></div>
+      </div>
+      <span class="progress-label" id="zip-label">Preparing…</span>
+    </div>
+
+    <button type="button" class="btn" id="download-all" disabled>
+      <span id="zip-icon"><Icon name="download" size={14} /></span>
+      <span id="zip-label-btn">Download icon set</span>
+    </button>
+
+    <div class="field">
+      <label for="manifest-output">manifest.webmanifest</label>
+      <textarea id="manifest-output" readonly rows="7" spellcheck="false"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="html-output">HTML head snippet</label>
+      <textarea id="html-output" readonly rows="6" spellcheck="false"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-sm" id="copy-manifest">Copy manifest</button>
+      <button type="button" class="btn btn-sm" id="copy-html">Copy HTML</button>
+    </div>
+    <div class="status-msg success" id="export-msg" role="status" aria-atomic="true">
+      Copied to clipboard.
+    </div>
+  </div>
+
+  <script>
+    import '../../scripts/tools/favicon-generator';
+  </script>
+</ToolLayout>
+
+<style>
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .label-val {
+    font-size: 0.74rem;
+    color: var(--primary-text);
+    font-family: 'Courier New', monospace;
+  }
+
+  .drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 150px;
+    padding: 1.5rem;
+    cursor: pointer;
+    text-align: center;
+    color: var(--secondary-text);
+    background: var(--tile-bg);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    transition: var(--t);
+  }
+
+  .drop-zone:hover,
+  .drop-zone:focus-visible,
+  .drop-zone.drag-over {
+    color: var(--primary-text);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    outline: none;
+  }
+
+  .drop-zone .field-note {
+    max-width: 40ch;
+  }
+
+  .check-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: var(--secondary-text);
+    cursor: pointer;
+  }
+
+  .check-row input {
+    accent-color: var(--accent);
+  }
+
+  .sizes-field {
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .sizes-field legend {
+    font-family: 'Aldrich', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--secondary-text);
+    margin-bottom: 0.6rem;
+  }
+
+  .sizes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .preview-wrap {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.8rem;
+    min-height: 240px;
+  }
+
+  .preview-wrap canvas {
+    display: block;
+    max-width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    image-rendering: auto;
+  }
+
+  #fav-preview-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 2px;
+  }
+
+  .progress-wrap {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .progress-wrap.visible {
+    display: flex;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--tile-bg);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width 0.2s linear;
+  }
+
+  .progress-label {
+    min-width: 8ch;
+    font-size: 0.72rem;
+    color: var(--secondary-text);
+    font-family: 'Courier New', monospace;
+  }
+
+  textarea {
+    min-height: 120px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  .status-msg {
+    margin-top: 0.5rem;
+  }
+</style>

@@ -46,6 +46,14 @@ export const TOOLS: Tool[] = [
     icon: 'palette',
   },
   {
+    name: 'Favicon Generator',
+    slug: 'favicon-generator',
+    description:
+      'Turn one SVG or PNG into a full web icon set: favicon.ico, PNG sizes, Apple touch icon, manifest, and HTML.',
+    tags: ['images', 'generator', 'dev'],
+    icon: 'layer-group',
+  },
+  {
     name: 'SVG to PNG',
     slug: 'svg-to-png',
     description: 'Convert vector graphics to high-quality transparent PNGs locally in your browser.',
