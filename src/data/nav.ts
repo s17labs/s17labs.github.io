@@ -22,6 +22,11 @@ export const SITE_NAV: NavLink[] = [
     description: 'Browser utilities that run entirely on your device.',
   },
   {
+    label: "What's new",
+    href: '/changelog/',
+    description: 'Recent changes to the tools and the site.',
+  },
+  {
     label: 'Projects',
     href: SITE.projectsUrl,
     description: 'Apps and kits built by s17 Labs.',

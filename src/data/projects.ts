@@ -47,12 +47,22 @@ export const PROJECTS: Project[] = [
     tags: ['android', 'webview'],
   },
   {
-    name: 'WebShell Forge',
-    description: 'Turn plain HTML, CSS, and JS into installable APKs — form or CLI in, app out.',
-    url: 'https://github.com/s17labs/webshell-forge',
+    name: 'Notes',
+    description: 'A simple Android notes app with markdown, pinning, search, and trash.',
+    url: 'https://github.com/s17labs/notes',
     external: true,
-    icon: 'wand-magic-sparkles',
-    emoji: '🔨',
-    tags: ['android', 'build'],
+    icon: 'font',
+    emoji: '📝',
+    tags: ['android', 'notes', 'archived'],
+  },
+  {
+    name: 'videobug',
+    description:
+      'Turns phone screen recordings into agent-readable bug reports with key frames and freeze/jank analysis.',
+    url: 'https://github.com/s17labs/videobug',
+    external: true,
+    icon: 'image',
+    emoji: '🎥',
+    tags: ['tool', 'ai', 'dev'],
   },
 ];

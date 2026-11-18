@@ -13,13 +13,23 @@ import {
   splitFileName,
 } from './lib';
 import { downloadResultsAsZip, updateZipButton, type ZipExportOptions } from './zip-export';
+import { restoreToolState, watchToolState } from './tool-state';
 
 // ── State ──────────────────────────────────────────────────────────────────
+const defaultW = Number((document.getElementById('input-w') as HTMLInputElement).value) || 800;
+const defaultH = Number((document.getElementById('input-h') as HTMLInputElement).value) || 600;
+const saved = restoreToolState('s17-image-resizer-v1', {
+  width: defaultW,
+  height: defaultH,
+  locked: true,
+  lastChanged: 'w' as 'w' | 'h',
+});
+
 let files: File[] = [];
 let results: { blob: Blob; name: string }[] = []; // per processed image
-let aspectLocked = true;
-let aspectRatio = 800 / 600;
-let lastChanged: 'w' | 'h' = 'w';
+let aspectLocked = saved.locked;
+let aspectRatio = saved.width / Math.max(1, saved.height);
+let lastChanged: 'w' | 'h' = saved.lastChanged === 'h' ? 'h' : 'w';
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const dropZone = document.getElementById('drop-zone')!;
@@ -31,6 +41,8 @@ const dzCountLabel = document.getElementById('dz-count-label')!;
 const dzChangeBtn = document.getElementById('dz-change-btn')!;
 const inputW = document.getElementById('input-w') as HTMLInputElement;
 const inputH = document.getElementById('input-h') as HTMLInputElement;
+inputW.value = String(saved.width);
+inputH.value = String(saved.height);
 const resizeBtn = document.getElementById('resize-btn') as HTMLButtonElement;
 const resultsPanel = document.getElementById('results-panel')!;
 const resultsList = document.getElementById('results-list')!;
@@ -277,3 +289,12 @@ function clearResults(): void {
     actionBtn: dlAllBtn,
   });
 }
+
+// ── Persist settings ───────────────────────────────────────────────────────
+setAspectLocked(aspectLocked);
+watchToolState('s17-image-resizer-v1', () => ({
+  width: Number(inputW.value) || defaultW,
+  height: Number(inputH.value) || defaultH,
+  locked: aspectLocked,
+  lastChanged,
+}));
