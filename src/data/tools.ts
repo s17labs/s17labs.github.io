@@ -59,3 +59,24 @@ export const TOOLS: Tool[] = [
     icon: 'qrcode',
   },
 ];
+
+/** Tools that share the most tags with `slug`, in registry order for ties.
+ * Tools with no tags in common are omitted, so callers can hide the section
+ * entirely when there is nothing meaningful to suggest. */
+export function getRelatedTools(slug: string, limit = 3): Tool[] {
+  const current = TOOLS.find((tool) => tool.slug === slug);
+  if (!current) return [];
+
+  const tags = new Set(current.tags);
+
+  return TOOLS.map((tool, order) => ({ tool, order }))
+    .filter(({ tool }) => tool.slug !== slug)
+    .map((entry) => ({
+      ...entry,
+      score: entry.tool.tags.reduce((total, tag) => total + (tags.has(tag) ? 1 : 0), 0),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.order - b.order)
+    .slice(0, limit)
+    .map(({ tool }) => tool);
+}
