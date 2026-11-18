@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
 import { TOOLS, TOOLS_SECTION } from '../../data/tools';
+import { CHANGELOG } from '../../data/changelog';
 import { SITE } from '../../data/site';
 import '../../styles/tool.css';
 ---
@@ -43,6 +44,25 @@ import '../../styles/tool.css';
       }
     </div>
 
+    <section class="whats-new" aria-labelledby="whats-new-heading">
+      <div class="whats-new-head">
+        <h2 class="panel-title" id="whats-new-heading">What's new</h2>
+        <a class="suggest-link" href="/changelog/">
+          See all changes <Icon name="arrow-right" />
+        </a>
+      </div>
+      <ul class="whats-new-list">
+        {
+          CHANGELOG.slice(0, 3).map((entry) => (
+            <li class="whats-new-item">
+              <time datetime={entry.date}>{entry.date}</time>
+              <span>{entry.title}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
     <div class="panel suggest-panel">
       <div class="suggest-copy">
         <h2>Suggest a tool</h2>
@@ -78,6 +98,35 @@ import '../../styles/tool.css';
     flex-direction: column;
     flex: 1;
   }
+
+  /* Compact changelog callout — same surface, hairline, and rhythm as the
+     tool cards above it. Scoped selectors out-specify shared tool.css rules. */
+  .whats-new {
+    margin-top: 1.5rem;
+    padding: 1.2rem 1.4rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .whats-new-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .whats-new-head .panel-title {
+    margin-bottom: 0;
+  }
+
+  .whats-new-head a {
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  /* Shared accent link style (also used by the "Suggest a tool" panel). */
 
   /* Subtle suggestion panel — uses the shared .panel surface + tokens. */
   .suggest-panel {
@@ -124,6 +173,28 @@ import '../../styles/tool.css';
 
   .suggest-link:hover svg {
     transform: translateX(3px);
+  }
+
+  .whats-new-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .whats-new-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .whats-new-item time {
+    font-family: 'Courier New', monospace;
+    font-size: 0.68rem;
+    color: var(--secondary-text);
+    flex-shrink: 0;
   }
 
   @media (max-width: 580px) {

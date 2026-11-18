@@ -38,6 +38,14 @@ export const TOOLS: Tool[] = [
     icon: 'file-zipper',
   },
   {
+    name: 'Palette & Gradient Studio',
+    slug: 'palette-studio',
+    description:
+      'Extract a color palette from an image, build custom gradients, and export CSS variables, PNG, or SVG.',
+    tags: ['images', 'design', 'generator'],
+    icon: 'palette',
+  },
+  {
     name: 'SVG to PNG',
     slug: 'svg-to-png',
     description: 'Convert vector graphics to high-quality transparent PNGs locally in your browser.',

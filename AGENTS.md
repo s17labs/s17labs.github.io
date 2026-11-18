@@ -57,7 +57,7 @@ Key patterns:
 - Anything used twice gets promoted from tool stylesheets into `tool.css` — the live token/component reference is `/design/` (`src/pages/design.astro`), which showcases the real classes so it can't drift.
 - When adding a shared component, button, link style, token, or page pattern, showcase it on `/design/` too — new UI without a specimen will drift undocumented.
 - Color inputs use `src/components/ColorField.astro` — it renders the swatch + hex input and wires the shared picker (`src/scripts/tools/color-picker.ts`). Listen for the `colorchange` event on the field root; never hand-roll a second picker.
-- Everything is self-hosted except Icon Maker emoji SVGs, which fetch from a CDN at runtime — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`.
+- Everything is self-hosted, including Icon Maker's curated emoji SVGs under `public/emoji/` (`twemoji/` + `noto/`) with the matching key set in `src/scripts/tools/emoji-assets.ts` — Font Awesome icon data comes from the npm `@fortawesome/*` packages via `src/icons.ts`; fonts live in `public/fonts/`. Emoji outside the bundled set render with the device font on canvas; no tool ever fetches from a third-party origin.
 - User-facing strings for tools live in their page/component code.
 
 ## UI Conventions

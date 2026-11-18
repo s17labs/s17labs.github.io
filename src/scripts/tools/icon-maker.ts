@@ -4,6 +4,7 @@ import { iconSvg } from '../../icons';
 import { announce, downloadBlob, svgTextToPngBlob } from './lib';
 import { initColorPickers, setColorPickerValue } from './color-picker';
 import { paintRangeFill } from '../range-fill';
+import { LOCAL_EMOJI } from './emoji-assets';
 
 // Font Awesome packs are ~2MB — load each style only when a lookup needs it.
 // Most icons are solid, so a normal search never downloads regular + brands.
@@ -95,7 +96,7 @@ const S = {
   paths: null as VectorPath[] | null,
   viewBox: '0 0 512 512',
   // Emoji specific
-  emojiSvg: null as string | null, // raw SVG string from CDN
+  emojiUri: null as string | null, // data URI for the resolved emoji artwork
   valid: false,
 };
 
@@ -174,7 +175,7 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
   S.source = src;
   S.valid = false;
   S.paths = null;
-  S.emojiSvg = null;
+  S.emojiUri = null;
   S.iconName = '';
   S.textValue = '';
   clearTimeout(iconTimer); // drop any pending lookup for the old source
@@ -263,29 +264,52 @@ function toNotoCP(emoji: string): string {
     .join('_');
 }
 
-// Build CDN URL for the emoji SVG
-function emojiUrl(emoji: string, src: string): string {
-  if (src === 'twemoji') {
-    const cp = toTwemojiCP(emoji);
-    return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/${cp}.svg`;
-  }
-  // noto — pinned to a commit so upstream moves can't break lookups again.
-  // Upstream restructured: glyphs moved from svg/ to 2D/svg/.
-  const cp = toNotoCP(emoji);
-  return `https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e/2D/svg/emoji_u${cp}.svg`;
+// Filename of the bundled SVG. Mirrors the upstream asset names so the
+// codepoint functions above stay the single source of naming truth.
+function emojiFilename(emoji: string, src: string): string {
+  return src === 'twemoji' ? `${toTwemojiCP(emoji)}.svg` : `emoji_u${toNotoCP(emoji)}.svg`;
 }
 
-// Fetch emoji SVG from CDN
-async function fetchEmojiSvg(emoji: string): Promise<string> {
-  const url = emojiUrl(emoji, S.source);
-  const res = await fetch(url);
+// Bundled assets live under public/emoji/ and ship with the site. Looking one
+// up is a same-origin read — no third-party origin is ever contacted.
+function emojiUrl(emoji: string, src: string): string {
+  const dir = src === 'twemoji' ? 'twemoji' : 'noto';
+  return `${import.meta.env.BASE_URL}emoji/${dir}/${emojiFilename(emoji, src)}`;
+}
+
+function hasLocalEmoji(emoji: string, src: string): boolean {
+  return src === 'twemoji'
+    ? LOCAL_EMOJI.twemoji.has(emojiFilename(emoji, src))
+    : LOCAL_EMOJI.noto.has(emojiFilename(emoji, src));
+}
+
+// Load a bundled SVG through a same-origin fetch.
+async function loadEmojiSvg(emoji: string): Promise<string> {
+  const res = await fetch(emojiUrl(emoji, S.source));
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   if (!text.includes('<svg')) throw new Error('Invalid SVG');
   return sanitizeEmojiSvg(text);
 }
 
-// Strip active content from fetched SVGs: the bytes ship inside our
+// Emoji outside the bundled set are painted with the device's own emoji
+// font. The result is a PNG data URI, so it flows through the same preview
+// and export pipeline as the bundled vector artwork.
+function renderEmojiToCanvasUri(emoji: string): string | null {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `${Math.round(size * 0.82)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", sans-serif`;
+  ctx.fillText(emoji, size / 2, size / 2 + size * 0.04);
+  return canvas.toDataURL('image/png');
+}
+
+// Strip active content from bundled SVGs: the bytes ship inside our
 // exported .svg files, which users open in browsers. Static art only.
 function sanitizeEmojiSvg(svg: string): string {
   return svg
@@ -1670,10 +1694,10 @@ function buildSVG(shapeOverride?: string): string {
     const ls = S.textSpacing;
     const tx = Math.round((50 + ls / 2) * 10) / 10;
     iconEl = `<svg x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" viewBox="0 0 100 100"><text x="${tx}" y="52" text-anchor="middle" dominant-baseline="central" font-family="${S.fontStack}" font-size="${fs}" font-weight="${S.fontWeight}" letter-spacing="${ls}"${fStyle}${fDeco} fill="${iconColor}">${escapeXml(S.textValue)}</text></svg>`;
-  } else if ((S.source === 'noto' || S.source === 'twemoji') && S.emojiSvg) {
-    // Embed emoji as image using data URI — preserves all colors and gradients
-    const uri = svgDataUri(S.emojiSvg);
-    iconEl = `<image x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" href="${uri}" preserveAspectRatio="xMidYMid meet"/>`;
+  } else if ((S.source === 'noto' || S.source === 'twemoji') && S.emojiUri) {
+    // Embed the resolved emoji (bundled SVG or canvas-rendered PNG) as an
+    // image — preserves all colors and gradients through every export path.
+    iconEl = `<image x="${pad}" y="${iy}" width="${iconScale}" height="${iconScale}" href="${S.emojiUri}" preserveAspectRatio="xMidYMid meet"/>`;
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">${bgEl}${iconEl}</svg>`;
@@ -1739,7 +1763,7 @@ function render(): void {
 let iconTimer: ReturnType<typeof setTimeout>;
 let biSeq = 0; // guards against out-of-order Bootstrap async lookups
 let faSeq = 0; // guards against out-of-order Font Awesome chunk loads
-let emojiSeq = 0; // guards against out-of-order emoji fetches
+let emojiSeq = 0; // guards against out-of-order emoji lookups
 
 const elIconInput = document.getElementById('icon-input') as HTMLInputElement;
 
@@ -1819,7 +1843,8 @@ function handleIconInput(): void {
       render();
     }, 300);
   } else {
-    // Emoji: debounce fetch
+    // Emoji: debounce lookup. Bundled glyphs come from a same-origin file;
+    // everything else is painted locally with the device's emoji font.
     const seq = ++emojiSeq;
     iconTimer = setTimeout(async () => {
       if (seq !== emojiSeq) return; // stale — user kept typing or switched source
@@ -1833,22 +1858,32 @@ function handleIconInput(): void {
       loading.classList.add('visible');
       err(false);
 
+      if (!hasLocalEmoji(val, S.source)) {
+        // Nothing leaves the browser: draw the glyph with the system font.
+        const uri = renderEmojiToCanvasUri(val);
+        if (seq !== emojiSeq) return;
+        if (uri) {
+          Object.assign(S, { iconName: val, emojiUri: uri, valid: true });
+          err(false);
+          announce('Emoji not bundled — using your device font.');
+        } else {
+          S.valid = false;
+          S.emojiUri = null;
+          err(true);
+        }
+        render();
+        return;
+      }
+
       try {
-        const svgText = await fetchEmojiSvg(val);
-        if (seq !== emojiSeq) return; // lost the race while fetching
-        S.iconName = val;
-        S.emojiSvg = svgText;
-        S.valid = true;
+        const svgText = await loadEmojiSvg(val);
+        if (seq !== emojiSeq) return; // lost the race while loading
+        Object.assign(S, { iconName: val, emojiUri: svgDataUri(svgText), valid: true });
         err(false);
-      } catch (e) {
+      } catch {
         if (seq !== emojiSeq) return;
         S.valid = false;
-        S.emojiSvg = null;
-        // Network failure looks different from a missing glyph.
-        if (e instanceof TypeError) {
-          document.getElementById('error-msg')!.textContent =
-            'Network error — check your connection and try again';
-        }
+        S.emojiUri = null;
         err(true);
       }
       render();

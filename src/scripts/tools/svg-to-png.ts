@@ -13,8 +13,13 @@ import {
   setupDropZone,
 } from './lib';
 import { downloadResultsAsZip, updateZipButton, type ZipExportOptions } from './zip-export';
+import { restoreToolState, watchToolState } from './tool-state';
 
 // ── State ──────────────────────────────────────────────────────────────────
+const saved = restoreToolState('s17-svg-to-png-v1', {
+  width: Number((document.getElementById('input-w') as HTMLInputElement).value) || 512,
+});
+
 let files: File[] = []; // File objects
 let results: { blob: Blob; name: string }[] = []; // per converted PNG
 
@@ -27,6 +32,7 @@ const dzGrid = document.getElementById('dz-preview-grid')!;
 const dzCountLbl = document.getElementById('dz-count-label')!;
 const dzChangeBtn = document.getElementById('dz-change-btn')!;
 const inputW = document.getElementById('input-w') as HTMLInputElement;
+inputW.value = String(saved.width);
 const convertBtn = document.getElementById('convert-btn') as HTMLButtonElement;
 const resultsPanel = document.getElementById('results-panel')!;
 const resultsList = document.getElementById('results-list')!;
@@ -245,3 +251,7 @@ function clearResults(): void {
     actionBtn: dlAllBtn,
   });
 }
+
+watchToolState('s17-svg-to-png-v1', () => ({
+  width: Number(inputW.value) || 512,
+}));
