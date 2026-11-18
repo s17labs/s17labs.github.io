@@ -10,7 +10,6 @@ interface Props {
   heading: string;
   tagline?: string;
   maxWidth?: number;
-  preconnect?: string[];
 }
 
 const {
@@ -19,7 +18,6 @@ const {
   heading,
   tagline,
   maxWidth = 680,
-  preconnect,
 } = Astro.props;
 ---
 
@@ -30,7 +28,6 @@ const {
   backHref={SITE.toolsUrl}
   backLabel="Tools"
   barWidth={900}
-  preconnect={preconnect}
 >
   <div class="tool-top">
     <slot name="pre" />
