@@ -65,13 +65,4 @@ export const PROJECTS: Project[] = [
     emoji: '🎥',
     tags: ['tool', 'ai', 'dev'],
   },
-  {
-    name: 's17 Labs Assets',
-    description: 'The official brand asset library — logos, icons, fonts, and usage guidelines.',
-    url: 'https://github.com/s17labs/assets',
-    external: true,
-    icon: 'image',
-    emoji: '🎨',
-    tags: ['design', 'brand'],
-  },
 ];
