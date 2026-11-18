@@ -47,7 +47,7 @@ import '../../styles/tool.css';
     <section class="whats-new" aria-labelledby="whats-new-heading">
       <div class="whats-new-head">
         <h2 class="panel-title" id="whats-new-heading">What's new</h2>
-        <a class="link-primary link-icon" href="/changelog/">
+        <a class="suggest-link" href="/changelog/">
           See all changes <Icon name="arrow-right" />
         </a>
       </div>
@@ -109,6 +109,31 @@ import '../../styles/tool.css';
   .whats-new-head a {
     font-size: 0.78rem;
     white-space: nowrap;
+  }
+
+  /* Shared accent link style (also used by the "Suggest a tool" panel). */
+  .suggest-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+    font-family: Verdana, sans-serif;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    transition: var(--t);
+  }
+
+  .suggest-link:hover {
+    color: var(--primary-text);
+  }
+
+  .suggest-link svg {
+    transition: transform var(--t);
+  }
+
+  .suggest-link:hover svg {
+    transform: translateX(3px);
   }
 
   .whats-new-list {
