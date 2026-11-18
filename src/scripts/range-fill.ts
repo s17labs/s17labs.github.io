@@ -19,6 +19,31 @@ function initRangeFills(): void {
   });
 }
 
+/* Setting `value` from JavaScript never fires input/change, so a palette
+   randomisation (or any other programmatic update) left the painted trail
+   behind the thumb. Patch the setter once so every range stays in sync,
+   including ranges created later. */
+let patched = false;
+function patchRangeValueSetter(): void {
+  if (patched) return;
+  const proto = HTMLInputElement.prototype;
+  const descriptor = Object.getOwnPropertyDescriptor(proto, 'value');
+  if (!descriptor?.get || !descriptor.set) return;
+  const originalSet = descriptor.set;
+  Object.defineProperty(proto, 'value', {
+    configurable: true,
+    enumerable: descriptor.enumerable,
+    get: descriptor.get,
+    set(this: HTMLInputElement, value: string) {
+      originalSet.call(this, value);
+      if (this.type === 'range') paintRangeFill(this);
+    },
+  });
+  patched = true;
+}
+
+patchRangeValueSetter();
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initRangeFills);
 } else {
