@@ -13,8 +13,7 @@ export interface Project {
 
 export const PROJECTS_SECTION = {
   title: 'Projects',
-  description:
-    'Apps and kits built by s17 Labs — lightweight, focused software for Android and the web.',
+  description: 'Lightweight, focused apps and tools for Android and the web, from s17 Labs and yungsamd17.',
 } as const;
 
 export const PROJECTS: Project[] = [
@@ -64,6 +63,15 @@ export const PROJECTS: Project[] = [
     icon: 'image',
     emoji: '🎥',
     tags: ['tool', 'ai', 'dev'],
+  },
+  {
+    name: 's17 Labs Assets',
+    description: 'The official brand asset library — logos, icons, fonts, and usage guidelines.',
+    url: 'https://github.com/s17labs/assets',
+    external: true,
+    icon: 'image',
+    emoji: '🎨',
+    tags: ['design', 'brand'],
   },
   {
     name: 'BattleBit Stats',
