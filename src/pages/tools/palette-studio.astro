@@ -26,7 +26,7 @@ const stops = [
   maxWidth={760}
 >
   <!-- Image palette panel -->
-  <div class="panel">
+  <div class="panel extract-panel">
     <h2 class="panel-title">Extract from image</h2>
     <div
       class="drop-zone"
@@ -180,14 +180,23 @@ const stops = [
     font-family: 'Courier New', monospace;
   }
 
+  /* Hidden status messages must not reserve vertical space in this card. */
+  .extract-panel .status-msg:not(.visible) {
+    display: none;
+  }
+
+  .extract-panel .btn-row {
+    margin-top: 0.75rem;
+  }
+
   .drop-zone {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.65rem;
-    min-height: 150px;
-    padding: 1.5rem;
+    gap: 0.45rem;
+    min-height: 110px;
+    padding: 1.1rem 1.2rem;
     cursor: pointer;
     text-align: center;
     color: var(--secondary-text);
@@ -218,11 +227,16 @@ const stops = [
 
   /* Swatches are created at runtime, so they need global selectors — Astro's
      scoped attribute is only added to elements present in this template. */
-  :global(.swatch) {
+  :global(.swatch-item) {
     position: relative;
+    min-width: 0;
+  }
+
+  :global(.swatch) {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    width: 100%;
     padding: 0;
     background: none;
     border: 0;
@@ -258,18 +272,23 @@ const stops = [
     right: 0.35rem;
     display: grid;
     place-items: center;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: var(--radius);
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.62);
     color: #fff;
-    opacity: 0;
+    cursor: pointer;
+    opacity: 0.9;
     transition: var(--t);
   }
 
-  :global(.swatch:hover .swatch-use),
-  :global(.swatch:focus-visible .swatch-use) {
+  :global(.swatch-item:hover .swatch-use),
+  :global(.swatch-use:focus-visible) {
     opacity: 1;
+    border-color: var(--accent);
+    outline: none;
   }
 
   :global(.swatch-use svg) {
@@ -302,7 +321,6 @@ const stops = [
     width: 100%;
     height: 220px;
     border-radius: var(--radius);
-    border: 1px solid var(--border);
     background: var(--tile-bg);
   }
 

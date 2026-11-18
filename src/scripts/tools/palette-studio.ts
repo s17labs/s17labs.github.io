@@ -1,5 +1,6 @@
 import { announce, copyText, debounce, downloadBlob, downloadUrl, setupDropZone } from './lib';
 import { setColorPickerValue } from './color-picker';
+import { iconSvg } from '../../icons';
 
 interface Stop {
   color: string;
@@ -187,22 +188,41 @@ function renderPalette(): void {
   elCount.textContent = `${S.palette.length} colors`;
 
   S.palette.forEach((hex) => {
+    const item = document.createElement('div');
+    item.className = 'swatch-item';
+    item.setAttribute('role', 'listitem');
+
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'swatch';
-    btn.setAttribute('role', 'listitem');
     btn.setAttribute('aria-label', `Copy ${hex} to clipboard`);
     btn.innerHTML = `
       <span class="swatch-chip" style="background:${hex}"></span>
       <span class="swatch-hex">${hex}</span>
-      <span class="swatch-use" aria-hidden="true"><svg viewBox="0 0 448 512" width="12" height="12" fill="currentColor"><path d="M9.4 233.4c12.5-12.5 32.8-12.5 45.3 0l160 160c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 274.7 224 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0z"/></svg></span>
     `;
     btn.addEventListener('click', async () => {
       const ok = await copyText(hex);
       announce(ok ? `Copied ${hex}` : 'Could not copy to clipboard');
       flashExport(ok ? `Copied ${hex}` : 'Could not copy');
     });
-    elStrip.append(btn);
+
+    const send = document.createElement('button');
+    send.type = 'button';
+    send.className = 'swatch-use';
+    send.title = 'Use in gradient';
+    send.setAttribute('aria-label', `Use ${hex} in gradient`);
+    send.innerHTML = iconSvg('arrow-right');
+    send.addEventListener('click', () => {
+      if (!S.stops[0]) return;
+      S.stops[0].color = hex;
+      render();
+      persist();
+      announce(`${hex} added to gradient`);
+      flashExport(`${hex} added to gradient.`);
+    });
+
+    item.append(btn, send);
+    elStrip.append(item);
   });
 }
 
