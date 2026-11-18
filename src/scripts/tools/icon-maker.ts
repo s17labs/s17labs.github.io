@@ -283,18 +283,39 @@ function hasLocalEmoji(emoji: string, src: string): boolean {
     : LOCAL_EMOJI.noto.has(emojiFilename(emoji, src));
 }
 
-// Load a bundled SVG through a same-origin fetch.
+// Everything outside the bundled set is pulled from the matching upstream
+// artwork instead of being redrawn with the device font — otherwise Noto and
+// Twemoji render the exact same system glyph and the two sources are
+// indistinguishable. Twemoji is pinned to a release tag; jsDelivr can't
+// resolve noto-emoji's tags, so that one is pinned to the commit its 2D SVGs
+// were generated from.
+const EMOJI_CDN = {
+  twemoji: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/svg/',
+  noto: 'https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@99701e07d3d1fe1bdbcdb14964547f0fd592966f/2D/svg/',
+} as const;
+
+function emojiCdnUrl(emoji: string, src: string): string {
+  const base = src === 'twemoji' ? EMOJI_CDN.twemoji : EMOJI_CDN.noto;
+  return base + emojiFilename(emoji, src);
+}
+
+// Bundled glyphs load same-origin; the rest come from the upstream set that
+// matches the selected source.
 async function loadEmojiSvg(emoji: string): Promise<string> {
-  const res = await fetch(emojiUrl(emoji, S.source));
+  const url = hasLocalEmoji(emoji, S.source)
+    ? emojiUrl(emoji, S.source)
+    : emojiCdnUrl(emoji, S.source);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const text = await res.text();
   if (!text.includes('<svg')) throw new Error('Invalid SVG');
   return sanitizeEmojiSvg(text);
 }
 
-// Emoji outside the bundled set are painted with the device's own emoji
-// font. The result is a PNG data URI, so it flows through the same preview
-// and export pipeline as the bundled vector artwork.
+// Last-resort fallback when the upstream artwork can't be reached (offline,
+// blocked CDN): paint the glyph with the device's own emoji font. The result
+// is a PNG data URI, so it flows through the same preview and export pipeline
+// as the vector artwork.
 function renderEmojiToCanvasUri(emoji: string): string | null {
   const size = 256;
   const canvas = document.createElement('canvas');
@@ -1843,8 +1864,8 @@ function handleIconInput(): void {
       render();
     }, 300);
   } else {
-    // Emoji: debounce lookup. Bundled glyphs come from a same-origin file;
-    // everything else is painted locally with the device's emoji font.
+    // Emoji: debounce lookup. Bundled glyphs come from a same-origin file,
+    // the rest from the upstream Noto/Twemoji artwork for the active source.
     const seq = ++emojiSeq;
     iconTimer = setTimeout(async () => {
       if (seq !== emojiSeq) return; // stale — user kept typing or switched source
@@ -1858,23 +1879,6 @@ function handleIconInput(): void {
       loading.classList.add('visible');
       err(false);
 
-      if (!hasLocalEmoji(val, S.source)) {
-        // Nothing leaves the browser: draw the glyph with the system font.
-        const uri = renderEmojiToCanvasUri(val);
-        if (seq !== emojiSeq) return;
-        if (uri) {
-          Object.assign(S, { iconName: val, emojiUri: uri, valid: true });
-          err(false);
-          announce('Emoji not bundled — using your device font.');
-        } else {
-          S.valid = false;
-          S.emojiUri = null;
-          err(true);
-        }
-        render();
-        return;
-      }
-
       try {
         const svgText = await loadEmojiSvg(val);
         if (seq !== emojiSeq) return; // lost the race while loading
@@ -1882,9 +1886,18 @@ function handleIconInput(): void {
         err(false);
       } catch {
         if (seq !== emojiSeq) return;
-        S.valid = false;
-        S.emojiUri = null;
-        err(true);
+        // Offline or no upstream glyph: draw it with the system font so the
+        // tool still produces something usable.
+        const uri = renderEmojiToCanvasUri(val);
+        if (uri) {
+          Object.assign(S, { iconName: val, emojiUri: uri, valid: true });
+          err(false);
+          announce('Emoji artwork unavailable — using your device font.');
+        } else {
+          S.valid = false;
+          S.emojiUri = null;
+          err(true);
+        }
       }
       render();
     }, 450);
