@@ -17,9 +17,12 @@ npm install         # install dependencies
 npm run dev         # dev server
 npm run build       # production build to dist/
 npm run preview     # preview the production build
-npx astro check     # typecheck .astro/.ts (via @astrojs/check; no test/lint scripts exist)
+npx astro check     # typecheck .astro/.ts (via @astrojs/check; no lint script exists)
+npm test            # unit tests for the pure tool logic
+npm run og          # regenerate the social preview cards in public/og/
 ```
 
+- `npm run og` needs a local Chrome/Chromium (override with `CHROME=/path/to/chrome`). Add `--sheet` to also write a contact sheet of every card — see `scripts/og-preview.mjs` for the layout grid you tune.
 - CI is `.github/workflows/deploy.yml`: on every push to `main` it builds via `withastro/action@v3` (Node 22) and deploys `dist/` to GitHub Pages with `actions/deploy-pages@v4`. It also supports `workflow_dispatch`.
 - Deploy fires only on pushes to `main` — there are no checks on PRs. Run `npm run build` locally before merging so you do not deploy a broken site.
 
@@ -45,7 +48,8 @@ src/
   styles/design.css           # /design/ page styles (ds- namespaced, never competes)
   styles/tools/               # per-tool overrides (icon-maker.css, icon-maker-fonts.css)
   icons.ts                    # Font Awesome icon definitions
-public/                       # served as-is: fonts/ (Aldrich + icon-maker bundles), robots.txt, link_preview.png
+public/                       # served as-is: fonts/ (Aldrich + icon-maker bundles), og/ (per-tool social previews), icons/ (app icons), robots.txt, link_preview.png
+scripts/og-preview.mjs        # regenerates public/og/*.png from one card template (npm run og)
 ```
 
 Key patterns:

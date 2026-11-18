@@ -12,6 +12,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "og": "node scripts/og-preview.mjs",
     "astro": "astro"
   },
   "dependencies": {
