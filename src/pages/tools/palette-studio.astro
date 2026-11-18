@@ -1,0 +1,339 @@
+---
+import ToolLayout from '../../components/ToolLayout.astro';
+import ColorField from '../../components/ColorField.astro';
+import Icon from '../../components/Icon.astro';
+
+const title = 'Palette & Gradient Studio | s17 Labs Tools';
+const description =
+  'Extract a color palette from an image, build custom gradients, and export CSS variables, PNG, or SVG — entirely in your browser.';
+const tagline =
+  'Pull a palette from any image, tune a gradient, and export it as CSS, PNG, or SVG. Everything happens on your device.';
+
+const stops = [
+  { id: 'stop-0', label: 'Stop 1', value: '#ff4136', pos: 0 },
+  { id: 'stop-1', label: 'Stop 2', value: '#7a1f1a', pos: 50 },
+  { id: 'stop-2', label: 'Stop 3', value: '#0e0e10', pos: 100 },
+  { id: 'stop-3', label: 'Stop 4', value: '#f1f1f1', pos: 75 },
+  { id: 'stop-4', label: 'Stop 5', value: '#3ddc84', pos: 25 },
+];
+---
+
+<ToolLayout
+  title={title}
+  description={description}
+  heading="Palette & Gradient Studio"
+  tagline={tagline}
+  maxWidth={760}
+>
+  <!-- Image palette panel -->
+  <div class="panel">
+    <h2 class="panel-title">Extract from image</h2>
+    <div
+      class="drop-zone"
+      id="pal-drop"
+      role="button"
+      tabindex="0"
+      aria-label="Choose an image or drop one here"
+      aria-describedby="pal-drop-hint"
+    >
+      <Icon name="cloud-arrow-up" size={28} />
+      <span>Drop an image here or click to browse</span>
+      <span class="field-note" id="pal-drop-hint">
+        PNG, JPEG, WebP or GIF. The image is read locally and never uploaded.
+      </span>
+      <input type="file" id="pal-input" accept="image/*" hidden />
+    </div>
+    <div class="btn-row">
+      <button type="button" class="btn btn-sm" id="pal-random">Random palette</button>
+      <button type="button" class="btn btn-sm" id="pal-reset">Reset</button>
+    </div>
+    <div class="status-msg error" id="pal-error" role="alert" aria-atomic="true">
+      Could not read that image. Try a PNG, JPEG, or WebP file.
+    </div>
+  </div>
+
+  <!-- Palette panel -->
+  <div class="panel">
+    <div class="panel-header-row">
+      <h2 class="panel-title">Palette</h2>
+      <span class="label-val" id="pal-count">0 colors</span>
+    </div>
+    <div class="palette-strip" id="palette-strip" role="list" aria-label="Color palette"></div>
+    <p class="field-note">Click a swatch to copy its hex value. Use the arrow to send it to the gradient.</p>
+  </div>
+
+  <!-- Gradient panel -->
+  <div class="panel">
+    <h2 class="panel-title">Gradient</h2>
+
+    <div class="field">
+      <label for="grad-type">Type</label>
+      <select id="grad-type">
+        <option value="linear" selected>Linear</option>
+        <option value="radial">Radial</option>
+      </select>
+    </div>
+
+    <div class="field" id="angle-field">
+      <div class="label-row">
+        <label for="grad-angle">Angle</label>
+        <span class="label-val" id="angle-val">135°</span>
+      </div>
+      <input
+        type="range"
+        id="grad-angle"
+        min="0"
+        max="360"
+        step="1"
+        value="135"
+        aria-describedby="angle-val"
+      />
+    </div>
+
+    <hr class="divider" />
+
+    <div id="stops">
+      {
+        stops.map((stop, i) => (
+          <div class="stop-row" data-stop={i} hidden={i > 2}>
+            <ColorField id={stop.id} label={stop.label} value={stop.value} />
+            <div class="stop-pos">
+              <div class="label-row">
+                <label for={`stop-pos-${i}`}>Position</label>
+                <span class="label-val" id={`stop-pos-val-${i}`} data-pos-val>{stop.pos}%</span>
+              </div>
+              <input
+                type="range"
+                id={`stop-pos-${i}`}
+                min="0"
+                max="100"
+                step="1"
+                value={stop.pos}
+                data-pos-input
+                aria-describedby={`stop-pos-val-${i}`}
+              />
+            </div>
+            <button type="button" class="btn btn-sm stop-remove" data-remove-stop aria-label={`Remove ${stop.label}`}>
+              <Icon name="xmark" size={12} />
+            </button>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-sm" id="add-stop">Add stop</button>
+      <button type="button" class="btn btn-sm" id="apply-palette">Use palette in gradient</button>
+    </div>
+  </div>
+
+  <!-- Preview panel -->
+  <div class="panel">
+    <h2 class="panel-title">Preview</h2>
+    <div class="gradient-preview" id="gradient-preview" role="img" aria-label="Gradient preview"></div>
+  </div>
+
+  <!-- Export panel -->
+  <div class="panel">
+    <h2 class="panel-title">Export</h2>
+
+    <div class="field">
+      <label for="export-size">PNG size</label>
+      <select id="export-size">
+        <option value="1200x630" selected>1200 × 630 — social preview</option>
+        <option value="1920x1080">1920 × 1080 — wallpaper</option>
+        <option value="1080x1080">1080 × 1080 — square</option>
+        <option value="512x512">512 × 512 — icon</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="css-output">CSS variables</label>
+      <textarea id="css-output" readonly rows="8" spellcheck="false"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" class="btn" id="copy-css"><span class="btn-fmt">CSS</span> Copy</button>
+      <button type="button" class="btn" id="download-png"><span class="btn-fmt">PNG</span> Download</button>
+      <button type="button" class="btn" id="download-svg"><span class="btn-fmt">SVG</span> Download</button>
+    </div>
+    <div class="status-msg success" id="export-msg" role="status" aria-atomic="true">
+      Copied to clipboard.
+    </div>
+  </div>
+
+  <script>
+    import '../../scripts/tools/palette-studio';
+  </script>
+</ToolLayout>
+
+<style>
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .label-val {
+    font-size: 0.74rem;
+    color: var(--primary-text);
+    font-family: 'Courier New', monospace;
+  }
+
+  .drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 150px;
+    padding: 1.5rem;
+    cursor: pointer;
+    text-align: center;
+    color: var(--secondary-text);
+    background: var(--tile-bg);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    transition: var(--t);
+  }
+
+  .drop-zone:hover,
+  .drop-zone:focus-visible,
+  .drop-zone.drag-over {
+    color: var(--primary-text);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    outline: none;
+  }
+
+  .drop-zone .field-note {
+    max-width: 34ch;
+  }
+
+  .palette-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 0.55rem;
+  }
+
+  /* Swatches are created at runtime, so they need global selectors — Astro's
+     scoped attribute is only added to elements present in this template. */
+  :global(.swatch) {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    color: var(--primary-text);
+  }
+
+  :global(.swatch-chip) {
+    height: 64px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: var(--t);
+  }
+
+  :global(.swatch:hover .swatch-chip),
+  :global(.swatch:focus-visible .swatch-chip) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    outline: none;
+  }
+
+  :global(.swatch-hex) {
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    text-transform: uppercase;
+  }
+
+  :global(.swatch-use) {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius);
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    opacity: 0;
+    transition: var(--t);
+  }
+
+  :global(.swatch:hover .swatch-use),
+  :global(.swatch:focus-visible .swatch-use) {
+    opacity: 1;
+  }
+
+  :global(.swatch-use svg) {
+    display: block;
+  }
+
+  .stop-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) minmax(120px, 1fr) auto;
+    align-items: end;
+    gap: 0.9rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stop-row[hidden] {
+    display: none;
+  }
+
+  .stop-pos {
+    min-width: 0;
+  }
+
+  .stop-remove {
+    align-self: end;
+    min-width: auto;
+  }
+
+  .gradient-preview {
+    width: 100%;
+    height: 220px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--tile-bg);
+  }
+
+  textarea {
+    min-height: 150px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  .status-msg {
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 580px) {
+    .stop-row {
+      grid-template-columns: 1fr auto;
+    }
+
+    .stop-pos {
+      grid-column: 1;
+    }
+
+    .stop-remove {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .gradient-preview {
+      height: 160px;
+    }
+  }
+</style>

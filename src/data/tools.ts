@@ -16,6 +16,14 @@ export const TOOLS_SECTION = {
 
 export const TOOLS: Tool[] = [
   {
+    name: 'Palette & Gradient Studio',
+    slug: 'palette-studio',
+    description:
+      'Extract a color palette from an image, build custom gradients, and export CSS variables, PNG, or SVG.',
+    tags: ['images', 'design', 'generator'],
+    icon: 'palette',
+  },
+  {
     name: 'Icon Maker',
     slug: 'icon-maker',
     description:
