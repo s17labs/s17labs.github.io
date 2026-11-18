@@ -1,0 +1,54 @@
+name: Tool suggestion
+description: Suggest a small, browser-based utility for the s17 Labs Tools suite
+title: '[Tool]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a tool? Keep it focused — s17 Labs tools are lightweight, run entirely in the browser, and never send your data anywhere.
+
+  - type: input
+    id: name
+    attributes:
+      label: Tool name
+      description: A short, descriptive name.
+      placeholder: e.g. Base64 Encoder
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should it do?
+      description: Describe the input, the output, and the main controls. One or two sentences is plenty.
+      placeholder: Paste text in, get a URL-safe Base64 string out, with a copy button.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category (optional)
+      description: Where would it fit in the suite?
+      options:
+        - Images
+        - Text
+        - Developer
+        - Generator
+        - Other
+    validations:
+      required: false
+
+  - type: input
+    id: references
+    attributes:
+      label: Examples or links (optional)
+      description: A similar tool, a spec, or a screenshot that explains the idea.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        > **Privacy first:** every s17 Labs tool runs locally. Please don't include personal or sensitive data in this suggestion.

@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from './Icon.astro';
 import { SITE } from '../data/site';
+import { getRelatedTools } from '../data/tools';
 import '../styles/tool.css';
 
 interface Props {
@@ -19,6 +20,11 @@ const {
   tagline,
   maxWidth = 680,
 } = Astro.props;
+
+// Every tool page lives at /tools/<slug>/, so the shell can derive the slug
+// from the URL and no individual page needs to pass it in.
+const slug = Astro.url.pathname.split('/').filter(Boolean).pop() ?? '';
+const relatedTools = getRelatedTools(slug);
 ---
 
 <BaseLayout
@@ -39,6 +45,22 @@ const {
   </div>
 
   <div class="tool-bottom">
+    {
+      relatedTools.length > 0 && (
+        <section class="related-tools" aria-labelledby="related-tools-title">
+          <h3 id="related-tools-title">Related tools</h3>
+          <div class="related-tools-list">
+            {relatedTools.map((tool) => (
+              <a href={`${SITE.toolsUrl}${tool.slug}/`} class="related-tool">
+                <span class="related-tool-icon"><Icon name={tool.icon} /></span>
+                <span class="related-tool-name">{tool.name}</span>
+                <Icon name="arrow-right" class="related-tool-arrow" />
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
     <div class="more-tools">
       <h3>More s17 Labs Tools</h3>
       <p>Discover more free, browser-based utilities designed for creators and developers.</p>
@@ -48,3 +70,82 @@ const {
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  /* Scoped to the shared shell — these specimens only appear here. */
+  .related-tools {
+    width: 100%;
+    margin: 2.5rem 0 0;
+    padding: 1.5rem 0 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .related-tools h3 {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--secondary-text);
+    margin-bottom: 1rem;
+  }
+
+  .related-tools-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .related-tool {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    padding: 0.8rem 0.85rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--primary-text);
+    font-family: Verdana, sans-serif;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: var(--t);
+  }
+
+  .related-tool:hover {
+    background: var(--accent-dim);
+    border-color: var(--accent-soft);
+  }
+
+  .related-tool-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: 0.9rem;
+  }
+
+  .related-tool-name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .related-tool-arrow {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    color: var(--secondary-text);
+    transition: var(--t);
+  }
+
+  .related-tool:hover .related-tool-arrow {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  @media (max-width: 580px) {
+    .related-tools-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
