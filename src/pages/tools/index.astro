@@ -62,6 +62,21 @@ import '../../styles/tool.css';
         }
       </ul>
     </section>
+
+    <div class="panel suggest-panel">
+      <div class="suggest-copy">
+        <h2>Suggest a tool</h2>
+        <p>Have an idea for a lightweight, browser-based utility? Tell us what you need and we'll take a look.</p>
+      </div>
+      <a
+        href="https://github.com/s17labs/s17labs.github.io/issues/new?template=tool-request.yml"
+        class="suggest-link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Request a tool <Icon name="arrow-up-right" />
+      </a>
+    </div>
   </div>
 </BaseLayout>
 
@@ -112,6 +127,30 @@ import '../../styles/tool.css';
   }
 
   /* Shared accent link style (also used by the "Suggest a tool" panel). */
+
+  /* Subtle suggestion panel — uses the shared .panel surface + tokens. */
+  .suggest-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0;
+  }
+
+  .suggest-copy h2 {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .suggest-copy p {
+    color: var(--secondary-text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
   .suggest-link {
     display: inline-flex;
     align-items: center;
@@ -156,5 +195,12 @@ import '../../styles/tool.css';
     font-size: 0.68rem;
     color: var(--secondary-text);
     flex-shrink: 0;
+  }
+
+  @media (max-width: 580px) {
+    .suggest-panel {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
