@@ -11,6 +11,8 @@ interface Props {
   tagline?: string;
   maxWidth?: number;
   preconnect?: string[];
+  /** Social preview image; defaults to /og/<slug>.png for this tool. */
+  og?: string;
 }
 
 const {
@@ -20,7 +22,10 @@ const {
   tagline,
   maxWidth = 680,
   preconnect,
+  og,
 } = Astro.props;
+const slug = Astro.url.pathname.split('/').filter(Boolean).pop() ?? '';
+const ogImage = og ?? `/og/${slug}.png`;
 ---
 
 <BaseLayout
@@ -31,6 +36,9 @@ const {
   backLabel="Tools"
   barWidth={900}
   preconnect={preconnect}
+  image={ogImage}
+  imageWidth={1200}
+  imageHeight={630}
 >
   <div class="tool-top">
     <slot name="pre" />

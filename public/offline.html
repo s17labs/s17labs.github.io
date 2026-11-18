@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0e0e10" />
+    <meta name="color-scheme" content="dark" />
+    <title>You're offline — s17 Labs Tools</title>
+    <style>
+      /* Mirrors the shared chrome tokens from src/styles/global.css — this
+         page is a standalone asset and cannot import the site stylesheet. */
+      :root {
+        color-scheme: dark;
+        --primary: #0e0e10;
+        --accent: #ff4136;
+        --primary-text: #f1f1f1;
+        --secondary-text: #909090;
+        --surface-2: #1a1a1c;
+        --border: rgba(255, 255, 255, 0.07);
+        --radius: 4px;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: var(--primary);
+        color: var(--primary-text);
+        font-family: Verdana, sans-serif;
+        text-align: center;
+      }
+      img { width: 64px; height: 64px; }
+      h1 { margin: 0; font-size: 1.75rem; }
+      p { margin: 0; max-width: 34rem; color: var(--secondary-text); line-height: 1.6; }
+      a {
+        display: inline-block;
+        padding: 12px 20px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        color: var(--primary-text);
+      }
+      a:hover, a:focus-visible { color: var(--accent); border-color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <img src="/icons/icon-192.png" alt="s17 Labs" width="64" height="64" />
+    <h1>You're offline</h1>
+    <p>
+      You're offline — open a tool you've already visited to keep working, or reconnect to browse
+      the full suite.
+    </p>
+    <a href="/tools/">Browse all tools</a>
+  </body>
+</html>
