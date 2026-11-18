@@ -13,6 +13,7 @@ import {
   splitFileName,
 } from './lib';
 import { downloadResultsAsZip, updateZipButton, type ZipExportOptions } from './zip-export';
+import { restoreToolState, watchToolState } from './tool-state';
 
 type Format = 'original' | 'jpeg' | 'png' | 'webp';
 
@@ -20,10 +21,15 @@ type Format = 'original' | 'jpeg' | 'png' | 'webp';
 const MAX_SIDE = 4096;
 
 // ── State ──────────────────────────────────────────────────────────────────
+const saved = restoreToolState('s17-image-compressor-v1', {
+  format: 'original' as Format,
+  quality: 80,
+});
+
 let files: File[] = [];
 let results: { blob: Blob; name: string }[] = [];
-let format: Format = 'original';
-let quality = 0.8;
+let format: Format = (['original', 'jpeg', 'png', 'webp'] as const).includes(saved.format) ? saved.format : 'original';
+let quality = Math.min(100, Math.max(1, saved.quality)) / 100;
 let totalIn = 0;
 let totalOut = 0;
 
@@ -105,7 +111,15 @@ qualityInput.addEventListener('input', () => {
   qualityValue.textContent = `${qualityInput.value}%`;
 });
 
-setFormat('original');
+qualityInput.value = String(Math.round(quality * 100));
+qualityValue.textContent = `${qualityInput.value}%`;
+qualityInput.setAttribute('aria-valuetext', `${qualityInput.value} percent`);
+setFormat(format);
+
+watchToolState('s17-image-compressor-v1', () => ({
+  format,
+  quality: Math.round(quality * 100),
+}));
 
 // ── Drop zone interactions ─────────────────────────────────────────────────
 setupDropZone({

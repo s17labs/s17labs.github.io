@@ -1,4 +1,5 @@
 import { announce, copyText } from './lib';
+import { restoreToolState, watchToolState } from './tool-state';
 
 function words(str: string): string[] {
   return str
@@ -61,22 +62,24 @@ export const FORMATS: CaseFormat[] = [
 export const DEFAULT_FORMAT_ID = 'snake';
 
 if (typeof document !== 'undefined') {
-  let activeFormat: CaseFormat = FORMATS.find((f) => f.id === DEFAULT_FORMAT_ID)!;
-
   const grid = document.getElementById('case-grid')!;
   const inputEl = document.getElementById('input') as HTMLTextAreaElement;
   const outputEl = document.getElementById('output') as HTMLTextAreaElement;
+
+  const saved = restoreToolState('s17-case-converter-v1', {
+    format: DEFAULT_FORMAT_ID,
+    text: '',
+  });
+  let activeFormat: CaseFormat =
+    FORMATS.find((f) => f.id === saved.format) ?? FORMATS.find((f) => f.id === DEFAULT_FORMAT_ID)!;
+  inputEl.value = saved.text;
 
   function convert(): void {
     const raw = inputEl.value;
     outputEl.value = raw ? activeFormat.fn(raw) : '';
   }
 
-  grid.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest<HTMLElement>('.choice-btn');
-    if (!btn) return;
-    const fmt = FORMATS.find((f) => f.id === btn.dataset.id);
-    if (!fmt) return;
+  function setActiveFormat(fmt: CaseFormat): void {
     activeFormat = fmt;
     for (const b of grid.querySelectorAll<HTMLElement>('.choice-btn')) {
       const on = b.dataset.id === fmt.id;
@@ -84,9 +87,23 @@ if (typeof document !== 'undefined') {
       b.setAttribute('aria-pressed', String(on));
     }
     convert();
+  }
+
+  grid.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.choice-btn');
+    if (!btn) return;
+    const fmt = FORMATS.find((f) => f.id === btn.dataset.id);
+    if (fmt) setActiveFormat(fmt);
   });
 
   inputEl.addEventListener('input', convert);
+
+  watchToolState('s17-case-converter-v1', () => ({
+    format: activeFormat.id,
+    text: inputEl.value,
+  }));
+
+  setActiveFormat(activeFormat);
 
   const copyBtn = document.getElementById('copy-btn')!;
   const flashCopied = (): void => {

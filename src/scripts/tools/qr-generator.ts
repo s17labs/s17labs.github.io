@@ -1,5 +1,7 @@
 import QRCode from 'qrcode';
 import { announce, debounce, downloadUrl } from './lib';
+import { initColorPickers, setColorPickerValue } from './color-picker';
+import { restoreToolState, watchToolState } from './tool-state';
 
 interface QrState {
   text: string;
@@ -10,12 +12,20 @@ interface QrState {
   ready: boolean;
 }
 
-const S: QrState = {
+const restored = restoreToolState('s17-qr-generator-v1', {
   text: '',
   size: 256,
-  ec: 'M',
+  ec: 'M' as QrState['ec'],
   fg: '#f1f1f1',
   bg: '#0e0e10',
+});
+
+const S: QrState = {
+  text: restored.text,
+  size: Math.min(512, Math.max(128, restored.size)),
+  ec: (['L', 'M', 'Q', 'H'] as const).includes(restored.ec) ? restored.ec : 'M',
+  fg: restored.fg,
+  bg: restored.bg,
   ready: false,
 };
 
@@ -38,6 +48,23 @@ const elErrorMsg = document.getElementById('error-msg')!;
 const elExportMsg = document.getElementById('export-msg')!;
 const elBtnPNG = document.getElementById('btn-png') as HTMLButtonElement;
 const elBtnSVG = document.getElementById('btn-svg') as HTMLButtonElement;
+
+initColorPickers();
+elInput.value = S.text;
+elSize.value = String(S.size);
+elSizeVal.textContent = `${S.size} px`;
+elSize.setAttribute('aria-valuetext', `${S.size} pixels`);
+elEC.value = S.ec;
+setColorPickerValue(document.getElementById('qr-fg')!, S.fg);
+setColorPickerValue(document.getElementById('qr-bg')!, S.bg);
+
+watchToolState('s17-qr-generator-v1', () => ({
+  text: S.text,
+  size: S.size,
+  ec: S.ec,
+  fg: S.fg,
+  bg: S.bg,
+}));
 
 function isSameColor(a: string, b: string): boolean {
   return a.replace('#', '').toLowerCase() === b.replace('#', '').toLowerCase();
@@ -222,3 +249,6 @@ elBtnSVG.addEventListener('click', exportSVG);
 
 elSizeVal.textContent = S.size + ' px';
 elSize.setAttribute('aria-valuetext', `${S.size} pixels`);
+
+// A restored link/text should show its QR code immediately, not wait for an edit.
+if (S.text.trim()) void generateQR();
