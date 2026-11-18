@@ -16,6 +16,14 @@ export const TOOLS_SECTION = {
 
 export const TOOLS: Tool[] = [
   {
+    name: 'Favicon Generator',
+    slug: 'favicon-generator',
+    description:
+      'Turn one SVG or PNG into a full web icon set: favicon.ico, PNG sizes, Apple touch icon, manifest, and HTML.',
+    tags: ['images', 'generator', 'dev'],
+    icon: 'layer-group',
+  },
+  {
     name: 'Icon Maker',
     slug: 'icon-maker',
     description:
