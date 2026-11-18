@@ -12,6 +12,51 @@ export interface ChangelogEntry {
     the current tools registry; do not add entries for planned work. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-11-18',
+    title: 'Palette & Gradient Studio',
+    description:
+      'A new tool that pulls a color palette out of any image, then builds gradients from those swatches — per-stop position and color, presets, and export as CSS variables, PNG, or SVG.',
+    tool: { name: 'Palette & Gradient Studio', href: '/tools/palette-studio/' },
+  },
+  {
+    date: '2026-11-18',
+    title: 'Favicon Generator',
+    description:
+      'Turn one SVG or PNG into a complete web icon set: favicon.ico, PNG sizes up to 512, an Apple touch icon, the web manifest, and the HTML tags — all from a single upload.',
+    tool: { name: 'Favicon Generator', href: '/tools/favicon-generator/' },
+  },
+  {
+    date: '2026-11-18',
+    title: 'Settings that stick, and links that share them',
+    description:
+      'Case Converter, QR Generator, Image Resizer, Image Compressor, and SVG to PNG remember your options between visits, and the URL carries them so a shared link opens with the same setup. Files and results are never stored.',
+  },
+  {
+    date: '2026-11-18',
+    title: 'Related tools and a way to ask for more',
+    description:
+      'Every tool page now ends with related tools from the same family, and the tools page gained a request panel that opens a pre-filled issue.',
+  },
+  {
+    date: '2026-11-18',
+    title: 'Emoji artwork in Icon Maker',
+    description:
+      'The common Noto and Twemoji glyphs ship with the site and load instantly, even offline. Anything outside that set still loads artwork from the set you picked, so the two sources always look different.',
+    tool: { name: 'Icon Maker', href: '/tools/icon-maker/' },
+  },
+  {
+    date: '2026-11-18',
+    title: 'Install the tool suite as an app',
+    description:
+      'The site is now an installable app with an offline cache for the pages and tools you visit, and every tool carries its own social preview image when shared.',
+  },
+  {
+    date: '2026-11-18',
+    title: "A 'What's new' page",
+    description:
+      'Shipped changes now have a home at /changelog/, and the three most recent ones surface on the tools page.',
+  },
+  {
     date: '2026-11-17',
     title: 'Image Compressor',
     description:
