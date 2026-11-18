@@ -284,11 +284,18 @@ const stops = [
     transition: var(--t);
   }
 
-  :global(.swatch-item:hover .swatch-use),
+  :global(.swatch-use:hover),
   :global(.swatch-use:focus-visible) {
     opacity: 1;
     border-color: var(--accent);
+    background: var(--accent);
+    transform: scale(1.06);
     outline: none;
+  }
+
+  :global(.swatch-use:active) {
+    background: var(--accent-hover);
+    transform: scale(0.9);
   }
 
   :global(.swatch-use svg) {

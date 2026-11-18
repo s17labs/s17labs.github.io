@@ -16,14 +16,6 @@ export const TOOLS_SECTION = {
 
 export const TOOLS: Tool[] = [
   {
-    name: 'Palette & Gradient Studio',
-    slug: 'palette-studio',
-    description:
-      'Extract a color palette from an image, build custom gradients, and export CSS variables, PNG, or SVG.',
-    tags: ['images', 'design', 'generator'],
-    icon: 'palette',
-  },
-  {
     name: 'Icon Maker',
     slug: 'icon-maker',
     description:
@@ -44,6 +36,14 @@ export const TOOLS: Tool[] = [
     description: 'Compress images and convert between JPEG, PNG, and WebP with a quality slider and before/after size savings.',
     tags: ['images', 'conversion'],
     icon: 'file-zipper',
+  },
+  {
+    name: 'Palette & Gradient Studio',
+    slug: 'palette-studio',
+    description:
+      'Extract a color palette from an image, build custom gradients, and export CSS variables, PNG, or SVG.',
+    tags: ['images', 'design', 'generator'],
+    icon: 'palette',
   },
   {
     name: 'SVG to PNG',
