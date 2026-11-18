@@ -5,6 +5,7 @@ export const SITE = {
   description: 'Building efficient, lightweight software for the modern web.',
   orgUrl: 'https://github.com/s17labs',
   toolsUrl: '/tools/',
+  changelogUrl: '/changelog/',
   designUrl: '/design/',
   projectsUrl: '/projects/',
   privacyUrl: '/privacy/',

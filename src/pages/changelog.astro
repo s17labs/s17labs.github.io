@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { CHANGELOG } from '../data/changelog';
+import '../styles/tool.css';
+
+const title = "What's new | s17 Labs";
+const description =
+  'A short log of recent changes to the s17 Labs tools and the site around them — newest first, shipped work only.';
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  barTitle="What's new"
+  backHref="/tools/"
+  backLabel="Tools"
+  barWidth={900}
+>
+  <div class="tool-top">
+    <p class="tool-desc">{description}</p>
+  </div>
+
+  <div class="page">
+    <section class="panel changelog-panel" aria-labelledby="changelog-heading">
+      <div class="panel-header-row">
+        <h2 class="panel-title" id="changelog-heading">Recent changes</h2>
+        <span class="changelog-count">{CHANGELOG.length} entries</span>
+      </div>
+
+      <ol class="changelog-list">
+        {
+          CHANGELOG.map((entry) => (
+            <li class="changelog-item">
+              <span class="changelog-dot" aria-hidden="true" />
+              <time class="changelog-date" datetime={entry.date}>{entry.date}</time>
+              <h3 class="changelog-title">{entry.title}</h3>
+              <p class="changelog-desc">{entry.description}</p>
+              {entry.tool && (
+                <a class="changelog-tool link-primary link-icon" href={entry.tool.href}>
+                  Open {entry.tool.name} <Icon name="arrow-right" />
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Same split as /tools/: a 900px bar, a 680px column, and 20px side padding.
+     Astro scopes these to (0,2,0), out-specifying tool.css without load order. */
+  .tool-top,
+  .page {
+    max-width: 680px;
+  }
+
+  .page {
+    width: 100%;
+    padding: 0 20px 7rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .changelog-count {
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    color: var(--secondary-text);
+  }
+
+  /* Timeline rail and markers — hairline border and accent tint tokens only. */
+  .changelog-list {
+    position: relative;
+    list-style: none;
+  }
+
+  .changelog-list::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .changelog-item {
+    position: relative;
+    padding: 0 0 1.6rem 1.6rem;
+  }
+
+  .changelog-item:last-child {
+    padding-bottom: 0;
+  }
+
+  .changelog-dot {
+    position: absolute;
+    left: 0;
+    top: 0.35rem;
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    background: var(--accent-dim);
+  }
+
+  .changelog-date {
+    display: block;
+    font-family: 'Courier New', monospace;
+    font-size: 0.66rem;
+    color: var(--secondary-text);
+    margin-bottom: 0.3rem;
+  }
+
+  .changelog-title {
+    font-family: Verdana, sans-serif;
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: var(--primary-text);
+    margin: 0 0 0.35rem;
+  }
+
+  .changelog-desc {
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--secondary-text);
+    max-width: 520px;
+  }
+
+  .changelog-tool {
+    display: inline-flex;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+  }
+</style>
