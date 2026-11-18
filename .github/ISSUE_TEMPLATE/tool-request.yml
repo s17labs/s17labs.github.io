@@ -1,0 +1,44 @@
+name: Tool request
+description: Suggest a new browser-based tool for the s17 Labs suite
+title: '[Tool]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a tool! Keep it small and focused — s17 Labs tools run entirely in the browser.
+  - type: input
+    id: tool-name
+    attributes:
+      label: Tool name
+      description: A short, descriptive name for the tool.
+      placeholder: e.g. Base64 Encoder
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What should it do?
+      description: Describe the tool and the features it needs.
+      placeholder: It should take ... and produce ...
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What are you trying to accomplish? How do the existing tools fall short?
+    validations:
+      required: true
+  - type: input
+    id: links
+    attributes:
+      label: Links or references (optional)
+      description: Specs, examples, screenshots, or similar tools that help explain the idea.
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        > **Privacy note:** s17 Labs tools are fully client-side — your data never leaves your browser.
+        > Please don't include any sensitive or personal data in this request.

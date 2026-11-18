@@ -43,6 +43,20 @@ import '../../styles/tool.css';
       }
     </div>
 
+    <div class="panel suggest-panel">
+      <div class="suggest-copy">
+        <h2>Suggest a tool</h2>
+        <p>Have an idea for a lightweight, browser-based utility? Tell us what you need and we'll take a look.</p>
+      </div>
+      <a
+        href="https://github.com/s17labs/s17labs.github.io/issues/new?template=tool-request.yml"
+        class="suggest-link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Request a tool <Icon name="arrow-right" />
+      </a>
+    </div>
   </div>
 </BaseLayout>
 
@@ -63,5 +77,59 @@ import '../../styles/tool.css';
     display: flex;
     flex-direction: column;
     flex: 1;
+  }
+
+  /* Subtle suggestion panel — uses the shared .panel surface + tokens. */
+  .suggest-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0;
+  }
+
+  .suggest-copy h2 {
+    font-family: Aldrich, sans-serif;
+    font-size: 0.95rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .suggest-copy p {
+    color: var(--secondary-text);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .suggest-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+    font-family: Verdana, sans-serif;
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    transition: var(--t);
+  }
+
+  .suggest-link:hover {
+    color: var(--primary-text);
+  }
+
+  .suggest-link svg {
+    transition: transform var(--t);
+  }
+
+  .suggest-link:hover svg {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 580px) {
+    .suggest-panel {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>
