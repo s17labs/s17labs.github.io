@@ -11,6 +11,9 @@ interface Props {
   heading: string;
   tagline?: string;
   maxWidth?: number;
+  preconnect?: string[];
+  /** Social preview image; defaults to /og/<slug>.png for this tool. */
+  og?: string;
 }
 
 const {
@@ -19,12 +22,15 @@ const {
   heading,
   tagline,
   maxWidth = 680,
+  preconnect,
+  og,
 } = Astro.props;
 
 // Every tool page lives at /tools/<slug>/, so the shell can derive the slug
 // from the URL and no individual page needs to pass it in.
 const slug = Astro.url.pathname.split('/').filter(Boolean).pop() ?? '';
 const relatedTools = getRelatedTools(slug);
+const ogImage = og ?? `/og/${slug}.png`;
 ---
 
 <BaseLayout
@@ -34,6 +40,10 @@ const relatedTools = getRelatedTools(slug);
   backHref={SITE.toolsUrl}
   backLabel="Tools"
   barWidth={900}
+  preconnect={preconnect}
+  image={ogImage}
+  imageWidth={1200}
+  imageHeight={630}
 >
   <div class="tool-top">
     <slot name="pre" />

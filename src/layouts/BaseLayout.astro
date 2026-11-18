@@ -16,15 +16,40 @@ interface Props {
   backLabel?: string;
   /** Content measure the bar tracks, in px. */
   barWidth?: number;
+  /** Third-party origins to warm up (Icon Maker's emoji CDN only). */
+  preconnect?: string[];
+  /** Social preview image; defaults to the site-wide preview in BaseHead. */
+  image?: string;
+  imageWidth?: number;
+  imageHeight?: number;
 }
 
-const { title, description, barTitle, backHref, backLabel, barWidth } = Astro.props;
+const {
+  title,
+  description,
+  barTitle,
+  backHref,
+  backLabel,
+  barWidth,
+  preconnect,
+  image,
+  imageWidth,
+  imageHeight,
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <BaseHead title={title} description={description} />
+    <BaseHead
+      title={title}
+      description={description}
+      image={image}
+      imageWidth={imageWidth}
+      imageHeight={imageHeight}
+    />
+    {preconnect?.map((href) => <link rel="preconnect" href={href} crossorigin />)}
+    {preconnect?.map((href) => <link rel="dns-prefetch" href={href} />)}
     <slot name="head" />
   </head>
   <body>
@@ -52,6 +77,14 @@ const { title, description, barTitle, backHref, backLabel, barWidth } = Astro.pr
     </script>
     <script>
       import '../scripts/topbar';
+    </script>
+    <script>
+      // Offline install is a production-only enhancement; dev never registers.
+      if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
+          // Best-effort: a failed registration must never break the page.
+        });
+      }
     </script>
   </body>
 </html>
