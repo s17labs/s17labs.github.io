@@ -10,6 +10,7 @@ const description =
   'Generate and export custom icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, custom text, Noto Emoji, or Twemoji. Includes full Android launcher package export.';
 const tagline =
   'Generate custom icons from Font Awesome, Bootstrap Icons, uploaded SVG artwork, custom text, Noto Emoji, or Twemoji. Control colors, gradients, shape, and scale — export as SVG, PNG, or a full Android launcher package.';
+const fontAwesomeLookupUrl = 'https://fontawesome.com/search?ic=free-collection';
 ---
 
 <ToolLayout
@@ -51,7 +52,26 @@ const tagline =
     <div class="controls-col">
       <!-- Icon panel -->
       <div class="panel">
-        <h2 class="panel-title">Icon</h2>
+        <div class="panel-header-row icon-panel-header">
+          <h2 class="panel-title">Icon</h2>
+          <a
+            class="link-secondary-permanent"
+            data-icon-lookup="fa"
+            href={fontAwesomeLookupUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Look up icons on Font Awesome (opens in a new tab)"
+          >Look up icons</a>
+          <a
+            class="link-secondary-permanent"
+            data-icon-lookup="bi"
+            href="https://icons.getbootstrap.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Look up icons on Bootstrap Icons (opens in a new tab)"
+            hidden
+          >Look up icons</a>
+        </div>
 
         <!-- Source selector -->
         <div class="source-row">
@@ -81,36 +101,38 @@ const tagline =
           </button>
         </div>
 
-        <div class="field" id="icon-input-field">
-          <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
-          <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
-          <div class="status-msg error" id="error-msg" role="alert" aria-atomic="true">
-            Icon not found — check spelling at <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a>
+        <div class="icon-source-fields">
+          <div class="field" id="icon-input-field">
+            <label for="icon-input" id="input-label">Font Awesome Icon Name</label>
+            <input type="text" id="icon-input" placeholder="e.g. star, circle-check, bolt" spellcheck="false" autocomplete="off" />
+            <div class="status-msg error" id="error-msg" role="alert" aria-atomic="true">
+              Icon not found — check spelling at <a href={fontAwesomeLookupUrl} target="_blank" rel="noopener noreferrer" aria-label="Check spelling on fontawesome.com">fontawesome.com</a>
+            </div>
           </div>
-        </div>
 
-        <div class="svg-upload-panel" id="svg-upload-panel" hidden>
-          <span class="group-label">Foreground SVG</span>
-          <input type="file" id="svg-file-input" accept=".svg,image/svg+xml" hidden />
-          <button type="button" class="svg-upload-btn" id="svg-upload-btn">
-            <span class="svg-upload-mark"><Icon name="cloud-arrow-up" /></span>
-            <span class="svg-upload-copy">
-              <span class="svg-upload-title" id="svg-upload-title">Upload SVG</span>
-              <span class="svg-upload-subtitle" id="svg-upload-subtitle">Choose an SVG with filled paths</span>
-            </span>
-          </button>
-          <div class="svg-file-card" id="svg-file-card" hidden>
-            <span class="svg-file-mark"><Icon name="bezier-curve" /></span>
-            <span class="svg-file-copy">
-              <span class="svg-file-name" id="svg-file-name"></span>
-              <span class="svg-file-meta" id="svg-file-meta" role="status" aria-live="polite"></span>
-            </span>
-            <button type="button" class="svg-file-remove" id="svg-file-remove" aria-label="Remove uploaded SVG">
-              <Icon name="xmark" />
+          <div class="svg-upload-panel" id="svg-upload-panel" hidden>
+            <span class="group-label">Foreground SVG</span>
+            <input type="file" id="svg-file-input" accept=".svg,image/svg+xml" hidden />
+            <button type="button" class="svg-upload-btn" id="svg-upload-btn">
+              <span class="svg-upload-mark"><Icon name="cloud-arrow-up" /></span>
+              <span class="svg-upload-copy">
+                <span class="svg-upload-title" id="svg-upload-title">Upload SVG</span>
+                <span class="svg-upload-subtitle" id="svg-upload-subtitle">Choose an SVG with filled paths</span>
+              </span>
             </button>
+            <div class="svg-file-card" id="svg-file-card" hidden>
+              <span class="svg-file-mark"><Icon name="bezier-curve" /></span>
+              <span class="svg-file-copy">
+                <span class="svg-file-name" id="svg-file-name"></span>
+                <span class="svg-file-meta" id="svg-file-meta" role="status" aria-live="polite"></span>
+              </span>
+              <button type="button" class="svg-file-remove" id="svg-file-remove" aria-label="Remove uploaded SVG">
+                <Icon name="xmark" />
+              </button>
+            </div>
+            <div class="font-note">Paths and regions use Icon Color by default · processed locally</div>
+            <div class="status-msg error" id="svg-upload-error" role="alert" aria-atomic="true"></div>
           </div>
-          <div class="font-note">Paths and regions use Icon Color by default · processed locally</div>
-          <div class="status-msg error" id="svg-upload-error" role="alert" aria-atomic="true"></div>
         </div>
       </div>
 

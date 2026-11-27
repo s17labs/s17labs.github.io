@@ -17,6 +17,16 @@
   margin-bottom: 0;
 }
 
+.icon-panel-header {
+  font-size: 0.8rem;
+  min-height: 1lh;
+}
+
+/* Hidden status copy can wrap differently for each provider. */
+.icon-source-fields .status-msg:not(.visible) {
+  display: none;
+}
+
 /* Workspace */
 .workspace {
   width: 100%;
@@ -186,12 +196,8 @@
   letter-spacing: 0.05em;
 }
 
-/* Icon input keeps identical metrics for every source (same height) —
-   the text source only adds weight, mirroring the exported type. */
-input.text-input,
-input.emoji-input {
-  font-size: 0.88rem;
-  padding: 0.6rem 0.8rem;
+#icon-input {
+  line-height: 1.25;
 }
 
 /* text icon input (bold, letter-spaced) */
@@ -208,8 +214,7 @@ input.text-input {
   gap: 0.55rem;
 }
 
-.workspace .field[hidden],
-.svg-upload-panel[hidden],
+.icon-source-fields > [hidden],
 .svg-file-card[hidden] {
   display: none;
 }
