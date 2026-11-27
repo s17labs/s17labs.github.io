@@ -190,6 +190,9 @@ function setSource(src: keyof typeof INPUT_CONFIG): void {
     b.classList.toggle('active', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  document.querySelectorAll<HTMLAnchorElement>('[data-icon-lookup]').forEach((link) => {
+    link.hidden = link.dataset.iconLookup !== src;
+  });
 
   // Update input appearance. The SVG source has its own file picker.
   const cfg = INPUT_CONFIG[src];
