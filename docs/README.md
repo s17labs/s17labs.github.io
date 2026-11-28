@@ -27,8 +27,9 @@ npx astro check     # typecheck .astro/.ts (no test/lint scripts exist)
 | Route | Source | Notes |
 |---|---|---|
 | `/` | `src/pages/index.astro` | Homepage hero, card, footer |
-| `/tools/` | `src/pages/tools/index.astro` | Tool listing, rendered from the registry |
+| `/tools/` | `src/pages/tools/index.astro` | Tool listing and the three latest changelog entries |
 | `/tools/<slug>/` | `src/pages/tools/<slug>.astro` | One page per tool (Icon Maker, Image Resizer, Image Compressor, SVG to PNG, Case Converter, QR Generator) |
+| `/changelog/` | `src/pages/changelog.astro` | Full What's new history from `src/data/changelog.ts` |
 | `/design/` | `src/pages/design.astro` | Design system + brand kit with live specimens |
 | `/projects/` | `src/pages/projects.astro` | Project showcase, rendered from `src/data/projects.ts` |
 | `/privacy/` | `src/pages/privacy.astro` | Privacy policy statement |
@@ -63,10 +64,14 @@ docs/                         # repo docs: README.md (this map), PRIVACY.md + TE
 
 Key patterns:
 
-- **Adding a new tool** touches exactly three places: create
-  `src/pages/tools/<slug>.astro` using `ToolLayout`, put client logic in
-  `src/scripts/tools/<slug>.ts`, register it in `src/data/tools.ts`. The
-  `/tools` listing renders from that registry — never hardcode tool entries.
+- **Adding a new tool** requires a page at `src/pages/tools/<slug>.astro`
+  using `ToolLayout`, client logic in `src/scripts/tools/<slug>.ts`, and a
+  registry entry in `src/data/tools.ts` for the listing.
+- **Announcing a tool or feature** requires a changelog entry in the same PR for
+  every new tool or user-facing tool feature. Add the date, title, description,
+  and tool link to [`src/data/changelog.ts`](../src/data/changelog.ts), newest
+  first. Both the full changelog and the Tools page's **What's new** card use
+  that file.
 - **Shared design system** (`src/styles/tool.css` + `ToolLayout.astro`).
   Anything used twice gets promoted from tool stylesheets into `tool.css`.
 - **Upload preview tiles** use the shared `.dz-thumb img` rule (`object-fit: contain`

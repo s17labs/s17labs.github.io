@@ -57,6 +57,7 @@ All tools run fully client-side — no server endpoints. Font Awesome icon data 
 1. Create `src/pages/tools/<slug>.astro` using `ToolLayout`
 2. Put client logic in `src/scripts/tools/<slug>.ts`
 3. Register it in `src/data/tools.ts`
+4. Add a dated entry with a link to the tool in [`src/data/changelog.ts`](src/data/changelog.ts). Do this for new user-facing features in existing tools, too. The same entry feeds the changelog and the **What's new** card on the Tools page.
 
 ---
 © 2026 [s17 Labs](https://s17labs.github.io)
