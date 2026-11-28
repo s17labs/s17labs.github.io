@@ -1,6 +1,6 @@
 /* s17 Labs Tools — minimal offline app shell.
-   Cache-first for same-origin navigations and static assets, network fallback
-   everywhere, and a brand-consistent offline page when both fail. */
+   Network-first for same-origin navigations, cache-first for static assets,
+   and an offline page when a navigation cannot be loaded. */
 const CACHE_NAME = 's17labs-shell-v1';
 
 // Relative to the registration scope so this also behaves at a subpath.
@@ -47,17 +47,24 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request)
-            .then((response) => {
-              const copy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-              return response;
-            })
-            .catch(() => caches.match(shellUrl('offline.html'))),
-      ),
+      (async () => {
+        let response;
+        try {
+          response = await fetch(request, { cache: 'no-cache' });
+        } catch {
+          return (await caches.match(request)) || caches.match(shellUrl('offline.html'));
+        }
+        if (response.ok) {
+          const copy = response.clone();
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(request, copy);
+          } catch {
+            // Cache failures should not prevent an online page from loading.
+          }
+        }
+        return response;
+      })(),
     );
     return;
   }
