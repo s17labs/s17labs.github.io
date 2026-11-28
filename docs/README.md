@@ -71,7 +71,7 @@ Key patterns:
   every new tool or user-facing tool feature. Add the date, title, description,
   and tool link to [`src/data/changelog.ts`](../src/data/changelog.ts), newest
   first. Both the full changelog and the Tools page's **What's new** card use
-  that file.
+  that file. See [Changelog entry format](#changelog-entry-format).
 - **Shared design system** (`src/styles/tool.css` + `ToolLayout.astro`).
   Anything used twice gets promoted from tool stylesheets into `tool.css`.
 - **Upload preview tiles** use the shared `.dz-thumb img` rule (`object-fit: contain`
@@ -87,6 +87,25 @@ Key patterns:
   undocumented.
 - Everything is **fully client-side** ("your data never leaves your browser")
   — no server endpoints, no analytics.
+
+### Changelog entry format
+
+Add an object to `CHANGELOG` in `src/data/changelog.ts` in the same PR as the
+new tool or feature. Use the date it ships (`YYYY-MM-DD`) and keep the newest
+entries first. Write a short, sentence-case title and one or two sentences
+describing what users can do. Set `tool.name` to the tool's display name and
+`tool.href` to its canonical site-relative URL, including the trailing slash.
+Site-wide entries may omit `tool`.
+
+```ts
+{
+  date: '2026-11-27',
+  title: 'Look up icons in Icon Maker',
+  description:
+    'Use the Look up icons link in the Icon panel to open the Font Awesome free collection or Bootstrap Icons in a new tab and find the icon name you need.',
+  tool: { name: 'Icon Maker', href: '/tools/icon-maker/' },
+},
+```
 
 ## Navigation
 
