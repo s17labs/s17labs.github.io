@@ -12,6 +12,13 @@ export interface ChangelogEntry {
     the current tools registry; do not add entries for planned work. */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-11-27',
+    title: 'Look up icons in Icon Maker',
+    description:
+      'Use the Look up icons link in the Icon panel to open the Font Awesome free collection or Bootstrap Icons in a new tab and find the icon name you need.',
+    tool: { name: 'Icon Maker', href: '/tools/icon-maker/' },
+  },
+  {
     date: '2026-11-18',
     title: 'Palette & Gradient Studio',
     description:
